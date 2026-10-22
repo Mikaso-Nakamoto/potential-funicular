@@ -1,0 +1,15 @@
+# Зависимости
+
+Бот работает **на стандартной библиотеке Python 3.11+**:
+urllib (VK API), sqlite3 (хранение), tomllib (конфиг), zoneinfo (часовой пояс),
+threading (фоновый воркер). Ставить pip-пакеты не нужно.
+
+Единственное исключение — Python 3.10 и старее, где нет tomllib:
+
+tomli; python_version < "3.11"
+
+Проверить свою версию:  python3 -V
+Если 3.10:             sudo apt install python3-tomli   (или обновить Python)
+
+Тесты тоже не требуют pytest:  python3 tests/run_all.py
+Если pytest установлен, работает и он:  pytest -q
