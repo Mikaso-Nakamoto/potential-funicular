@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+
+# Типичные имена чувствительных файлов; при других именах проверяйте git status.
+hashes.txt
+hashes-ntlm.txt
+target-hash.txt
+wordlist.txt
+hint-mutations.txt
+cracked.txt
+recovered.txt
+audit-results/
+*.potfile
+*.restore
