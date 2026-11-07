@@ -70,6 +70,62 @@ class TextGate:
 
 
 @dataclass(frozen=True)
+class StringGate:
+    """Equal-length ASCII string substitution inside a binary.
+
+    Some checks are not a branch you can invert, but a literal the client
+    compares against: rewriting the literal makes the comparison miss. This is
+    far more version-robust than a byte signature (the compiler may reorder
+    instructions, but it does not mangle string constants), which is why it is
+    offered as an alternative rather than a replacement.
+
+    Experimental: the semantics of the check it defeats are not fully known
+    here, so it is never applied unless you ask for it explicitly.
+    """
+
+    key: str
+    target: str
+    needle: bytes
+    replacement: bytes
+    desc: str
+    provenance: str
+    max_sites: int = 8
+
+    def __post_init__(self) -> None:
+        if len(self.needle) != len(self.replacement):
+            raise SigError("replacement must be the same length as the needle")
+        if not self.needle:
+            raise SigError("empty needle")
+
+    @property
+    def group(self) -> str:
+        # Kept separate from the byte-gate group on purpose: a string patch and
+        # an instruction patch on the same target answer different questions,
+        # and neither should mask the other's absence.
+        parts = self.key.split("/")
+        return "/".join(parts[:2])
+
+    def match(self, data: bytes) -> Tuple[str, int]:
+        done = data.find(self.replacement)
+        sites = data.count(self.needle)
+        if sites == 0:
+            return ("patched", done) if done >= 0 else ("absent", -1)
+        if sites > self.max_sites:
+            return "ambiguous", -1
+        return "unpatched", data.find(self.needle)
+
+    def apply_all(self, data: bytearray) -> int:
+        count = data.count(self.needle)
+        if count == 0 or count > self.max_sites:
+            raise SigError(f"unexpected occurrence count ({count}) for {self.key}")
+        patched = bytes(data).replace(self.needle, self.replacement)
+        if len(patched) != len(data):
+            raise SigError("string patch changed the file size — refusing")
+        data[:] = patched
+        return count
+
+
+@dataclass(frozen=True)
 class Gate:
     key: str
     target: str
@@ -285,6 +341,28 @@ CLI_ARM64 = (
 
 
 # --------------------------------------------------------------------------
+# OPT-IN: equal-length string patches (experimental)
+#
+# These do not appear in the default profile. ``--experimental-strings`` turns
+# them on. Same length, same file size, trivially reversible from the backup —
+# but the check they defeat is not fully understood here, so they are your call
+# and not the default.
+# --------------------------------------------------------------------------
+STRING_PATCHES = {
+    MANAGER: [
+        StringGate(
+            key="manager/string/ineligible",
+            target=MANAGER,
+            needle=b"ineligible",
+            replacement=b"inexigible",
+            desc='literal "ineligible" -> "inexigible"',
+            provenance="public report (confeden/Antigravity) — semantics unverified",
+        )
+    ],
+}
+
+
+# --------------------------------------------------------------------------
 # profiles
 # --------------------------------------------------------------------------
 BINARY_PROFILES = {
@@ -311,16 +389,22 @@ def all_gates() -> List[object]:
             out.extend(gates)
     for gates in TEXT_GATES.values():
         out.extend(gates)
+    for gates in STRING_PATCHES.values():
+        out.extend(gates)
     return out
 
 
-def gates_for(kind: str, arch: Optional[str] = None) -> List[Gate]:
+def gates_for(kind: str, arch: Optional[str] = None,
+              strings: bool = False) -> List[object]:
     if kind not in BINARY_PROFILES:
         raise KeyError(kind)
     profile = BINARY_PROFILES[kind]
     if arch:
-        return list(profile.get(arch, []))
-    out: List[Gate] = []
-    for gates in profile.values():
-        out.extend(gates)
+        out: List[object] = list(profile.get(arch, []))
+    else:
+        out = []
+        for gates in profile.values():
+            out.extend(gates)
+    if strings:
+        out.extend(STRING_PATCHES.get(kind, []))
     return out

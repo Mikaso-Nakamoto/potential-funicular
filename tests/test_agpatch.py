@@ -358,3 +358,308 @@ def test_cli_scan_and_patch(tmp_path, capsys):
     assert "0x" in capsys.readouterr().out
 
     assert main(["scan", "--kind", "nonsense"]) == 2
+
+
+# --------------------------------------------------------------------------
+# doctor: the whole point is that these two are NOT the same problem
+# --------------------------------------------------------------------------
+def test_doctor_separates_client_gate_from_server_geo():
+    from agpatch.doctor import CLIENT_GATE, SERVER_GEO, diagnose
+
+    local = diagnose('{"code": 400, "message": "Your current account is not eligible for Antigravity"}')
+    assert local and local.category == CLIENT_GATE and local.patcher_action == "patch"
+
+    server = diagnose("Error 400: User location is not supported for the API use.")
+    assert server and server.category == SERVER_GEO
+    assert server.patcher_action == "route"
+    assert "IP" in server.meaning
+
+
+def test_doctor_account_errors_say_do_not_patch():
+    from agpatch.doctor import diagnose
+
+    for text in (
+        "You do not have a valid license of this product (#3501)",
+        "403 Forbidden / SUBSCRIPTION_REQUIRED",
+        "429 RESOURCE_EXHAUSTED",
+    ):
+        diag = diagnose(text)
+        assert diag is not None and diag.patcher_action == "none", text
+
+
+def test_doctor_oauth_exchange_is_transport():
+    from agpatch.doctor import TRANSPORT, diagnose
+
+    diag = diagnose("Failed to exchange authorization code for token")
+    assert diag and diag.category == TRANSPORT
+    assert any("DIRECT" in step for step in diag.steps)
+
+
+def test_doctor_unknown_and_empty():
+    from agpatch.doctor import diagnose
+
+    assert diagnose("") is None
+    assert diagnose("something entirely unrelated happened") is None
+
+
+def test_doctor_cli(capsys):
+    from agpatch.cli import main
+
+    assert main(["doctor", "User location is not supported for the API use"]) == 0
+    out = capsys.readouterr().out
+    assert "route" in out and "NOT patch" in out
+    assert main(["doctor"]) == 2
+    assert main(["doctor", "??? nonsense ???"]) == 1
+
+
+# --------------------------------------------------------------------------
+# route: only the two API hosts, everything else direct
+# --------------------------------------------------------------------------
+def test_pac_decision_is_narrow():
+    from agpatch.route import DIRECT_HOSTS, GATED_HOSTS, pac_decision
+
+    for host in GATED_HOSTS:
+        assert pac_decision(host) == "PROXY"
+        assert pac_decision(host.upper()) == "PROXY"
+        assert pac_decision("eu." + host) == "PROXY"  # subdomain
+    for host in DIRECT_HOSTS:
+        assert pac_decision(host) == "DIRECT"
+    for host in ("google.com", "cloudcode-pa.googleapis.com.evil.test", "example.org"):
+        assert pac_decision(host) == "DIRECT"
+
+
+def test_pac_file_is_valid_js_and_only_gates_two_hosts():
+    from agpatch.route import GATED_HOSTS, render_pac
+
+    pac = render_pac("PROXY 127.0.0.1:8899")
+    assert pac.count('"') % 2 == 0
+    assert 'return "DIRECT";' in pac
+    for host in GATED_HOSTS:
+        assert host in pac
+    assert "accounts.google.com" not in pac
+
+
+def test_route_build_and_check(tmp_path, capsys):
+    from agpatch.cli import main
+
+    out = tmp_path / "p.pac"
+    assert main(["route", "build", "--out", str(out), "--proxy", "PROXY 127.0.0.1:9999"]) == 0
+    assert out.is_file() and "127.0.0.1:9999" in out.read_text()
+    assert main(["route", "check"]) == 0
+    assert "PROXY" in capsys.readouterr().out
+
+
+def test_env_url_conversion():
+    import sys as _sys
+
+    from agpatch.route import env_url, platform_plan
+
+    assert env_url("PROXY 127.0.0.1:8899") == "http://127.0.0.1:8899"
+    assert env_url("http://10.0.0.1:3128") == "http://10.0.0.1:3128"
+    assert env_url("127.0.0.1:8899") == "http://127.0.0.1:8899"
+    # no PAC syntax leaking into env vars, on any platform's plan
+    for platform in ("win32", "darwin", "linux"):
+        plan = "\n".join(platform_plan("PROXY 127.0.0.1:8899", "/tmp/p.pac", platform=platform))
+        for line in plan.splitlines():
+            if "export HTTP" in line or "export HTTPS" in line:
+                assert "PROXY " not in line
+
+
+def test_route_plan_has_no_hosts_file_edits():
+    from agpatch.route import render_plan
+
+    plan = render_plan()
+    assert "cloudcode-pa.googleapis.com" in plan
+    assert "accounts.google.com" in plan
+    lowered = plan.lower()
+    assert "/etc/hosts" not in lowered and "hosts file" not in lowered
+    assert "nrpt" not in lowered
+
+
+def test_upstream_spec_parsing():
+    from agpatch.route import UpstreamError, _parse_upstream
+
+    assert _parse_upstream("socks://127.0.0.1:1080") == ("socks5", "127.0.0.1", 1080)
+    assert _parse_upstream("socks5h://host:9050") == ("socks5", "host", 9050)
+    assert _parse_upstream("http://10.0.0.1:3128") == ("http", "10.0.0.1", 3128)
+    assert _parse_upstream("127.0.0.1:8080") == ("http", "127.0.0.1", 8080)
+    for bad in ("socks://noport", "ftp://x:1", "host:abc"):
+        with pytest.raises(UpstreamError):
+            _parse_upstream(bad)
+
+
+def test_proxy_tunnel_end_to_end(tmp_path):
+    """Real sockets: echo server <- socks5-less http upstream <- agpatch proxy <- client."""
+    import asyncio
+    import socket
+    import threading
+
+    async def scenario():
+        # 1) target echo server
+        async def echo(reader, writer):
+            data = await reader.read(100)
+            writer.write(b"pong:" + data)
+            await writer.drain()
+            writer.close()
+
+        target = await asyncio.start_server(echo, "127.0.0.1", 0)
+        target_port = target.sockets[0].getsockname()[1]
+
+        # 2) upstream CONNECT proxy (minimal)
+        async def upstream(reader, writer):
+            await reader.readline()
+            while True:
+                line = await reader.readline()
+                if line in (b"\r\n", b""):
+                    break
+            up_r, up_w = await asyncio.open_connection("127.0.0.1", target_port)
+            writer.write(b"HTTP/1.1 200 OK\r\n\r\n")
+            await writer.drain()
+
+            async def pump(a, b):
+                try:
+                    while chunk := await a.read(4096):
+                        b.write(chunk)
+                        await b.drain()
+                except Exception:
+                    pass
+
+            await asyncio.gather(pump(reader, up_w), pump(up_r, writer))
+            writer.close()
+
+        up_srv = await asyncio.start_server(upstream, "127.0.0.1", 0)
+        up_port = up_srv.sockets[0].getsockname()[1]
+
+        # 3) start agpatch proxy on a free port
+        sock = socket.socket()
+        sock.bind(("127.0.0.1", 0))
+        listen_port = sock.getsockname()[1]
+        sock.close()
+        logs = []
+        task = asyncio.create_task(
+            __import__("agpatch.route", fromlist=["serve"]).serve(
+                f"127.0.0.1:{listen_port}", f"http://127.0.0.1:{up_port}", logs.append,
+                allow_hosts=["example.test"],
+            )
+        )
+        await asyncio.sleep(0.15)
+
+        # 4) client: CONNECT through agpatch, then talk plaintext
+        reader, writer = await asyncio.open_connection("127.0.0.1", listen_port)
+        writer.write(f"CONNECT example.test:443 HTTP/1.1\r\nHost: example.test\r\n\r\n".encode())
+        await writer.drain()
+        status = await reader.readline()
+        assert status.startswith(b"HTTP/1.1 200"), status
+        while (line := await reader.readline()) not in (b"\r\n", b""):
+            pass
+        writer.write(b"hello")
+        await writer.drain()
+        reply = await reader.read(100)
+        writer.close()
+
+        task.cancel()
+        target.close()
+        up_srv.close()
+        await asyncio.sleep(0.05)
+        return reply, logs
+
+    reply, logs = asyncio.run(scenario())
+    assert reply == b"pong:hello"
+    assert any("example.test:443" in line for line in logs)
+
+
+def test_proxy_refuses_hosts_outside_the_allowlist():
+    """Sign-in hosts must never leave through the egress, even if misconfigured."""
+    import asyncio
+    import socket
+
+    async def scenario():
+        sock = socket.socket()
+        sock.bind(("127.0.0.1", 0))
+        port = sock.getsockname()[1]
+        sock.close()
+        logs = []
+        task = asyncio.create_task(
+            __import__("agpatch.route", fromlist=["serve"]).serve(
+                f"127.0.0.1:{port}", "http://127.0.0.1:1", logs.append
+            )
+        )
+        await asyncio.sleep(0.15)
+        reader, writer = await asyncio.open_connection("127.0.0.1", port)
+        writer.write(b"CONNECT accounts.google.com:443 HTTP/1.1\r\n\r\n")
+        await writer.drain()
+        status = await reader.readline()
+        writer.close()
+        task.cancel()
+        await asyncio.sleep(0.05)
+        return status, logs
+
+    status, logs = asyncio.run(scenario())
+    assert b"403" in status
+    assert any("not in allowlist" in line for line in logs)
+
+
+def test_proxy_returns_502_when_upstream_is_dead(tmp_path):
+    import asyncio
+    import socket
+
+    async def scenario():
+        sock = socket.socket()
+        sock.bind(("127.0.0.1", 0))
+        port = sock.getsockname()[1]
+        sock.close()
+        logs = []
+        task = asyncio.create_task(
+            __import__("agpatch.route", fromlist=["serve"]).serve(
+                f"127.0.0.1:{port}", "http://127.0.0.1:1", logs.append,
+                allow_hosts=["x.test"],
+            )
+        )
+        await asyncio.sleep(0.15)
+        reader, writer = await asyncio.open_connection("127.0.0.1", port)
+        writer.write(b"CONNECT x.test:443 HTTP/1.1\r\n\r\n")
+        await writer.drain()
+        status = await reader.readline()
+        writer.close()
+        task.cancel()
+        await asyncio.sleep(0.05)
+        return status, logs
+
+    status, logs = asyncio.run(scenario())
+    assert b"502" in status
+    assert any("upstream failed" in line for line in logs)
+
+
+# --------------------------------------------------------------------------
+# opt-in string patch
+# --------------------------------------------------------------------------
+def test_string_patch_is_opt_in(tmp_path):
+    body = fill(512) + b"ineligible" + fill(512, seed=3)
+    target = write(tmp_path, "language_server", body)
+
+    default = scan(MANAGER, target)
+    assert "manager/string" not in {g.group for g in default.gates}
+
+    explicit = scan(MANAGER, target, strings=True)
+    assert "manager/string" in {g.group for g in explicit.gates}
+
+
+def test_string_patch_applies_equal_length(tmp_path):
+    # a real target needs both the instruction gate and the literal
+    body = fill(400) + MANAGER_SITE + fill(64, seed=2) + b"ineligible" + fill(400, seed=3)
+    target = write(tmp_path, "language_server", body)
+    before = target.read_bytes()
+    result = patch(MANAGER, target, strings=True, ledger=Ledger(tmp_path / "s.json"))
+    assert result.ok, result.message
+    after = target.read_bytes()
+    assert len(after) == len(before)
+    assert b"inexigible" in after and b"ineligible" not in after
+    assert restore(target, ledger=Ledger(tmp_path / "s.json")).ok
+    assert target.read_bytes() == before
+
+
+def test_string_patch_refuses_absurd_occurrence_count(tmp_path):
+    body = fill(400) + MANAGER_SITE + b"ineligible" * 50
+    target = write(tmp_path, "language_server", body)
+    result = patch(MANAGER, target, strings=True, ledger=Ledger(tmp_path / "s.json"))
+    assert not result.ok and "ambiguous" in result.message

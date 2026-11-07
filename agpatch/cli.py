@@ -15,10 +15,13 @@ EACCES and you decide what to do about it.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import sys
 from pathlib import Path
 from typing import List, Optional, Sequence
 
+from . import doctor as doctor_mod
+from . import route as route_mod
 from .gates import CLI, IDE, KIND_LABELS, MANAGER, VSCODE, all_gates
 from .patcher import ABSENT, PATCHED, UNPATCHED, patch, restore, scan
 from .state import Ledger, backup_path_for, sha256_file
@@ -108,6 +111,7 @@ def cmd_patch(args) -> int:
             arch=args.arch,
             dry_run=args.dry_run,
             ledger=ledger,
+            strings=args.experimental_strings,
         )
         tag = "OK  " if result.ok else "FAIL"
         print(f"{tag} {candidate.kind}: {candidate.path}")
@@ -164,6 +168,15 @@ def cmd_probe(args) -> int:
     print()
     gates = all_gates()
     for gate in gates:
+        if hasattr(gate, "needle"):
+            print(f"-- {gate.key}  ({gate.desc})")
+            sites = data.count(gate.needle)
+            print(f"   {gate.needle.decode('ascii', 'replace')!r} occurs {sites}x")
+            start = data.find(gate.needle)
+            if start >= 0:
+                print(f"   first @ 0x{start:x}")
+            print()
+            continue
         if hasattr(gate, "sig"):
             print(f"-- {gate.key}  ({gate.desc})")
             print(f"   sig: {gate.sig.pattern}")
@@ -189,11 +202,85 @@ def cmd_gates(args) -> int:
             print(f"{gate.key:<28} {gate.target:<8} {gate.arch:<6} {gate.desc}")
             print(f"   sig {gate.sig.pattern}")
             print(f"   fix {gate.sig.fix.hex()} @ +{gate.sig.offset}")
+        elif hasattr(gate, "needle"):
+            print(f"{gate.key:<28} {gate.target:<8} {'bytes':<6} {gate.desc}")
+            print(f"   {gate.needle.decode('ascii', 'replace')!r} -> {gate.replacement.decode('ascii', 'replace')!r}")
+            print("   opt-in: only applied with --experimental-strings")
         else:
             print(f"{gate.key:<28} {'text':<8} {'js':<6} {gate.desc}")
             print(f"   re  {gate.pattern}")
         print(f"   src {gate.provenance}")
         print()
+    return 0
+
+
+def cmd_doctor(args) -> int:
+    text = args.text
+    if args.log:
+        try:
+            text = Path(args.log).read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            print(f"error: cannot read {args.log}: {exc}")
+            return 2
+    if not text:
+        print("Paste the error text (or use --log FILE). Known codes:")
+        print()
+        for code, pattern in doctor_mod._RULES:
+            print(f"  {code:<16} {pattern.pattern}")
+        print()
+        print("Example: agpatch doctor \"Error 400: User location is not supported for the API use\"")
+        return 2
+    diag = doctor_mod.diagnose(text)
+    if diag is None:
+        print("Not recognised — paste more of the message.")
+        print("Known codes: " + ", ".join(code for code, _ in doctor_mod._RULES))
+        return 1
+    print(doctor_mod.format_diagnosis(diag))
+    return 0
+
+
+def cmd_route(args) -> int:
+    if args.route_action == "plan":
+        print(route_mod.render_plan(args.proxy, args.out))
+        return 0
+
+    if args.route_action == "build":
+        text = route_mod.render_pac(args.proxy)
+        out = Path(args.out)
+        out.write_text(text, encoding="utf-8")
+        print(f"wrote {out.resolve()}")
+        print(f"diverted: {', '.join(route_mod.GATED_HOSTS)}")
+        print("everything else: DIRECT")
+        return 0
+
+    if args.route_action == "check":
+        hosts = args.host or list(route_mod.GATED_HOSTS) + list(route_mod.DIRECT_HOSTS)
+        for host in hosts:
+            print(f"{route_mod.pac_decision(host):<8} {host}")
+        return 0
+
+    if args.route_action == "proxy":
+        return _run_proxy(args)
+
+    print("use: plan | build | check | proxy")
+    return 2
+
+
+def _run_proxy(args) -> int:
+    try:
+        route_mod._parse_upstream(args.upstream)
+    except route_mod.UpstreamError as exc:
+        print(f"error: {exc}")
+        return 2
+
+    def log(message: str) -> None:
+        print(f"[proxy] {message}", flush=True)
+
+    allow_hosts = None if args.allow_all else route_mod.GATED_HOSTS
+    try:
+        asyncio.run(route_mod.serve(args.listen, args.upstream, log, allow_hosts=allow_hosts))
+    except KeyboardInterrupt:
+        print("\nstopped")
     return 0
 
 
@@ -216,6 +303,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_patch.add_argument("--path", help="explicit file or install directory")
     p_patch.add_argument("--arch", default="any", choices=["any", "x64", "arm64"])
     p_patch.add_argument("--dry-run", action="store_true", help="validate only, write nothing")
+    p_patch.add_argument(
+        "--experimental-strings",
+        action="store_true",
+        help="also apply opt-in equal-length string patches (see agpatch gates)",
+    )
     p_patch.set_defaults(func=cmd_patch)
 
     p_restore = sub.add_parser("restore", help="restore from the pristine backup")
@@ -230,6 +322,42 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_gates = sub.add_parser("gates", help="list every gate, signature and fix without touching anything")
     p_gates.set_defaults(func=cmd_gates)
+
+    p_doctor = sub.add_parser("doctor", help="tell client-gate errors from server/account errors")
+    p_doctor.add_argument("text", nargs="?", help="the error text, quoted")
+    p_doctor.add_argument("--log", help="read the error text from a file")
+    p_doctor.set_defaults(func=cmd_doctor)
+
+    p_route = sub.add_parser("route", help="split routing: two API hosts through an egress, rest direct")
+    route_sub = p_route.add_subparsers(dest="route_action")
+
+    r_plan = route_sub.add_parser("plan", help="print the whole plan with platform commands")
+    r_plan.add_argument("--proxy", default="PROXY 127.0.0.1:8899")
+    r_plan.add_argument("--out", default="./agpatch-proxy.pac")
+    r_plan.set_defaults(func=cmd_route)
+
+    r_build = route_sub.add_parser("build", help="write the PAC file")
+    r_build.add_argument("--proxy", default="PROXY 127.0.0.1:8899")
+    r_build.add_argument("--out", default="./agpatch-proxy.pac")
+    r_build.set_defaults(func=cmd_route)
+
+    r_check = route_sub.add_parser("check", help="show the PAC decision for hostnames")
+    r_check.add_argument("--host", action="append", help="hostname (repeatable)")
+    r_check.set_defaults(func=cmd_route)
+
+    r_proxy = route_sub.add_parser("proxy", help="run the local CONNECT proxy")
+    r_proxy.add_argument("--listen", default="127.0.0.1:8899")
+    r_proxy.add_argument("--upstream", required=True, help="socks://host:port or http://host:port")
+    r_proxy.add_argument(
+        "--allow-all",
+        action="store_true",
+        help="forward any host, not just the two Cloud Code API hosts (not recommended)",
+    )
+    r_proxy.set_defaults(func=cmd_route)
+
+    p_route.set_defaults(func=cmd_route, route_action="plan", proxy="PROXY 127.0.0.1:8899",
+                         out="./agpatch-proxy.pac", listen="127.0.0.1:8899", upstream="", host=None,
+                         allow_all=False)
 
     return parser
 

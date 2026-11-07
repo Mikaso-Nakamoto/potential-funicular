@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
-from .gates import BINARY_PROFILES, TEXT_GATES, Gate, TextGate, gates_for
+from .gates import BINARY_PROFILES, STRING_PATCHES, TEXT_GATES, Gate, StringGate, TextGate, gates_for
 from .hexsig import SigError, apply_fix, spans_overlap
 from .state import (
     FileRecord,
@@ -136,11 +136,15 @@ def _read(path: Path) -> bytes:
     return path.read_bytes()
 
 
-def _binary_report(kind: str, path: Path, data: bytes, arch: str) -> Report:
+def _binary_report(kind: str, path: Path, data: bytes, arch: str,
+                   strings: bool = False) -> Report:
     report = Report(kind=kind, path=path, arch=arch)
-    for gate in gates_for(kind, arch):
+    for gate in gates_for(kind, arch, strings=strings):
         try:
-            state, offset = gate.sig.match(data)
+            if isinstance(gate, StringGate):
+                state, offset = gate.match(data)
+            else:
+                state, offset = gate.sig.match(data)
         except Exception as exc:  # malformed signature is a bug, surface it
             report.gates.append(GateReport(gate.key, gate.desc, ABSENT, error=str(exc), group=gate.group))
             continue
@@ -156,7 +160,7 @@ def _text_report(kind: str, path: Path, text: str) -> Report:
     return report
 
 
-def scan(kind: str, path: Path, arch: str = "any") -> Report:
+def scan(kind: str, path: Path, arch: str = "any", strings: bool = False) -> Report:
     try:
         raw = _read(path)
     except (OSError, SigError) as exc:
@@ -168,11 +172,11 @@ def scan(kind: str, path: Path, arch: str = "any") -> Report:
     target_arch = arch
     if target_arch == "any":
         target_arch = _guess_arch(raw)
-    report = _binary_report(kind, path, raw, target_arch)
+    report = _binary_report(kind, path, raw, target_arch, strings)
     if not any(g.state != ABSENT for g in report.gates) and arch == "any":
         # Nothing matched under the guessed arch — try the other one and say so.
         other = "arm64" if target_arch == "x64" else "x64"
-        alt = _binary_report(kind, path, raw, other)
+        alt = _binary_report(kind, path, raw, other, strings)
         if any(g.state != ABSENT for g in alt.gates):
             return alt
     return report
@@ -216,6 +220,10 @@ def _build_binary_image(data: bytes, report: Report) -> tuple[bytearray, List[st
         if gate_report.state != UNPATCHED:
             continue
         gate = _gate_by_key(gate_report.key)
+        if isinstance(gate, StringGate):
+            gate.apply_all(image)
+            applied.append(gate.key)
+            continue
         apply_fix(image, gate_report.offset, gate.sig.fix)
         spans.append((gate_report.offset, gate_report.offset + len(gate.sig.fix)))
         applied.append(gate.key)
@@ -226,12 +234,16 @@ def _build_binary_image(data: bytes, report: Report) -> tuple[bytearray, List[st
     return image, applied
 
 
-def _gate_by_key(key: str) -> Gate:
+def _gate_by_key(key: str) -> object:
     for arch_map in BINARY_PROFILES.values():
         for gates in arch_map.values():
             for gate in gates:
                 if gate.key == key:
                     return gate
+    for gates in STRING_PATCHES.values():
+        for gate in gates:
+            if gate.key == key:
+                return gate
     raise KeyError(key)
 
 
@@ -257,9 +269,9 @@ class PatchResult:
 
 
 def patch(kind: str, path: Path, arch: str = "any", dry_run: bool = False,
-          ledger: Optional[Ledger] = None) -> PatchResult:
+          ledger: Optional[Ledger] = None, strings: bool = False) -> PatchResult:
     ledger = ledger or Ledger()
-    report = scan(kind, path, arch)
+    report = scan(kind, path, arch, strings)
     if report.error:
         return PatchResult(False, report.error)
 
@@ -282,7 +294,7 @@ def patch(kind: str, path: Path, arch: str = "any", dry_run: bool = False,
         except SigError as exc:
             return PatchResult(False, str(exc))
         out_bytes = bytes(image)
-        verify = _binary_report(kind, path, out_bytes, report.arch or "any")
+        verify = _binary_report(kind, path, out_bytes, report.arch or "any", strings)
     else:
         image, applied = _build_text_image(raw.decode("utf-8"), report)
         out_bytes = image.encode("utf-8")
@@ -306,7 +318,7 @@ def patch(kind: str, path: Path, arch: str = "any", dry_run: bool = False,
     atomic_write(path, out_bytes)
     post_sha = sha256_bytes(out_bytes)
 
-    disk = scan(kind, path, arch)
+    disk = scan(kind, path, arch, strings)
     if set(disk.groups.values()) != {PATCHED}:
         # Roll back immediately; we still hold the pristine bytes.
         atomic_write(path, raw)
