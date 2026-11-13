@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TempleOS и HolyC: анатомия операционной системы, написанной одним человеком — Код и люди</title>
+  <meta name="description" content="Технический разбор TempleOS: 640×480 и 16 цветов, ring 0, отсутствие сети, файловая система RedSea, язык HolyC, JIT-компиляция и игра After Egypt.">
+  <meta name="author" content="Редакция «Код и люди»">
+  <link rel="icon" href="images/tux.png" type="image/png">
+</head>
+<body>
+
+<a href="#main">Перейти к основному содержанию</a>
+
+<header>
+  <a href="index.html" aria-label="На главную страницу журнала «Код и люди»">
+    <img src="images/tux.png" alt="Пингвин Tux — талисман ядра Linux" width="56" height="66">
+  </a>
+  <p>
+    <strong>Код и люди</strong><br>
+    <small>журнал о программистах и их операционных системах</small>
+  </p>
+
+  <nav aria-label="Основная навигация">
+    <ul>
+      <li><a href="index.html">Главная</a></li>
+      <li><a href="linus-torvalds.html">Линус Торвальдс</a></li>
+      <li><a href="terry-davis.html">Терри Дэвис</a></li>
+      <li><a href="templeos-holyc.html" aria-current="page">TempleOS и HolyC</a></li>
+      <li><a href="login.html">Вход</a></li>
+    </ul>
+  </nav>
+</header>
+
+<hr>
+
+<main id="main">
+
+  <article>
+
+    <header>
+      <nav aria-label="Хлебные крошки">
+        <ol>
+          <li><a href="index.html">Главная</a></li>
+          <li><a href="templeos-holyc.html">Статьи</a></li>
+          <li>TempleOS и HolyC</li>
+        </ol>
+      </nav>
+
+      <hgroup>
+        <p><small>Статья третья · Техника</small></p>
+        <h1>TempleOS и HolyC: анатомия операционной системы, написанной одним человеком</h1>
+        <p>Представьте систему, в которой нет сети, нет защиты памяти, нет разграничения ядра и пользователя — зато есть собственный компилятор, редактор, файловая система, игры, 3D-графика и язык программирования. Именно такой проект десять лет писал один человек. Разбираем по частям.</p>
+      </hgroup>
+
+      <p>
+        <small>
+          Автор: <a href="index.html">редакция журнала «Код и люди»</a> ·
+          <time datetime="2026-11-13">13 ноября 2026</time> ·
+          Время чтения: около 13 минут
+        </small>
+      </p>
+
+      <figure>
+        <img src="images/templeos-desktop.png"
+             alt="Скриншот TempleOS 4.05: синий экран 640×480, окно справки со списком файлов, справа панель с иконками игр и меню"
+             width="640" height="480">
+        <figcaption>
+          Рабочий стол TempleOS 4.05. Всё, что на экране, нарисовано процессором: видеокарта используется только как «кисть». Скриншот: <cite>Wikimedia Commons</cite>.
+        </figcaption>
+      </figure>
+    </header>
+
+    <nav aria-labelledby="toc-title">
+      <h2 id="toc-title">Содержание статьи</h2>
+      <ol>
+        <li><a href="#spec">Паспорт системы</a></li>
+        <li><a href="#architecture">Архитектура: всё в ring 0</a></li>
+        <li><a href="#ui">Интерфейс: DOS, Turbo C и шестнадцать цветов</a></li>
+        <li><a href="#holyc">Язык HolyC</a></li>
+        <li><a href="#afteregypt">After Egypt и «оракул»</a></li>
+        <li><a href="#compare">TempleOS и Linux: сравнение</a></li>
+        <li><a href="#run">Как запустить и что посмотреть</a></li>
+        <li><a href="#sources">Источники</a></li>
+      </ol>
+    </nav>
+
+    <section id="spec" aria-labelledby="spec-title">
+      <h2 id="spec-title">Паспорт системы</h2>
+
+      <p>Начнём с формальностей, иначе разговор уедет в мистику. TempleOS — 64-битная операционная система для архитектуры x86-64, написанная на HolyC и ассемблере. Она распространяется как публичное достояние: автор отказался от исключительных прав, поэтому исходники можно читать, менять и использовать без разрешения.</p>
+
+      <table>
+        <caption>Краткая техническая карточка</caption>
+        <tbody>
+          <tr>
+            <th scope="row">Разработчик</th>
+            <td>Терри А. Дэвис — один человек, без соавторов и сторонних библиотек.</td>
+          </tr>
+          <tr>
+            <th scope="row">Первые имена</th>
+            <td>J Operating System (2005), LoseThos, SparrowOS, с 2013 — TempleOS.</td>
+          </tr>
+          <tr>
+            <th scope="row">Последний релиз</th>
+            <td>5.03, <time datetime="2017-11-20">20 ноября 2017 года</time>.</td>
+          </tr>
+          <tr>
+            <th scope="row">Платформа</th>
+            <td>x86-64, запуск с CD/DVD или в виртуальной машине.</td>
+          </tr>
+          <tr>
+            <th scope="row">Видеорежим</th>
+            <td>VGA 640×480, 16 цветов, 8-битный ASCII-текст.</td>
+          </tr>
+          <tr>
+            <th scope="row">Звук</th>
+            <td>Одноголосый синтез, без звуковых карт.</td>
+          </tr>
+          <tr>
+            <th scope="row">Сеть</th>
+            <td>Отсутствует полностью — ни драйверов, ни стека TCP/IP.</td>
+          </tr>
+          <tr>
+            <th scope="row">Файловые системы</th>
+            <td>ISO 9660, FAT32 и собственная RedSea со сжатием.</td>
+          </tr>
+          <tr>
+            <th scope="row">Многозадачность</th>
+            <td>Кооперативная, без вытеснения: каждая задача сама уступает процессор.</td>
+          </tr>
+          <tr>
+            <th scope="row">Лицензия</th>
+            <td>Public domain.</td>
+          </tr>
+          <tr>
+            <th scope="row">Адрес проекта</th>
+            <td><a href="https://templeos.org/" rel="external noopener">templeos.org</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <section id="architecture" aria-labelledby="architecture-title">
+      <h2 id="architecture-title">Архитектура: всё в ring 0</h2>
+
+      <p>В обычной операционной системе есть два мира: ядро с полными правами и приложения, которые обращаются к нему через системные вызовы. Такое разделение защищает систему от ошибок в программах. В TempleOS его нет: любая задача работает в привилегированном режиме процессора, в едином адресном пространстве. Ошибка в игре может положить всю систему — и это сознательный выбор.</p>
+
+      <p>Зачем? Потому что TempleOS создавалась не для банков, а для того, чтобы один человек мог сесть и за вечер написать программу. Меньше абстракций — короче путь от идеи до пикселя. Компилятор, отладчик и редактор встроены в систему; можно прямо на работающей машине менять функцию ядра и пересобирать её без перезагрузки.</p>
+
+      <figure>
+        <img src="images/templeos-laptop.jpg"
+             alt="TempleOS 5.03 на экране ноутбука: слева окно с иконками игр, справа текст справки и таблица памяти"
+             width="720" height="406">
+        <figcaption>
+          TempleOS 5.03 в виртуальной машине на ноутбуке. Строка сверху показывает дату, частоту кадров, объём памяти и число процессоров. Скриншот: <cite>xda-developers.com</cite>.
+        </figcaption>
+      </figure>
+
+      <h3>Ключевые решения</h3>
+      <ul>
+        <li><strong>Единое адресное пространство.</strong> Все задачи делят одну память: не нужно копировать данные между ядром и приложением.</li>
+        <li><strong>Кооперативная многозадачность.</strong> Задача обязана сама вызвать уступку процессора; вытеснения по таймеру нет.</li>
+        <li><strong>Собственная файловая система.</strong> RedSea поддерживает сжатие и создана именно для этой системы.</li>
+        <li><strong>Нет сети.</strong> Автор считал, что подключать TempleOS к интернету — «изобретать колесо» и разрушать её замкнутость.</li>
+        <li><strong>Встроенная графика.</strong> Двумерная и трёхмерная библиотеки находятся в самой системе, а не в отдельной подсистеме.</li>
+      </ul>
+
+      <p>Отдельно стоит упомянуть отрисовку. TempleOS не полагается на ускорение видеокарты: большую часть изображения считает центральный процессор, а на экран кадр попадает через простую VGA-поверхность. Отсюда — характерная «пиксельная» эстетика и низкая частота кадров, которая в интерфейсе честно показывается в строке состояния.</p>
+    </section>
+
+    <hr>
+
+    <section id="ui" aria-labelledby="ui-title">
+      <h2 id="ui-title">Интерфейс: DOS, Turbo C и шестнадцать цветов</h2>
+
+      <p>Рабочий стол TempleOS — это мозаика окон, наложенных друг на друга. Окно может быть текстовым или графическим, но границы у них одинаковые: синий фон, белые линии, заголовок сверху. Всё управление идёт с клавиатуры, мышь поддерживается, но не обязательна. По ощущению это одновременно DOS, среда Turbo C и игровая консоль середины восьмидесятых.</p>
+
+      <p>Ограничение в 16 цветов — не ностальгия, а требование, которое автор приписывал Богу. В интервью он объяснял: экран 640×480 нужен, чтобы даже ребёнок мог рисовать простые картинки, а шестнадцати цветов достаточно, чтобы не отвлекаться на «богатство палитры». В результате у TempleOS есть узнаваемый визуальный язык: ярко-синий фон, красные заголовки, зелёные и жёлтые акценты, пиксельные иконки.</p>
+
+      <figure>
+        <img src="images/holyc-calc.png"
+             alt="Скриншот TempleOS с кодом на HolyC: функция Calc с разбором операторов switch, ниже — строка компиляции и вывод 0x000000A0"
+             width="720" height="353">
+        <figcaption>
+          Фрагмент HolyC в редакторе: пример учебной функции-калькулятора и результат её компиляции. Скриншот: <cite>xda-developers.com</cite>.
+        </figcaption>
+      </figure>
+    </section>
+
+    <hr>
+
+    <section id="holyc" aria-labelledby="holyc-title">
+      <h2 id="holyc-title">Язык HolyC</h2>
+
+      <p>HolyC — это «среднее» между C и C++, написанное Дэвисом специально для TempleOS. Он компилируется JIT-компилятором прямо во время работы системы: нажали комбинацию клавиш — функция пересобрана, ошибки подсвечены, можно сразу вызвать её из командной строки. Язык сочетает роль системного языка и роль скриптового: на нём написаны и ядро, и игры, и утилиты.</p>
+
+      <h3>Чем HolyC отличается от C</h3>
+      <dl>
+        <dt>Нет обязательной <code>main()</code></dt>
+        <dd>Выражения верхнего уровня выполняются по порядку прямо при компиляции файла. Поэтому командная строка в TempleOS — это фактически интерпретатор HolyC.</dd>
+
+        <dt>Явный амперсанд у функций</dt>
+        <dd>Чтобы передать функцию как указатель, нужно писать <code>&amp;MyFunction</code>. В C имя функции само превращается в указатель — здесь это считается неявным и опасным.</dd>
+
+        <dt><code>class</code> вместо <code>struct</code></dt>
+        <dd>Составные типы объявляются ключевым словом <code>class</code> и поддерживают наследование — влияние C++.</dd>
+
+        <dt>Диапазоны в <code>switch</code></dt>
+        <dd>Можно писать <code>case 0...10:</code> и обрабатывать интервал значений одной ветвью.</dd>
+
+        <dt>64-битные целые по умолчанию</dt>
+        <dd>Все целочисленные типы ведут себя как 64-битные; для явного приведения есть функции вроде <code>ToI64()</code>.</dd>
+
+        <dt>Нет макросов с параметрами</dt>
+        <dd>Конструкции вида <code>#define MACRO(x)</code> не поддерживаются: вместо них используются обычные функции.</dd>
+
+        <dt>Встроенный ассемблер</dt>
+        <dd>Блоки ассемблера вставляются прямо в код, а доступ к регистрам и портам ввода-вывода не требует обёрток.</dd>
+
+        <dt>Один модуль компиляции</dt>
+        <dd>Нет отдельного линкера: файлы подключаются через <code>#include "..."</code> и собираются в единое целое.</dd>
+      </dl>
+
+      <p>Простейший пример: если в командной строке TempleOS набрать арифметическое выражение, оно выполнится сразу. Это и есть язык в роли оболочки — то, чего в C приходится добиваться отдельной программой.</p>
+
+      <pre><code>// Пример в духе HolyC: функция и её немедленный вызов
+I64 Square(I64 x)
+{
+  return x * x;
+}
+
+"Квадрат числа 12 равен ";
+Square(12);</code></pre>
+
+      <p><small>Фрагмент иллюстративный: он показывает синтаксис и стиль, а не дословный текст из исходников TempleOS. Настоящие файлы системы лежат в <a href="https://github.com/cia-foundation/TempleOS" rel="external noopener">репозитории на GitHub</a>.</small></p>
+
+      <h3>Почему это важно</h3>
+      <p>Создать язык — полдела; куда сложнее создать среду, в которой язык полезен. HolyC работает не сама по себе, а вместе с редактором, отладчиком и графической библиотекой: написали функцию — увидели её результат на экране, не перезагружая машину. Именно эта связка давала Дэвису скорость, которой не могли похвастаться «взрослые» системы его времени.</p>
+    </section>
+
+    <hr>
+
+    <section id="afteregypt" aria-labelledby="afteregypt-title">
+      <h2 id="afteregypt-title">After Egypt и «оракул»</h2>
+
+      <p>В комплект TempleOS входит игра <cite>After Egypt</cite>. По сюжету игрок идёт по пустыне к неопалимой купине, у которой стоит «высокоскоростной секундомер». Секундомер работает как оракул: он генерирует псевдослучайный текст, который автор считал сообщениями от Бога. Сам Дэвис сравнивал это с доской Уиджи и глоссолалией — говорением на языках.</p>
+
+      <p>Он задавал оракулу вопросы и записывал ответы: про войну («соревнующиеся военнослужащие»), про смерть («ужасно»), про динозавров («у бронтозавров болят ноги, когда на них наступают»), про любимую игру (<cite>Donkey Kong</cite>), любимую машину (BMW), любимый гимн (латвийский) и одиннадцатую заповедь («Не мусори»). Читать это можно по-разному, но техническая суть проста: генератор случайных чисел плюс словарь — древняя идея, доведённая до ритуала.</p>
+
+      <figure>
+        <img src="images/after-egypt.jpg"
+             alt="Скриншот игры After Egypt: пиксельный пейзаж с холмом, деревом и сидящей фигурой; ниже — текстовое окно с цитатой из книги Иезекииля"
+             width="720" height="540">
+        <figcaption>
+          After Egypt: пейзаж и текстовое окно с цитатой из Книги Иезекииля. Скриншот: <cite>Kotaku</cite>.
+        </figcaption>
+      </figure>
+
+      <p>С точки зрения программирования это учебный пример: 2D-графика, работа с текстом, простой игровой цикл — всё на HolyC, всё в нескольких сотнях строк. С точки зрения антропологии — свидетельство того, как система, задуманная как инструмент, становится способом разговаривать с миром, когда другого способа не осталось.</p>
+    </section>
+
+    <hr>
+
+    <section id="compare" aria-labelledby="compare-title">
+      <h2 id="compare-title">TempleOS и Linux: сравнение</h2>
+
+      <p>Эти две системы выросли из противоположных установок, и сравнивать их стоит не по числу функций, а по принципам. Одна создавалась для того, чтобы выдержать нагрузку миллионов машин; другая — чтобы один человек мог понять её целиком.</p>
+
+      <table>
+        <caption>Две философии — две системы</caption>
+        <thead>
+          <tr>
+            <th scope="col">Критерий</th>
+            <th scope="col">Linux</th>
+            <th scope="col">TempleOS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Кто пишет</th>
+            <td>тысячи разработчиков и компании</td>
+            <td>один человек</td>
+          </tr>
+          <tr>
+            <th scope="row">Год старта</th>
+            <td>1991</td>
+            <td>около 1993, публичный релиз в 2005</td>
+          </tr>
+          <tr>
+            <th scope="row">Модель памяти</th>
+            <td>ядро и пользователь разделены</td>
+            <td>единое адресное пространство, все задачи в ring 0</td>
+          </tr>
+          <tr>
+            <th scope="row">Многозадачность</th>
+            <td>вытесняющая</td>
+            <td>кооперативная</td>
+          </tr>
+          <tr>
+            <th scope="row">Сеть</th>
+            <td>основа проекта</td>
+            <td>отсутствует</td>
+          </tr>
+          <tr>
+            <th scope="row">Графика</th>
+            <td>драйверы и ускорение</td>
+            <td>программная отрисовка, 640×480, 16 цветов</td>
+          </tr>
+          <tr>
+            <th scope="row">Язык</th>
+            <td>C и ассемблер</td>
+            <td>HolyC и ассемблер</td>
+          </tr>
+          <tr>
+            <th scope="row">Лицензия</th>
+            <td>GPL v2</td>
+            <td>public domain</td>
+          </tr>
+          <tr>
+            <th scope="row">Задача</th>
+            <td>инфраструктура для всех</td>
+            <td>инструмент для одного автора и его разговора с Богом</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Обе системы, тем не менее, сделаны из одного материала. Там и там есть планировщик, драйверы, файловая система и компилятор. Разница в масштабе задач и в том, кому адресован результат. Именно поэтому история TempleOS так полезна для понимания Linux: она показывает, что «операционная система» — это не продукт с рынка, а решение конкретной задачи конкретным человеком.</p>
+
+      <details>
+        <summary>Можно ли запустить TempleOS сегодня?</summary>
+        <p>Да. Образы системы доступны на <a href="https://templeos.org/" rel="external noopener">templeos.org</a> и в архивах Internet Archive. Проще всего запускать её в виртуальной машине (QEMU, VirtualBox, VMware): современное железо плохо совместимо с драйверами VGA и PS/2, которые рассчитаны на машины эпохи автора. Загрузка с CD или Live-образа позволяет поработать в системе, ничего не устанавливая на диск.</p>
+      </details>
+
+      <details>
+        <summary>Почему в TempleOS нет интернета?</summary>
+        <p>Автор прямо писал, что система «в первую очередь для создания видеоигр» и что поддержка сети была бы «изобретением колеса». Практическое следствие: TempleOS нельзя использовать как рабочую среду для современных задач — и это ограничение осознанное, а не упущение.</p>
+      </details>
+    </section>
+
+    <hr>
+
+    <section id="run" aria-labelledby="run-title">
+      <h2 id="run-title">Как запустить и что посмотреть</h2>
+
+      <p>Смотреть на TempleOS лучше всего в движении: статичные скриншоты не передают, как быстро открываются окна и как выглядит пересборка кода на лету. Ниже — документальный разбор и записи самого автора.</p>
+
+      <h3>Экскурсия по системе</h3>
+      <figure>
+        <iframe
+          width="640" height="380"
+          src="https://www.youtube.com/embed/UCgoxQCf5Jg"
+          title="TempleOS — Down the Rabbit Hole: документальный фильм о TempleOS и её авторе"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen></iframe>
+        <figcaption>
+          «TempleOS — Down the Rabbit Hole»: разбор устройства системы и её истории. Канал <a href="https://www.youtube.com/@FredrikKnudsen" rel="external noopener">Fredrik Knudsen</a>.
+        </figcaption>
+      </figure>
+
+      <h3>Запись с экрана: как работает код</h3>
+      <figure>
+        <iframe
+          width="640" height="380"
+          src="https://www.youtube.com/embed/b3cuul06hJc"
+          title="451 — Exploring The Flight Simulator And First Person Shooter's Code (TempleOS), авторская запись"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen></iframe>
+        <figcaption>
+          Автор разбирает код симулятора полёта и шутера от первого лица, встроенных в TempleOS. Архив канала <a href="https://www.youtube.com/@absoluteterrydavis" rel="external noopener">Absolute Terry Davis</a>.
+        </figcaption>
+      </figure>
+
+      <h3>Полезные ссылки</h3>
+      <ul>
+        <li><a href="https://templeos.org/" rel="external noopener">templeos.org</a> — образы, документация, скриншоты.</li>
+        <li><a href="https://github.com/cia-foundation/TempleOS" rel="external noopener">github.com/cia-foundation/TempleOS</a> — исходный код, включая ядро и HolyC.</li>
+        <li><a href="https://archive.org/details/TempleOSVideos" rel="external noopener">Архив записей TempleOSVideos</a> — в том числе прохождения After Egypt и компиляция ядра.</li>
+        <li><a href="https://archive.org/details/TerryADavis_TempleOS_Archive" rel="external noopener">Полный архив</a> — видео, исходники, копии сайта.</li>
+        <li><a href="https://ru.wikipedia.org/wiki/TempleOS" rel="external noopener">Русская Википедия: TempleOS</a>.</li>
+        <li><a href="https://en.wikipedia.org/wiki/TempleOS" rel="external noopener">Английская Википедия: TempleOS</a> — первоисточник большинства дат и цитат.</li>
+      </ul>
+    </section>
+
+    <hr>
+
+    <section id="sources" aria-labelledby="sources-title">
+      <h2 id="sources-title">Источники</h2>
+      <ol>
+        <li><a href="https://en.wikipedia.org/wiki/TempleOS" rel="external noopener">Wikipedia: TempleOS</a> — архитектура, HolyC, критика, цитаты.</li>
+        <li><a href="https://en.wikipedia.org/wiki/Terry_A._Davis" rel="external noopener">Wikipedia: Terry A. Davis</a> — обстоятельства создания системы.</li>
+        <li><a href="https://www.vice.com/en/article/gods-lonely-programmer/" rel="external noopener">Jesse Hicks. God's Lonely Programmer</a> — <cite>Vice</cite>, 2014: сведения об оракуле и After Egypt.</li>
+        <li><a href="https://web.archive.org/web/20150416045403/http://www.techrepublic.com/blog/software-engineer/templeos-an-educational-tool-for-programming-experiments/" rel="external noopener">James Sanders. TempleOS: an educational tool for programming experiments</a> — <cite>TechRepublic</cite>, 2014.</li>
+        <li><a href="https://holyc-lang.com/" rel="external noopener">holyc-lang.com</a> — описание языка HolyC.</li>
+      </ol>
+
+      <p><small>Технические детали приведены по открытым источникам; код в статье — иллюстративный, а не цитата из репозитория.</small></p>
+    </section>
+
+    <footer>
+      <nav aria-label="Навигация по статьям">
+        <p>
+          <a href="terry-davis.html" rel="prev">← Предыдущая статья: Терри Дэвис</a> |
+          <a href="index.html">Ко всем статьям</a>
+        </p>
+      </nav>
+    </footer>
+
+  </article>
+
+</main>
+
+<hr>
+
+<footer>
+  <h2>Код и люди</h2>
+  <p>Учебный статический журнал: три статьи, семантическая разметка, никаких CSS и JavaScript.</p>
+
+  <nav aria-label="Навигация в подвале">
+    <ul>
+      <li><a href="index.html">Главная</a></li>
+      <li><a href="linus-torvalds.html">Линус Торвальдс</a></li>
+      <li><a href="terry-davis.html">Терри Дэвис</a></li>
+      <li><a href="templeos-holyc.html">TempleOS и HolyC</a></li>
+      <li><a href="login.html">Авторизация</a></li>
+    </ul>
+  </nav>
+
+  <p><small>Связаться с редакцией: <a href="mailto:redakciya@example.org">redakciya@example.org</a> · <time datetime="2026-11-13">13 ноября 2026</time></small></p>
+</footer>
+
+</body>
+</html>

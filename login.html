@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Вход в аккаунт — Код и люди</title>
+  <meta name="description" content="Демонстрационная страница авторизации учебного журнала «Код и люди»: форма входа, регистрация, восстановление доступа. Только HTML, без CSS и JavaScript.">
+  <meta name="author" content="Редакция «Код и люди»">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="images/tux.png" type="image/png">
+</head>
+<body>
+
+<a href="#main">Перейти к основному содержанию</a>
+
+<header>
+  <a href="index.html" aria-label="На главную страницу журнала «Код и люди»">
+    <img src="images/tux.png" alt="Пингвин Tux — талисман ядра Linux" width="56" height="66">
+  </a>
+  <p>
+    <strong>Код и люди</strong><br>
+    <small>журнал о программистах и их операционных системах</small>
+  </p>
+
+  <nav aria-label="Основная навигация">
+    <ul>
+      <li><a href="index.html">Главная</a></li>
+      <li><a href="linus-torvalds.html">Линус Торвальдс</a></li>
+      <li><a href="terry-davis.html">Терри Дэвис</a></li>
+      <li><a href="templeos-holyc.html">TempleOS и HolyC</a></li>
+      <li><a href="login.html" aria-current="page">Вход</a></li>
+    </ul>
+  </nav>
+</header>
+
+<hr>
+
+<main id="main">
+
+  <nav aria-label="Хлебные крошки">
+    <ol>
+      <li><a href="index.html">Главная</a></li>
+      <li>Вход в аккаунт</li>
+    </ol>
+  </nav>
+
+  <hgroup>
+    <p><small>Личный кабинет</small></p>
+    <h1>Вход в аккаунт читателя</h1>
+    <p>Аккаунт нужен, чтобы сохранять статьи в закладки, отмечать прочитанное и получать следующий выпуск журнала на почту.</p>
+  </hgroup>
+
+  <section id="signin" aria-labelledby="signin-title">
+
+    <h2 id="signin-title">Вход</h2>
+
+    <p>
+      <small>
+        Демонстрационная форма: страница статическая, данные никуда не отправляются и не сохраняются.
+        Это часть учебного задания — вёрстка без CSS и JavaScript.
+      </small>
+    </p>
+
+    <form action="index.html" method="get" name="signin" autocomplete="on">
+
+      <fieldset>
+        <legend>Данные для входа</legend>
+
+        <p>
+          <label for="email">Электронная почта</label><br>
+          <input type="email"
+                 id="email"
+                 name="email"
+                 placeholder="reader@example.org"
+                 autocomplete="username"
+                 inputmode="email"
+                 spellcheck="false"
+                 size="32"
+                 maxlength="120"
+                 required>
+        </p>
+
+        <p>
+          <label for="password">Пароль</label><br>
+          <input type="password"
+                 id="password"
+                 name="password"
+                 placeholder="не менее 8 символов"
+                 autocomplete="current-password"
+                 minlength="8"
+                 maxlength="64"
+                 size="32"
+                 required>
+        </p>
+
+        <p>
+          <input type="checkbox" id="remember" name="remember" value="yes" checked>
+          <label for="remember">Запомнить меня на этом устройстве</label>
+        </p>
+
+        <p>
+          <button type="submit">Войти</button>
+          <button type="reset">Очистить поля</button>
+        </p>
+      </fieldset>
+
+      <p>
+        <small>Забыли пароль? <a href="#recovery">Восстановить доступ</a> · Ещё нет аккаунта? <a href="#signup">Зарегистрироваться</a></small>
+      </p>
+    </form>
+
+  </section>
+
+  <hr>
+
+  <section id="signup" aria-labelledby="signup-title">
+
+    <h2 id="signup-title">Регистрация</h2>
+
+    <p>Пять полей — и можно сохранять материалы выпуска. Никаких подтверждений по SMS: учебный проект.</p>
+
+    <form action="index.html" method="get" name="signup" autocomplete="on">
+
+      <fieldset>
+        <legend>Новый аккаунт</legend>
+
+        <p>
+          <label for="name">Как к вам обращаться</label><br>
+          <input type="text"
+                 id="name"
+                 name="name"
+                 placeholder="Имя или никнейм"
+                 autocomplete="nickname"
+                 size="32"
+                 maxlength="60"
+                 required>
+        </p>
+
+        <p>
+          <label for="signup-email">Электронная почта</label><br>
+          <input type="email"
+                 id="signup-email"
+                 name="signup_email"
+                 placeholder="reader@example.org"
+                 autocomplete="email"
+                 size="32"
+                 maxlength="120"
+                 required>
+        </p>
+
+        <p>
+          <label for="signup-password">Пароль</label><br>
+          <input type="password"
+                 id="signup-password"
+                 name="signup_password"
+                 placeholder="не менее 8 символов"
+                 autocomplete="new-password"
+                 minlength="8"
+                 maxlength="64"
+                 size="32"
+                 required>
+        </p>
+
+        <p>
+          <label for="signup-password-repeat">Повторите пароль</label><br>
+          <input type="password"
+                 id="signup-password-repeat"
+                 name="signup_password_repeat"
+                 autocomplete="new-password"
+                 minlength="8"
+                 maxlength="64"
+                 size="32"
+                 required>
+        </p>
+
+        <p>
+          <label for="interest">Что вам интереснее всего?</label><br>
+          <select id="interest" name="interest" size="3">
+            <option value="linux" selected>Ядро Linux и системное программирование</option>
+            <option value="retro">Ретро-системы и операционные системы-долгожители</option>
+            <option value="people">Биографии инженеров и история индустрии</option>
+          </select>
+        </p>
+
+        <fieldset>
+          <legend>Формат уведомлений</legend>
+          <p>
+            <input type="radio" id="digest-weekly" name="digest" value="weekly" checked>
+            <label for="digest-weekly">Раз в неделю, кратко</label>
+          </p>
+          <p>
+            <input type="radio" id="digest-issue" name="digest" value="issue">
+            <label for="digest-issue">Только по выходу нового выпуска</label>
+          </p>
+          <p>
+            <input type="radio" id="digest-none" name="digest" value="none">
+            <label for="digest-none">Не присылать писем</label>
+          </p>
+        </fieldset>
+
+        <p>
+          <input type="checkbox" id="terms" name="terms" value="accepted" required>
+          <label for="terms">Согласен с правилами сообщества и обработкой данных</label>
+        </p>
+
+        <p>
+          <button type="submit">Создать аккаунт</button>
+        </p>
+      </fieldset>
+
+    </form>
+
+  </section>
+
+  <hr>
+
+  <section id="recovery" aria-labelledby="recovery-title">
+
+    <h2 id="recovery-title">Восстановление доступа</h2>
+
+    <p>Укажите почту, на которую зарегистрирован аккаунт. В реальном проекте на неё пришло бы письмо со ссылкой для сброса пароля.</p>
+
+    <form action="index.html" method="get" name="recovery">
+
+      <fieldset>
+        <legend>Сброс пароля</legend>
+
+        <p>
+          <label for="recovery-email">Почта аккаунта</label><br>
+          <input type="email"
+                 id="recovery-email"
+                 name="recovery_email"
+                 placeholder="reader@example.org"
+                 autocomplete="email"
+                 size="32"
+                 required>
+        </p>
+
+        <p>
+          <label for="recovery-note">Комментарий для поддержки <small>(необязательно)</small></label><br>
+          <textarea id="recovery-note"
+                    name="recovery_note"
+                    rows="5"
+                    cols="48"
+                    maxlength="600"
+                    placeholder="Например: почта изменилась, доступ к старому ящику потерян"></textarea>
+        </p>
+
+        <p>
+          <button type="submit">Отправить запрос</button>
+        </p>
+      </fieldset>
+
+    </form>
+
+  </section>
+
+  <hr>
+
+  <section id="benefits" aria-labelledby="benefits-title">
+
+    <h2 id="benefits-title">Что даёт аккаунт</h2>
+
+    <dl>
+      <dt>Закладки</dt>
+      <dd>Статьи сохраняются в личный список — удобно вернуться к технической части про HolyC.</dd>
+
+      <dt>Прогресс чтения</dt>
+      <dd>Журнал запоминает, где вы остановились в лонгриде.</dd>
+
+      <dt>Архив выпусков</dt>
+      <dd>Доступ к предыдущим номерам и к подборкам по темам: Linux, ретро-системы, биографии инженеров.</dd>
+
+      <dt>Письма</dt>
+      <dd>Один дайджест в неделю или уведомление о выходе выпуска — по вашему выбору в форме регистрации.</dd>
+    </dl>
+
+    <details>
+      <summary>Это правда безопасно?</summary>
+      <p>Это учебная страница. В коде нет ни CSS, ни JavaScript, а форма не подключена к серверу: пароль не покидает ваш браузер. В настоящем проекте такие данные передаются только по HTTPS, пароли хранятся в виде хешей, а для входа по почте и паролю обязательны ограничение попыток и двухфакторная защита.</p>
+    </details>
+
+    <details>
+      <summary>Почему форма отправляет на главную?</summary>
+      <p>Атрибут <code>action="index.html"</code> указан только для того, чтобы кнопка «Войти» ничего не ломала: страница статическая, а без серверной части авторизацию реализовать невозможно. Без JavaScript — тоже.</p>
+    </details>
+
+  </section>
+
+  <aside aria-labelledby="help-title">
+    <h3 id="help-title">Нужна помощь?</h3>
+    <p>Напишите в редакцию: <a href="mailto:redakciya@example.org">redakciya@example.org</a>. Отвечаем по будням, обычно в течение одного рабочего дня.</p>
+  </aside>
+
+</main>
+
+<hr>
+
+<footer>
+  <h2>Код и люди</h2>
+  <p>Учебный статический журнал: три статьи, семантическая разметка, никаких CSS и JavaScript.</p>
+
+  <nav aria-label="Навигация в подвале">
+    <ul>
+      <li><a href="index.html">Главная</a></li>
+      <li><a href="linus-torvalds.html">Линус Торвальдс</a></li>
+      <li><a href="terry-davis.html">Терри Дэвис</a></li>
+      <li><a href="templeos-holyc.html">TempleOS и HolyC</a></li>
+      <li><a href="login.html">Авторизация</a></li>
+    </ul>
+  </nav>
+
+  <p><small>Связаться с редакцией: <a href="mailto:redakciya@example.org">redakciya@example.org</a> · <time datetime="2026-11-13">13 ноября 2026</time></small></p>
+</footer>
+
+</body>
+</html>

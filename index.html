@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Код и люди — журнал о трёх системах и трёх судьбах</title>
+  <meta name="description" content="Учебный журнал из трёх статей: Линус Торвальдс и Linux, Терри Дэвис и TempleOS, язык HolyC и устройство «храмовой» операционной системы.">
+  <meta name="author" content="Редакция «Код и люди»">
+  <link rel="icon" href="images/tux.png" type="image/png">
+</head>
+<body>
+
+<a href="#main">Перейти к основному содержанию</a>
+
+<header>
+  <a href="index.html" aria-label="На главную страницу журнала «Код и люди»">
+    <img src="images/tux.png" alt="Пингвин Tux — талисман ядра Linux" width="56" height="66">
+  </a>
+  <p>
+    <strong>Код и люди</strong><br>
+    <small>журнал о программистах и их операционных системах</small>
+  </p>
+
+  <nav aria-label="Основная навигация">
+    <ul>
+      <li><a href="index.html" aria-current="page">Главная</a></li>
+      <li><a href="linus-torvalds.html">Линус Торвальдс</a></li>
+      <li><a href="terry-davis.html">Терри Дэвис</a></li>
+      <li><a href="templeos-holyc.html">TempleOS и HolyC</a></li>
+      <li><a href="login.html">Вход</a></li>
+    </ul>
+  </nav>
+</header>
+
+<hr>
+
+<main id="main">
+
+  <section aria-labelledby="hero-title">
+    <hgroup>
+      <p><small>Выпуск № 1 · ноябрь 2026</small></p>
+      <h1 id="hero-title">Три истории о том, как один человек пишет операционную систему</h1>
+      <p>Ядро, на котором работает большая часть интернета. Система, которую один человек собрал за десять лет, чтобы говорить с Богом. Язык, придуманный для этой системы. Три материала — о коде, о людях и о том, что стоит за строчкой <code>#include</code>.</p>
+    </hgroup>
+
+    <figure>
+      <img src="images/templeos-laptop.jpg"
+           alt="Ноутбук на деревянном столе: на экране запущена TempleOS 5.03 — синий рабочий стол с иконками игр и окном справки"
+           width="720" height="406">
+      <figcaption>
+        <small>TempleOS 5.03 на современном ноутбуке в виртуальной машине. Скриншот: XDA Developers.</small>
+      </figcaption>
+    </figure>
+
+    <p><strong>Привет!</strong> Это учебный журнал о трёх очень разных способах делать одно и то же дело — писать системы, на которых работают компьютеры. Здесь нет ни одной строчки CSS и ни одного скрипта: только семантическая разметка HTML, текст, изображения и встроенное видео. Листайте статьи, рассматривайте скриншоты, слушайте и смотрите первоисточники.</p>
+
+    <p>
+      <a href="linus-torvalds.html">Начать с первой статьи — о Линусе Торвальдсе</a>
+    </p>
+  </section>
+
+  <hr>
+
+  <section aria-labelledby="news-title">
+    <h2 id="news-title">Материалы выпуска</h2>
+    <p>Три статьи, три героя, одна общая тема: человек, который садится за клавиатуру и создаёт систему с нуля — а потом десять, двадцать или тридцать лет живёт с последствиями.</p>
+
+    <ul>
+
+      <li>
+        <article aria-labelledby="card-linus">
+          <figure>
+            <a href="linus-torvalds.html">
+              <img src="images/linus-torvalds.jpg"
+                   alt="Портрет Линуса Торвальдса: мужчина в очках и чёрной футболке улыбается, снят крупным планом"
+                   width="720" height="980">
+            </a>
+            <figcaption><small>Линус Торвальдс. Фото: Wikimedia Commons.</small></figcaption>
+          </figure>
+
+          <hgroup>
+            <p><small>История одного письма</small></p>
+            <h3 id="card-linus"><a href="linus-torvalds.html">Линус Торвальдс: инженер, который отказался быть визионером</a></h3>
+          </hgroup>
+
+          <p>В августе 1991 года студент из Хельсинки отправил в конференцию <code>comp.os.minix</code> короткое сообщение: «делаю (бесплатную) операционную систему, просто хобби». Сегодня это ядро работает на серверах, телефонах, автомобилях и даже на вертолёте, летавшем над Марсом. Разбираемся, как хобби стало инфраструктурой цивилизации — и почему сам Линус называет себя не визионером, а инженером, который «чинит яму перед собой».</p>
+
+          <p>
+            <small>
+              <time datetime="2026-11-13">13 ноября 2026</time> ·
+              Время чтения: около 11 минут ·
+              <a href="linus-torvalds.html">Читать статью</a>
+            </small>
+          </p>
+        </article>
+      </li>
+
+      <li>
+        <article aria-labelledby="card-terry">
+          <figure>
+            <a href="terry-davis.html">
+              <img src="images/terry-davis.jpg"
+                   alt="Портрет Терри Дэвиса на улице: мужчина в клетчатой рубашке и светлой кепке козырьком назад смотрит прямо в камеру"
+                   width="720" height="540">
+            </a>
+            <figcaption><small>Терри Дэвис, 2017 год. Фото: Wikimedia Commons.</small></figcaption>
+          </figure>
+
+          <hgroup>
+            <p><small>Биография</small></p>
+            <h3 id="card-terry"><a href="terry-davis.html">Терри Дэвис: человек, который построил храм в 120 000 строк</a></h3>
+          </hgroup>
+
+          <p>Инженер-электрик из Висконсина, магистр Arizona State University, сотрудник Ticketmaster. В 1996 году его жизнь раскололась: маниакальные эпизоды, больницы, диагноз «шизофрения». Из этого он сделал единственное, что умел, — операционную систему, которая, по его словам, была заказана Богом. История гениальности и болезни без дешёвых сенсаций.</p>
+
+          <p>
+            <small>
+              <time datetime="2026-11-13">13 ноября 2026</time> ·
+              Время чтения: около 12 минут ·
+              <a href="terry-davis.html">Читать статью</a>
+            </small>
+          </p>
+        </article>
+      </li>
+
+      <li>
+        <article aria-labelledby="card-templeos">
+          <figure>
+            <a href="templeos-holyc.html">
+              <img src="images/templeos-desktop.png"
+                   alt="Скриншот TempleOS 4.05: синий экран 640×480 с окном справки, списком файлов и сеткой пиксельных иконок игр"
+                   width="640" height="480">
+            </a>
+            <figcaption><small>Рабочий стол TempleOS. Скриншот: Wikimedia Commons.</small></figcaption>
+          </figure>
+
+          <hgroup>
+            <p><small>Техника</small></p>
+            <h3 id="card-templeos"><a href="templeos-holyc.html">TempleOS и HolyC: анатомия операционной системы, написанной одним человеком</a></h3>
+          </hgroup>
+
+          <p>640×480, шестнадцать цветов, одноголосый звук, отсутствие сети и полная свобода: всё в ring 0, ни одного системного вызова, свой компилятор, свой редактор, своя файловая система. Разбираем HolyC, таблицу отличий от Linux, игру After Egypt и «оракула», с которым Терри Дэвис советовался о динозаврах.</p>
+
+          <p>
+            <small>
+              <time datetime="2026-11-13">13 ноября 2026</time> ·
+              Время чтения: около 13 минут ·
+              <a href="templeos-holyc.html">Читать статью</a>
+            </small>
+          </p>
+        </article>
+      </li>
+
+    </ul>
+  </section>
+
+  <hr>
+
+  <section aria-labelledby="about-title">
+    <h2 id="about-title">О чём этот выпуск</h2>
+
+    <dl>
+      <dt>Тема</dt>
+      <dd>Как один человек создаёт операционную систему — и что из этого получается через годы.</dd>
+
+      <dt>Герои</dt>
+      <dd>Линус Торвальдс (Linux, Git), Терри Дэвис (TempleOS, HolyC), а также сама TempleOS как инженерный объект.</dd>
+
+      <dt>Формат</dt>
+      <dd>Только HTML: семантические элементы, встроенные изображения и видео, ссылки на первоисточники. Без стилей и без скриптов.</dd>
+
+      <dt>Источники</dt>
+      <dd>Wikipedia, архивы Internet Archive, официальные сайты проектов, интервью и записи выступлений. Ссылки — в конце каждой статьи.</dd>
+    </dl>
+
+    <details>
+      <summary>Как читать этот журнал</summary>
+      <p>Начните с главной страницы — вы уже здесь. Дальше статьи можно читать в любом порядке: у каждой есть своё оглавление, врезки с фактами и раздел «Источники». Внутри статей есть встроенные видео и аудио — они открываются прямо на странице, интернет для этого нужен.</p>
+      <p>Если хочется сохранить материалы в закладки, воспользуйтесь <a href="login.html">входом в аккаунт</a>: в этой учебной сборке авторизация демонстрационная и не отправляет данные на сервер.</p>
+    </details>
+
+    <p>
+      <small>Материалы подготовлены в учебных целях. Иллюстрации взяты из открытых источников и используются с указанием происхождения.</small>
+    </p>
+  </section>
+
+</main>
+
+<hr>
+
+<footer>
+  <h2>Код и люди</h2>
+  <p>Учебный статический журнал: три статьи, семантическая разметка, никаких CSS и JavaScript.</p>
+
+  <nav aria-label="Навигация в подвале">
+    <ul>
+      <li><a href="index.html">Главная</a></li>
+      <li><a href="linus-torvalds.html">Линус Торвальдс</a></li>
+      <li><a href="terry-davis.html">Терри Дэвис</a></li>
+      <li><a href="templeos-holyc.html">TempleOS и HolyC</a></li>
+      <li><a href="login.html">Авторизация</a></li>
+    </ul>
+  </nav>
+
+  <p>
+    <small>
+      Связаться с редакцией: <a href="mailto:redakciya@example.org">redakciya@example.org</a><br>
+      <time datetime="2026-11-13">13 ноября 2026</time>
+    </small>
+  </p>
+
+  <p><small>Внешние ресурсы: <a href="https://www.kernel.org/">kernel.org</a> · <a href="https://git-scm.com/">git-scm.com</a> · <a href="https://templeos.org/">templeos.org</a> · <a href="https://archive.org/details/TempleOSVideos">архив видео TempleOS</a></small></p>
+</footer>
+
+</body>
+</html>
