@@ -1,28 +1,100 @@
-# Web Design, Motion & Shaders Skills
+# Web Design, Visual Themes, Shaders & Scroll Storytelling
 
-Навыки по веб-дизайну, готовым визуальным темам, веб-анимациям, шейдерам, WebGL-эффектам и современной адаптивной вёрстке.
+Полная коллекция из **94 навыков** веб-дизайна: готовые арт-дирекшн системы, шейдеры, Three.js/WebGL сцены, скролл-сторителлинг, GSAP + Lenis и CSS-эффекты.
 
-## Готовые визуальные темы и арт-дирекшн
-- **[`agency-grid-layout-minimal/`](agency-grid-layout-minimal/SKILL.md)** — Минималистичная швейцарская сетка креативного агентства с крупной типографикой.
-- **[`beautiful-shadows/`](beautiful-shadows/SKILL.md)** — Многослойные реалистичные нейтральные тени Tailwind CSS для карточек, контролов и поповеров.
-- **[`blue-cloudy-clean-modern/`](blue-cloudy-clean-modern/SKILL.md)** — Воздушная светлая дизайн-система с мягким небесно-синим свечением и чистой типографикой.
-- **[`blue-laser-clean-glass-layout/`](blue-laser-clean-glass-layout/SKILL.md)** — Тёмная стеклянная дизайн-система для дашбордов с тонкими синими лазерными акцентами.
-- **[`book-serif-index/`](book-serif-index/SKILL.md)** — Архивно-книжный редакционный стиль: антиква, моноширинный индекс и фактура бумаги.
-- **[`bright-green-tech-system-webgl/`](bright-green-tech-system-webgl/SKILL.md)** — Инженерный тёмный сплит-интерфейс с неоново-зелёным акцентом и WebGL-сценой.
-- **[`build-awwwards-quality-sites/`](build-awwwards-quality-sites/SKILL.md)** — Арт-дирекшн и сборка сайтов уровня Awwwards: композиция, ритм, Lenis, осмысленный 3D/моушн.
+## Каталог
 
-## Моушн и анимации
-- **[`animation-on-scroll/`](animation-on-scroll/SKILL.md)** — Появление элементов при прокрутке на базе `IntersectionObserver` и Tailwind keyframes.
-- **[`animation-systems/`](animation-systems/SKILL.md)** — Продуктовые веб-анимации уровня Stripe/Linear/Apple: тайминги, кривые, хореография переходов.
-- **[`cinematic-gsap-lenis-motion-system/`](cinematic-gsap-lenis-motion-system/SKILL.md)** — Кинематографичный веб-моушн на связке GSAP + ScrollTrigger + Lenis.
-- **[`framer-motion-system/`](framer-motion-system/SKILL.md)** — Анимации и микро-интеракции в React/Next.js на Framer Motion (`layoutId`, `AnimatePresence`, spring-физика, жесты).
-
-## WebGL, шейдеры и фоновые эффекты
-- **[`add-shader-cursor-trail/`](add-shader-cursor-trail/SKILL.md)** — Мерцающий шейдерный след за курсором на WebGPU/Shaders.
-- **[`ambient-section-particles/`](ambient-section-particles/SKILL.md)** — Настраиваемые атмосферные частицы внутри секции с физикой и реакцией на курсор.
-- **[`atmosphere-background/`](atmosphere-background/SKILL.md)** — Тёмный атмосферный фон с мягкими световыми складками и свечением.
-- **[`background-grid-webgl/`](background-grid-webgl/SKILL.md)** — Перспективная 3D WebGL-сетка с плавным дрейфом, дымкой частиц и параллаксом.
-- **[`beam-glow-states/`](beam-glow-states/SKILL.md)** — Анимированная контурная подсветка (`border-beam`) для состояний загрузки, фокуса и выбора в React.
-
-## Адаптивная вёрстка
-- **[`responsive-layout-systems/`](responsive-layout-systems/SKILL.md)** — Современная внутренняя адаптивность: CSS Container Queries (`@container`), CSS Subgrid и плавная типографика `clamp()`.
+- **[`add-mouse-driven-orbit`](add-mouse-driven-orbit/SKILL.md)** — Add restrained mouse-driven orbit and parallax depth to a Three.js hero by damping one pointer target and splitting it across camera translation, look-at, and small object rotations.
+- **[`add-shader-cursor-trail`](add-shader-cursor-trail/SKILL.md)** — Add the Shaders WebGPU mouse effect used for the Tidal Commons hero: a white twinkling halftone cursor trail driven by ChromaFlow, masked through a DotGrid, finished with chromatic ripples and...
+- **[`agency-grid-layout-minimal`](agency-grid-layout-minimal/SKILL.md)** — Create a minimal agency design system with a disciplined editorial grid, oversized typography, quiet uppercase utility labels, restrained image blocks, and subtle structural detail.
+- **[`ambient-section-particles`](ambient-section-particles/SKILL.md)** — Add a restrained particle atmosphere inside one section with configurable shapes, density, gravity, wind, sway, rotation, recycling or settling, pointer disturbance, visibility pausing, responsive...
+- **[`animation-on-scroll`](animation-on-scroll/SKILL.md)** — Create an on-scroll animation trigger using IntersectionObserver with Tailwind-friendly animation classes and keyframes.
+- **[`animation-systems`](animation-systems/SKILL.md)** — Use when designing or implementing product-grade web motion like Stripe, Linear, Apple, and Vercel.
+- **[`atmosphere-background`](atmosphere-background/SKILL.md)** — Create a dark atmospheric background with drifting vertical light folds, screen-blended glow, and a concentrated luminous corner or lower-edge bloom.
+- **[`background-grid-webgl`](background-grid-webgl/SKILL.md)** — Create a perspective WebGL background grid with fading lines, subtle particle haze, slow forward drift, and gentle camera parallax.
+- **[`beam-glow-states`](beam-glow-states/SKILL.md)** — Create React loading, processing, selected, current, focus, and pressed states with the border-beam package's animated edge glow.
+- **[`beautiful-shadows`](beautiful-shadows/SKILL.md)** — Apply exact Tailwind arbitrary shadow utilities for polished, layered neutral elevation.
+- **[`blue-cloudy-clean-modern`](blue-cloudy-clean-modern/SKILL.md)** — Create a clean modern design system with a luminous blue sky atmosphere, soft drifting cloud light, minimal white framing, and serene premium typography.
+- **[`blue-laser-clean-glass-layout`](blue-laser-clean-glass-layout/SKILL.md)** — Create a clean dark glass layout system with a thin blue laser atmosphere, frosted premium shells, and polished dashboard structure.
+- **[`book-serif-index`](book-serif-index/SKILL.md)** — Create an archival book-reader design system with serif-led pages, mono index navigation, aged paper surfaces, margin notes, and a premium catalog frame.
+- **[`bright-green-tech-system-webgl`](bright-green-tech-system-webgl/SKILL.md)** — Create a bright-green technical design system with structured split layouts, hard-framed dark surfaces, mono utility labels, and a prominent WebGL visualization zone.
+- **[`build-awwwards-quality-sites`](build-awwwards-quality-sites/SKILL.md)** — Art-direct and implement distinctive, motion-rich marketing, editorial, portfolio, and landing websites with original reference-inspired imagery, standout heroes, GSAP choreography, one...
+- **[`build-interactive-particle-trail`](build-interactive-particle-trail/SKILL.md)** — Build a cursor or touch particle interaction that emits by distance along the traveled segment into a recycled GPU point pool, with optional keyboard-triggered bursts.
+- **[`build-threejs-scroll-worlds`](build-threejs-scroll-worlds/SKILL.md)** — Build rich, scroll-controlled real-time Three.js experiences as one persistent 3D world whose camera, lighting, atmosphere, materials, objects, DOM story, and interactions evolve across authored...
+- **[`build-wireframe-scan-reveal`](build-wireframe-scan-reveal/SKILL.md)** — Reveal Three.js geometry with an expanding world-space scan whose wire cage leads the solid surface, then burns away.
+- **[`cinematic-gsap-lenis-motion-system`](cinematic-gsap-lenis-motion-system/SKILL.md)** — Create premium cinematic web motion systems with GSAP, ScrollTrigger, and Lenis.
+- **[`cinematic-scroll-storytelling`](cinematic-scroll-storytelling/SKILL.md)** — Create cinematic scroll-driven landing pages with Lenis smooth scrolling, GSAP ScrollTrigger, scroll-linked progression, staggered text reveals, sticky card stacks, parallax backgrounds,...
+- **[`clean-minimal-beige-light-mode`](clean-minimal-beige-light-mode/SKILL.md)** — Create a clean minimal beige light-mode design system with warm neutral shells, quiet process grids, restrained accent color, and elegant low-contrast structure.
+- **[`cobejs`](cobejs/SKILL.md)** — Use when adding a lightweight interactive globe with cobe (canvas setup, markers, interaction, performance, integration with React/Next.js).
+- **[`company-logos`](company-logos/SKILL.md)** — Use Iconify Simple Icons logos (64x64) instead of text logos.
+- **[`container-lines`](container-lines/SKILL.md)** — Add vertical container-size guide lines with mini corner squares for precise, structured web layouts.
+- **[`corner-diagonals`](corner-diagonals/SKILL.md)** — Apply diagonal-cut corners and chamfered edges to buttons, cards, panels, and container shells.
+- **[`corner-lasers`](corner-lasers/SKILL.md)** — Create a corner-anchored laser composition with thin beams, a bright emitter node, bloom, and atmospheric glow or fog.
+- **[`css-alpha-masking`](css-alpha-masking/SKILL.md)** — Apply CSS alpha masking with linear-gradient for horizontal or vertical edge fades (mask-image and -webkit-mask-image).
+- **[`css-border-gradient`](css-border-gradient/SKILL.md)** — Apply subtle gradient-border treatments for premium web surfaces.
+- **[`dark-blue-contrasting-clean`](dark-blue-contrasting-clean/SKILL.md)** — Create a dark-blue clean design system with strong contrast, cobalt gradient feature blocks, crisp framed structure, and restrained premium glow.
+- **[`dark-glass-clean-layout`](dark-glass-clean-layout/SKILL.md)** — Create a dark glass layout system with frosted premium shells, clean multi-column workspace structure, floating data cards, and restrained atmospheric depth.
+- **[`dither-background`](dither-background/SKILL.md)** — Create a dark monochrome procedural background with enlarged square pixels and visible Bayer-style ordered dithering.
+- **[`dither-laser-dark-mode`](dither-laser-dark-mode/SKILL.md)** — Create a dark premium design system that combines near-black surfaces, subtle ordered-dither texture, and a thin accent-colored laser atmosphere.
+- **[`documentary-brutalist-agency`](documentary-brutalist-agency/SKILL.md)** — Create or redesign creative agency, production studio, architecture, culture, and portfolio websites with billboard typography, hard black-and-white chapters, exposed grids, documentary imagery,...
+- **[`editorial-portfolio-chapters`](editorial-portfolio-chapters/SKILL.md)** — Create or redesign creative-studio, agency, photographer, artist, and portfolio websites where project work leads the story.
+- **[`editorial-service-booking`](editorial-service-booking/SKILL.md)** — Create or redesign appointment-based service websites for salons, barbers, spas, wellness studios, clinics, and hospitality brands.
+- **[`editorial-tech`](editorial-tech/SKILL.md)** — Blend editorial magazine composition with precision product-tech detailing using asymmetrical grids, cinematic media bands, mono utility labels, and restrained accent color.
+- **[`falling-leaves`](falling-leaves/SKILL.md)** — Build falling leaves that read as leaves, with each one tumbling on its own axis so it presents a face, thins to an edge, and opens out again, and with its sideways slip driven by that same tumble.
+- **[`fire-paper-loader`](fire-paper-loader/SKILL.md)** — Build a burning-paper ring loader whose GLSL flame is drawn by a Worker on an OffscreenCanvas started from the head, so a main thread blocked by the page build cannot freeze it, with a progress...
+- **[`framed-grid-layout`](framed-grid-layout/SKILL.md)** — Create minimal framed grid layouts with thin visible boundary lines, L-shaped corner brackets, subtle diagonal line texture, and strict section alignment.
+- **[`framed-tech-dark-border-gradient`](framed-tech-dark-border-gradient/SKILL.md)** — Create a framed dark technical design system with border-gradient shells, asymmetrical grid panels, mono utility labeling, and restrained monochrome atmosphere.
+- **[`framer-motion-system`](framer-motion-system/SKILL.md)** — Implement fluid, production-ready animations and micro-interactions in React and Next.js applications using Framer Motion.
+- **[`funky-purple-container-tech`](funky-purple-container-tech/SKILL.md)** — Create a dark container-led technical design system with fuchsia-purple accents, layered rounded shells, crisp frame lines, and playful futuristic focal objects.
+- **[`glass-dark-mode-clock`](glass-dark-mode-clock/SKILL.md)** — Create a dark glass design system with frosted shells, soft beam grids, circular clock-like calibration dials, and precise sci-fi instrument framing.
+- **[`glass-dark-ui`](glass-dark-ui/SKILL.md)** — Build dark-mode glassmorphism interfaces with readable contrast, frosted surfaces, and gradient borders using a pseudo-element mask.
+- **[`globe-gl`](globe-gl/SKILL.md)** — Use when implementing globe.gl (Globe.GL) for 3D globe data visualization with WebGL/ThreeJS, including setup, data layers (points, arcs, polygons, labels), and integration patterns in plain HTML...
+- **[`globe-particles`](globe-particles/SKILL.md)** — Create a globe-like 3D particle visualization with a dense luminous spherical core and thinner orbital ring or flattened disc.
+- **[`gooey-blob-system`](gooey-blob-system/SKILL.md)** — Create a gooey blob system using SVG filters where multiple shapes merge into a single fluid form.
+- **[`gsap`](gsap/SKILL.md)** — Use when you need to add or debug professional web animations with GSAP (timelines, ScrollTrigger, stagger, transforms) in HTML/CSS/JS/React.
+- **[`gsap-scrolltrigger-storytelling`](gsap-scrolltrigger-storytelling/SKILL.md)** — Build cinematic sticky product storytelling with GSAP ScrollTrigger, progressive UI reveals, scroll-synced animation, smooth interpolation, and immersive section transitions.
+- **[`high-contrast-skeuomorphic-clean`](high-contrast-skeuomorphic-clean/SKILL.md)** — Create a high-contrast clean skeuomorphic design system with molded dark surfaces, crisp light separation, tactile inset depth, and restrained signal accents.
+- **[`horizontal-scroll-scenes`](horizontal-scroll-scenes/SKILL.md)** — Build scene-by-scene chapters that advance left to right on one fixed stage while the user scrolls vertically, with native scroll as the only input.
+- **[`html-demo`](html-demo/SKILL.md)** — Show an app working on a web page by drawing it live in HTML instead of recording it.
+- **[`image-first-grid-layout`](image-first-grid-layout/SKILL.md)** — Create an image-led grid design system with full-bleed photography, structural guide lines, anchored content blocks, and restrained technical overlays.
+- **[`landing-page`](landing-page/SKILL.md)** — Use when designing or rewriting a high-converting landing page (single-offer page) for SaaS/apps/services.
+- **[`light-mode-paper-technical`](light-mode-paper-technical/SKILL.md)** — Create a light-mode technical design system with warm paper surfaces, dark outer framing, subtle diagonal texture, precise bracketed geometry, and restrained accent signals.
+- **[`liquid-metal-border`](liquid-metal-border/SKILL.md)** — Add and tune animated liquid-metal WebGL borders with the React `metal-fx` package.
+- **[`marquee-loop`](marquee-loop/SKILL.md)** — Apply seamless infinite marquee loops using duplicated items.
+- **[`masked-reveal`](masked-reveal/SKILL.md)** — Create masked staggered word reveals on scroll with GSAP ScrollTrigger.
+- **[`matterjs`](matterjs/SKILL.md)** — Use when implementing 2D physics interactions with Matter.js, including Engine/World setup, Render/Runner configuration, adding bodies and constraints, and scroll/interaction-friendly canvas scenes.
+- **[`mesh-gradient-dark-blue-clean`](mesh-gradient-dark-blue-clean/SKILL.md)** — Create a futuristic, premium, clean dark-blue mesh-gradient design system across background rendering, hero shell, navigation, floating nodes, framed sections, CTAs, and motion.
+- **[`nested-container-clean-agency`](nested-container-clean-agency/SKILL.md)** — Create a clean agency design system built from nested containers, with an outer editorial shell, inset dark feature blocks, rounded premium cards, and restrained accent color.
+- **[`nested-container-frames`](nested-container-frames/SKILL.md)** — Create a container-in-container layout system using nested frames.
+- **[`number-details`](number-details/SKILL.md)** — Add decorative 01, 02, 03 numeric detail markers.
+- **[`operational-enterprise-ai`](operational-enterprise-ai/SKILL.md)** — Create or redesign enterprise AI, automation, security, and operations product pages that explain system boundaries, approvals, auditability, exceptions, and rollback.
+- **[`orange-clean-paper-saas`](orange-clean-paper-saas/SKILL.md)** — Create a clean paper-toned SaaS design system with warm neutrals, orange accent signals, rounded premium forms, and polished product illustration surfaces.
+- **[`paper-cinder-transition`](paper-cinder-transition/SKILL.md)** — Change between pages, chapters or scenes with a paper-burn transition, a ragged ember line that sweeps across the frame, chars the old page ahead of it and reveals the next scene live behind it,...
+- **[`pointer-trail-emitter`](pointer-trail-emitter/SKILL.md)** — Build a cursor trail whose spacing stays constant at any hand speed, by emitting motes per unit of distance travelled rather than on a timer, so a flick draws the same continuous ribbon as a crawl...
+- **[`pricing-page`](pricing-page/SKILL.md)** — Use when designing or rewriting a high-converting SaaS pricing page (structure, plan design, copywriting, SEO/AEO, FAQs, layout patterns, experiments).
+- **[`product-proof-saas`](product-proof-saas/SKILL.md)** — Create or redesign SaaS and AI product landing pages where a real workflow, interface, or deterministic demo is the central proof.
+- **[`progressive-blur`](progressive-blur/SKILL.md)** — Create a layered CSS progressive blur (top or bottom) using multiple backdrop-filter masks for depth and softness.
+- **[`responsive-layout-systems`](responsive-layout-systems/SKILL.md)** — Build modern responsive, intrinsic web layouts using CSS Container Queries (@container), CSS Subgrid, fluid clamp() typography, and auto-fit flex/grid patterns.
+- **[`reveal-hover-effect`](reveal-hover-effect/SKILL.md)** — Build cursor-following spotlight reveals that expose a second aligned image through a soft radial mask.
+- **[`scroll-progress-timeline`](scroll-progress-timeline/SKILL.md)** — Turn any ordered process into a data-driven vertical or horizontal scroll story with a base line, progress fill, active step states, responsive collapse, semantic fallback, and reduced-motion behavior.
+- **[`scroll-scrubbed-visual-sequence`](scroll-scrubbed-visual-sequence/SKILL.md)** — Build reversible scroll-controlled visual transformations with a pinned or sticky stage, normalized progress, and video, image-sequence, canvas, SVG, or DOM renderers.
+- **[`scroll-scrubbed-word-reveal`](scroll-scrubbed-word-reveal/SKILL.md)** — Reveal marked-up text word by word as scroll progress advances, while preserving semantic inline links, emphasis, responsive line wrapping, and reduced-motion readability.
+- **[`scroll-world-storytelling`](scroll-world-storytelling/SKILL.md)** — Turn an article, case study, brand narrative, product journey, or long-form story into a cinematic scroll-driven landing page using one of three renderers: scrubbed video, a real-time Three.js...
+- **[`shaders-cursor-ripples`](shaders-cursor-ripples/SKILL.md)** — Add cursor-following fluid WebGPU distortion over an existing image with the Shaders library's ImageTexture and CursorRipples components.
+- **[`skeuomorphic-ui`](skeuomorphic-ui/SKILL.md)** — Create skeuomorphic web UI surfaces with layered gradients, stacked inner and outer shadows, reflective gradient borders, micro texture, and embossed text or icon details.
+- **[`solar-duotone-bold`](solar-duotone-bold/SKILL.md)** — Use Iconify Solar Duotone Bold icon style.
+- **[`split-layout-technical`](split-layout-technical/SKILL.md)** — Create a technical split-screen design system with dual panels, fine frame lines, mono metadata, quiet editorial typography, and premium inset surfaces.
+- **[`staggered-word-reveal`](staggered-word-reveal/SKILL.md)** — Create subtle editorial word-by-word text reveal animations where each word fades and rises into place once it enters the viewport.
+- **[`tailwindcss`](tailwindcss/SKILL.md)** — Use when designing/implementing UI with Tailwind CSS (layout, typography, responsive, theming, component patterns).
+- **[`tech-green-dark-mode-modern`](tech-green-dark-mode-modern/SKILL.md)** — Create a modern dark-mode technical design system with matte-black surfaces, emerald signal accents, mono system labeling, framed dashboard cards, and restrained glow.
+- **[`technical-wireframe-info-layout`](technical-wireframe-info-layout/SKILL.md)** — Create a monochrome technical wireframe design system with exploded 3D structure, connector annotations, sparse information labels, and precise dark diagnostic framing.
+- **[`thinking-orbs`](thinking-orbs/SKILL.md)** — Add accessible animated AI loading and agent-status indicators with the React thinking-orbs library.
+- **[`threejs`](threejs/SKILL.md)** — Use when building or debugging interactive 3D scenes on the web with Three.js (scene/camera/renderer, lights/materials, GLTF loading, controls, performance).
+- **[`threejs-landscape`](threejs-landscape/SKILL.md)** — Build a live Three.js landscape that stays quiet behind a subject — a noise heightfield on a polar grid so resolution follows the lens, ground coloured by slope and moisture rather than by...
+- **[`threejs-towers`](threejs-towers/SKILL.md)** — Generate architecture procedurally in Three.js and film it assembling — a small geometry vocabulary that builds pagodas, castles, domes and spires from parameters instead of mesh files, hip roofs...
+- **[`threejs-weather`](threejs-weather/SKILL.md)** — Put weather into a Three.js scene that reads as weather — rain anchored inside the frustum, a storm that is the rain leaned on rather than a second system, lightning on its own light with thunder...
+- **[`unicorn-studio`](unicorn-studio/SKILL.md)** — Use when embedding and customizing Unicorn Studio interactive animations on the web (embed, responsive sizing, performance, layering with UI, fallbacks).
+- **[`vantajs`](vantajs/SKILL.md)** — Use when adding animated WebGL background effects with Vanta.js (setup, parameters, resizing, performance, integration in React/Next.js).
+- **[`webgl-3d-object`](webgl-3d-object/SKILL.md)** — Create a real 3D WebGL object with geometric mesh depth, physically based material, directional and ambient lighting, perspective camera, subtle rotation, and floating motion.
+- **[`webgl-landing-steering`](webgl-landing-steering/SKILL.md)** — Use when creating or refining WebGL-heavy landing pages and you need to steer toward a specific visual outcome (premium, technical, playful, cinematic) while balancing conversion clarity,...
+- **[`webgl-laser`](webgl-laser/SKILL.md)** — Create a fixed full-screen WebGL laser background effect with a thin white-hot vertical core, restrained brand-colored halo, and soft smoky fog around the beam.
