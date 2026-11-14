@@ -1,6 +1,6 @@
 # Claude Code & AI Agents — Repo Guide
 
-Этот репозиторий содержит единую библиотеку из **243 навыков (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, нативных возможностей современной веб-платформы, 3D/WebGL сцен, браузерных игр и защищённых приложений.
+Этот репозиторий содержит единую библиотеку из **271 навыка (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, нативных возможностей современной веб-платформы, логики и архитектуры сайтов, 3D/WebGL сцен, браузерных игр и защищённых приложений.
 
 ## Рекомендуемый пайплайн для фронтенда и веб-дизайна
 
@@ -8,16 +8,30 @@
 
 0. **Современная веб-платформа без устаревших JS-костылей (Chrome / Edge / Firefox / MDN):**
    - `agent-skills/web-platform/modern-web-guidance/SKILL.md` (и локальные гайды в `agent-skills/web-platform/modern-web-guidance/guides/`) — нативные `<dialog>`, Popover API, CSS Anchor Positioning, `oklch()`, `subgrid`, `@starting-style`, View Transitions, оптимизация INP.
-1. **Выбор направления и защита от стокового ИИ-стиля (обязательно на старте):**
+1. **Логика и сценарии — до пикселей (обязательно для сайта или веб-приложения):**
+   - Структура страниц, навигация, URL-иерархия: `agent-skills/design-logic/site-architecture/SKILL.md` + `agent-skills/design-logic/information-architecture/SKILL.md`
+   - Проверка «всё ли предусмотрено в сценарии» (закрытие аккаунта, отписка, цены до заказа, 404, вес страницы): `agent-skills/design-logic/numerique-responsable/SKILL.md`
+   - Выбор паттерна взаимодействия и обоснование по законам UX: `agent-skills/design-logic/interaction-patterns/SKILL.md`, `agent-skills/design-logic/laws-of-ux/SKILL.md`
+2. **Выбор направления и защита от стокового ИИ-стиля (обязательно на старте):**
    - Лендинги, промо-сайты, портфолио: `agent-skills/ui/taste-skill/SKILL.md` + `agent-skills/ui/no-ai-design-slop/SKILL.md`
    - Продуктовый UI и веб-приложения: `agent-skills/ui/frontend-design/SKILL.md` или `agent-skills/ui/anthropic-frontend-design/SKILL.md`
    - Автоподбор палитры, шрифтов и паттернов под индустрию: `agent-skills/ui/ui-ux-pro-max/SKILL.md`
-2. **Конкретная визуальная тема или эффект:**
+   - Базовый фильтр на весь сеанс: `agent-skills/ui/antislop/SKILL.md` (плюс `antislop-ui`, `antislop-code`, `antislop-copywriting`)
+3. **Дизайн-ДНК и токены проекта (числа, а не прилагательные):**
+   - Взять 2–3 системы и собрать гибрид: `agent-skills/design-logic/design-md-library/SKILL.md` (84 бренда, каталог `design-md-library/BRANDS.md`)
+   - Снять токены с референсного сайта: `agent-skills/design-logic/design-extract/SKILL.md` (`npx designlang <url>`)
+   - Спроектировать свою трёхслойную систему: `agent-skills/ui/design-system/SKILL.md`
+   - Зафиксировать результат в `DESIGN.md` проекта и дальше ссылаться на него.
+4. **Конкретная визуальная тема или эффект:**
    - Выбери подходящий стиль в `agent-skills/web-design/` (94 навыка: темы, шейдеры, скролл-сцены, Three.js, GSAP + Lenis) или `agent-skills/3d/` / `agent-skills/illustration/`.
-3. **Тактильность и микро-анимации уровня Linear / Apple:**
-   - Подключи нужный навык из `agent-skills/design-engineering/` (`emil-design-eng`, `animate`, `choreograph`, `gestures`, `animation-performance`).
-4. **Финальная критика, полировка и аудит перед сдачей:**
+5. **Тактильность и микро-анимации уровня Linear / Apple:**
+   - Подключи нужный навык из `agent-skills/design-engineering/` (`emil-design-eng`, `animate`, `choreograph`, `gestures`, `animation-performance`, `motion-design`).
+6. **Тексты и конверсия:**
+   - Заголовки и обещания: `agent-skills/design-logic/copywriting/SKILL.md`, редактура — `copy-editing/SKILL.md`
+   - Воронка и формы: `agent-skills/design-logic/cro/SKILL.md`; первая сессия — `onboarding/SKILL.md`; тарифы — `pricing/SKILL.md`
+7. **Финальная критика, полировка и аудит перед сдачей:**
    - Визуальная полировка: `agent-skills/ui/impeccable/SKILL.md` и `agent-skills/ui/audit-ai-design-slop/SKILL.md`
+   - Качество в цифрах (Lighthouse / Core Web Vitals): `agent-skills/web-quality/web-quality-audit/SKILL.md`, `agent-skills/web-quality/core-web-vitals/SKILL.md`, `accessibility/SKILL.md`, `seo/SKILL.md`
    - Доступность, UX и производительность React/Next.js: `agent-skills/vercel/web-design-guidelines/SKILL.md` и `agent-skills/vercel/react-best-practices/SKILL.md`
 
 ---

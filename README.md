@@ -1,8 +1,8 @@
 # Agent Skills Vault
 
-Масштабная библиотека переиспользуемых навыков (**243 Agent Skills**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
+Масштабная библиотека переиспользуемых навыков (**271 Agent Skill**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
 
-Собраны топовые мировые решения против шаблонного «пластикового» ИИ-дизайна (**Taste Skill**, **UI/UX Pro Max**, **Impeccable**, **Emil Kowalski Skills**, **Anthropic Frontend Design**, **Claude Design Skill**, **Vercel Web Design Guidelines**), официальный пакет современных веб-стандартов **GoogleChrome Modern Web Guidance** (совместно с Edge, Firefox и MDN), полная коллекция **MengTo/Skills** (все 94 навыка веб-дизайна, 3D и иллюстрации), а также паки по геймдеву, Яндекс Играм и прикладной криптографии.
+Собраны топовые мировые решения против шаблонного «пластикового» ИИ-дизайна (**Taste Skill**, **UI/UX Pro Max**, **Impeccable**, **Emil Kowalski Skills**, **Anthropic Frontend Design**, **Claude Design Skill**, **Vercel Web Design Guidelines**), официальный пакет современных веб-стандартов **GoogleChrome Modern Web Guidance** (совместно с Edge, Firefox и MDN), полная коллекция **MengTo/Skills** (все 94 навыка веб-дизайна, 3D и иллюстрации), библиотека **84 файлов `DESIGN.md`** с разобранными дизайн-системами реальных брендов, UX-законы и правила архитектуры сайта, аудит **Lighthouse / Core Web Vitals**, а также паки по геймдеву, Яндекс Играм и прикладной криптографии.
 
 ![Галерея превью навыков](SCREENSHOTS-preview.jpg)
 
@@ -18,6 +18,10 @@
 | **Вычистить и отполировать уже свёрстанный сайт** | [`impeccable`](agent-skills/ui/impeccable/SKILL.md) + [`audit-ai-design-slop`](agent-skills/ui/audit-ai-design-slop/SKILL.md) + [`web-design-guidelines`](agent-skills/vercel/web-design-guidelines/SKILL.md) |
 | **Собрать сайт уровня Awwwards со скролл-сценами и 3D** | [`build-awwwards-quality-sites`](agent-skills/web-design/build-awwwards-quality-sites/SKILL.md) + [`cinematic-gsap-lenis-motion-system`](agent-skills/web-design/cinematic-gsap-lenis-motion-system/SKILL.md) |
 | **Писать на свежем нативном CSS/HTML без устаревших JS-костылей** | [`modern-web-guidance`](agent-skills/web-platform/modern-web-guidance/SKILL.md) (250 фич современной веб-платформы от Chrome, Edge, Firefox и MDN) |
+| **Сделать сайт «как у Stripe / Linear / Vercel», но не копию** | [`design-md-library`](agent-skills/design-logic/design-md-library/SKILL.md) (84 дизайн-ДНК с точными токенами) + [`design-extract`](agent-skills/design-logic/design-extract/SKILL.md) |
+| **Продумать структуру сайта, навигацию и сценарии** | [`site-architecture`](agent-skills/design-logic/site-architecture/SKILL.md) + [`information-architecture`](agent-skills/design-logic/information-architecture/SKILL.md) + [`numerique-responsable`](agent-skills/design-logic/numerique-responsable/SKILL.md) |
+| **Поднять конверсию лендинга, тарифов и онбординга** | [`cro`](agent-skills/design-logic/cro/SKILL.md) + [`copywriting`](agent-skills/design-logic/copywriting/SKILL.md) + [`onboarding`](agent-skills/design-logic/onboarding/SKILL.md) |
+| **Проверить скорость, доступность и SEO перед сдачей** | [`web-quality-audit`](agent-skills/web-quality/web-quality-audit/SKILL.md) + [`core-web-vitals`](agent-skills/web-quality/core-web-vitals/SKILL.md) |
 
 ---
 
@@ -25,10 +29,12 @@
 
 ```text
 agent-skills/
-  ui/                  # Дизайн-системы, Taste Skill, UI/UX Pro Max, Impeccable, Anti-Slop (23)
-  design-engineering/  # Микро-анимации, жесты и полировка UI от Эмиля Ковальски (19)
+  ui/                  # Дизайн-системы, Taste Skill, UI/UX Pro Max, Impeccable, Anti-Slop (29)
+  design-engineering/  # Микро-анимации, жесты, моушн-принципы и полировка UI (20)
   web-design/          # Полная база тем, шейдеров, WebGL и скролл-сторителлинга (94)
   web-platform/        # Современные веб-стандарты и расширения Chrome/Edge/Firefox/MDN (2)
+  design-logic/        # Дизайн-ДНК брендов, UX-законы, архитектура сайта и конверсия (15)
+  web-quality/         # Lighthouse, Core Web Vitals, доступность и техническое SEO (6)
   vercel/              # Аудит UI, View Transitions и производительность React/Next.js (9)
   3d/                  # Реалистичные PBR-материалы, вода, свет и 3D-туры в Three.js (16)
   illustration/        # Авторские векторные SVG-иллюстрации в 14 стилях (14)
@@ -45,11 +51,17 @@ agent-skills/
 
 ---
 
-## Полный каталог навыков (243)
+## Полный каталог навыков (271)
 
-### 1. UI, дизайн-системы и борьба со стоковым ИИ ([`agent-skills/ui/`](agent-skills/ui/README.md) — 23)
+### 1. UI, дизайн-системы и борьба со стоковым ИИ ([`agent-skills/ui/`](agent-skills/ui/README.md) — 29)
 
 - **[`anthropic-frontend-design`](agent-skills/ui/anthropic-frontend-design/SKILL.md)** — Официальный навык фронтенд-дизайна от Anthropic: уход от нейросетевых клише, продуманная композиция, палитра и типографика.
+- **[`antislop`](agent-skills/ui/antislop/SKILL.md)** — Ядро-фильтр anti-slop (miqdadbadjuber, 9.2k★): правила, которые агент держит загруженными постоянно, + полный свод в [`references/antislop.md`](agent-skills/ui/antislop/references/antislop.md).
+- **[`antislop-code`](agent-skills/ui/antislop-code/SKILL.md)** — Фильтр сгенерированного кода: структура, именование, дублирование и «код ради кода».
+- **[`antislop-copywriting`](agent-skills/ui/antislop-copywriting/SKILL.md)** — Фильтр текстов: маркеры ИИ-письма, пустые обещания, штампы маркетингового языка.
+- **[`antislop-human`](agent-skills/ui/antislop-human/SKILL.md)** — Правила живого письма и подачи: ритм, конкретика, отказ от канцелярита.
+- **[`antislop-layoutmobile`](agent-skills/ui/antislop-layoutmobile/SKILL.md)** — Слоп в раскладке и мобильной адаптации: сломанные сетки, неучтённые состояния, тач-цели.
+- **[`antislop-ui`](agent-skills/ui/antislop-ui/SKILL.md)** — Визуальные правила против типового ИИ-интерфейса: цвет, типографика, глубина, состояния.
 - **[`apple-hig-design`](agent-skills/ui/apple-hig-design/SKILL.md)** — Принципы Apple Human Interface Guidelines: vibrancy/blur материалы, squircle-скругления, SF Pro и жесты.
 - **[`audit-ai-design-slop`](agent-skills/ui/audit-ai-design-slop/SKILL.md)** — Аудит готовых макетов, скриншотов и кода на предмет нейросетевых клише и визуальных дефектов.
 - **[`banner-design`](agent-skills/ui/banner-design/SKILL.md)** — Арт-дирекшн и дизайн баннеров для hero-секций сайтов, соцсетей и рекламных креативов.
@@ -73,7 +85,7 @@ agent-skills/
 - **[`ui-ux-pro-max`](agent-skills/ui/ui-ux-pro-max/SKILL.md)** — Поисковый дизайн-движок (NextLevelBuilder, 149k★): 79 UI-стилей, 192 палитры, 74 шрифтовые пары и UX-правила под 22 стека через `scripts/search.py`.
 - **[`web-artifacts-builder`](agent-skills/ui/web-artifacts-builder/SKILL.md)** — Сборка сложных многокомпонентных веб-артефактов на React, Tailwind CSS и shadcn/ui.
 
-### 2. Дизайн-инженерия и микро-анимации (Emil Kowalski) ([`agent-skills/design-engineering/`](agent-skills/design-engineering/README.md) — 19)
+### 2. Дизайн-инженерия и микро-анимации ([`agent-skills/design-engineering/`](agent-skills/design-engineering/README.md) — 20)
 
 - **[`animate`](agent-skills/design-engineering/animate/SKILL.md)** — Пошаговое создание веб-анимации с нуля: нужно ли анимировать, выбор кривой, длительности и пружинной физики.
 - **[`animate-expo`](agent-skills/design-engineering/animate-expo/SKILL.md)** — Построение плавных нативных анимаций в React Native и Expo.
@@ -89,6 +101,7 @@ agent-skills/
 - **[`improve-animations`](agent-skills/design-engineering/improve-animations/SKILL.md)** — Аудит и улучшение существующих анимаций в кодовой базе с готовыми исправлениями.
 - **[`learn-taste`](agent-skills/design-engineering/learn-taste/SKILL.md)** — Фиксация дизайнерских правок сессии в переиспользуемые правила вкуса (`DESIGN.md` / проектные гайдлайны).
 - **[`mobile-native`](agent-skills/design-engineering/mobile-native/SKILL.md)** — Набор CSS и meta-приёмов, превращающих мобильный веб-сайт в приложение с ощущением нативного iOS/Android.
+- **[`motion-design`](agent-skills/design-engineering/motion-design/SKILL.md)** — Универсальные принципы моушн-дизайна от LottieFiles: тайминги, easing, хореография и Disney-принципы (squash/stretch, anticipation, follow-through) для CSS, Framer Motion, GSAP, Lottie и Spring.
 - **[`pick-ui-library`](agent-skills/design-engineering/pick-ui-library/SKILL.md)** — Выбор проверенных UI-примитивов (drawers, toasts, command menu, диалоги, графики) под задачу.
 - **[`prototype`](agent-skills/design-engineering/prototype/SKILL.md)** — Сборка нескольких контрастных вариантов UI-компонента с переключателем для живого сравнения.
 - **[`remove-animations`](agent-skills/design-engineering/remove-animations/SKILL.md)** — Поиск и удаление лишних анимаций, которые замедляют частые действия и клавиатурную навигацию.
@@ -331,6 +344,33 @@ agent-skills/
 
 - **[`modern-web-guidance`](agent-skills/web-platform/modern-web-guidance/SKILL.md)** — Официальный пакет от команд Google Chrome, Microsoft Edge, Mozilla Firefox и MDN: 250 современных возможностей веб-платформы и 200+ локальных гайдов (`guides/` — `visual-design`, `ui-components`, `css`, `forms`, `performance`, `accessibility`, `built-in-ai`).
 - **[`chrome-extensions`](agent-skills/web-platform/chrome-extensions/SKILL.md)** — Разработка современных расширений на Manifest V3, service workers, API расширений и публикация в Chrome Web Store.
+
+### 15. Логика дизайна, UX-законы и конверсия ([`agent-skills/design-logic/`](agent-skills/design-logic/README.md) — 15)
+
+- **[`design-md-library`](agent-skills/design-logic/design-md-library/SKILL.md)** — 84 разобранные дизайн-системы реальных брендов (Stripe, Linear, Vercel, Apple, Figma, Notion, Shopify, Supabase, Ferrari, Nike…) в формате `DESIGN.md` от Google Stitch: токены по ролям, типографика с точным трекингом, отступы, радиусы, тени. Каталог — [`BRANDS.md`](agent-skills/design-logic/design-md-library/BRANDS.md).
+- **[`design-extract`](agent-skills/design-logic/design-extract/SKILL.md)** — Реверс-инжиниринг дизайн-языка любого сайта через `npx designlang <url>`: markdown, HTML-превью, Tailwind/React/shadcn-темы, переменные Figma, W3C-токены и WCAG-скоринг.
+- **[`laws-of-ux`](agent-skills/design-logic/laws-of-ux/SKILL.md)** — Все 30 законов UX как активный советник по вёрстке: рекомендует закон и конкретную правку, плюс режимы `review` (оценка 0–60) и `checklist`.
+- **[`information-architecture`](agent-skills/design-logic/information-architecture/SKILL.md)** — Навигация, таксономия, иерархия, поиск и подписи: «если пользователь не может найти — этого не существует».
+- **[`design-heuristics`](agent-skills/design-logic/design-heuristics/SKILL.md)** — 10 эвристик Нильсена и золотые правила Шнейдермана с оценкой серьёзности проблем.
+- **[`usability-testing`](agent-skills/design-logic/usability-testing/SKILL.md)** — Методология юзабилити-тестов: дизайн исследования, задачи, модерация, анализ, отчёт.
+- **[`ux-metrics`](agent-skills/design-logic/ux-metrics/SKILL.md)** — Измерение UX, связанное с бизнес-результатом: HEART, GSM, SUS, task success вместо vanity-метрик.
+- **[`interaction-patterns`](agent-skills/design-logic/interaction-patterns/SKILL.md)** — Когда модалка, а когда drawer: progressive disclosure, inline-редактирование, мобильные жесты, поведение компонентов.
+- **[`site-architecture`](agent-skills/design-logic/site-architecture/SKILL.md)** — Иерархия страниц, навигация, URL-структура, внутренняя перелинковка и миграции сайта.
+- **[`cro`](agent-skills/design-logic/cro/SKILL.md)** — Конверсионная оптимизация: почему страница не конвертирует и что менять первым — лендинги, тарифы, формы.
+- **[`onboarding`](agent-skills/design-logic/onboarding/SKILL.md)** — Первая сессия и активация: aha-момент, чек-листы, пустые состояния, time-to-value.
+- **[`pricing`](agent-skills/design-logic/pricing/SKILL.md)** — Ценообразование и упаковка: тарифы, метрики ценности, per-seat vs usage, freemium и триалы.
+- **[`copywriting`](agent-skills/design-logic/copywriting/SKILL.md)** — Тексты страниц: какое обещание вести первым, диагностика входа и доказуемость утверждений.
+- **[`copy-editing`](agent-skills/design-logic/copy-editing/SKILL.md)** — Редактура готового текста: убирает маркеры ИИ-письма, не переписывая с нуля.
+- **[`numerique-responsable`](agent-skills/design-logic/numerique-responsable/SKILL.md)** — Правила качества и сценариев из RGESN, GR491, Opquast (245 правил) и RGAA: настоящий 404, закрытие аккаунта, отписка без подтверждения, вес страницы, семантика.
+
+### 16. Качество веба: производительность, доступность и SEO ([`agent-skills/web-quality/`](agent-skills/web-quality/README.md) — 6)
+
+- **[`web-quality-audit`](agent-skills/web-quality/web-quality-audit/SKILL.md)** — Сводный аудит Lighthouse: собирает измерения в один отчёт с приоритезированным планом исправлений.
+- **[`core-web-vitals`](agent-skills/web-quality/core-web-vitals/SKILL.md)** — Пороги и причины LCP, INP и CLS — что именно чинить по каждой метрике.
+- **[`performance`](agent-skills/web-quality/performance/SKILL.md)** — Критический путь, изображения и шрифты, кеширование, разбиение бандла, работа главного потока.
+- **[`accessibility`](agent-skills/web-quality/accessibility/SKILL.md)** — Доступность по Lighthouse: контраст, доступные имена, роли и ARIA, клавиатура, скринридеры.
+- **[`seo`](agent-skills/web-quality/seo/SKILL.md)** — Техническое SEO: метаданные, структура URL, индексируемость, канонические ссылки, Core Web Vitals.
+- **[`best-practices`](agent-skills/web-quality/best-practices/SKILL.md)** — Гигиена веба: HTTPS, ошибки в консоли, устаревшие API, безопасность сторонних скриптов.
 
 ---
 
