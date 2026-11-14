@@ -1,6 +1,6 @@
 # Design Engineering & Micro-Interactions (Emil Kowalski)
 
-Коллекция из **19 навыков** дизайн-инженерии и микро-анимаций уровня Linear, Vercel и Apple, а также шпаргалки [UI Cheatsheet](ui-cheatsheet.md) и [Performance Cheatsheet](performance-cheatsheet.md).
+Коллекция из **20 навыков** дизайн-инженерии и микро-анимаций уровня Linear, Vercel и Apple, а также шпаргалки [UI Cheatsheet](ui-cheatsheet.md) и [Performance Cheatsheet](performance-cheatsheet.md).
 
 ## Каталог
 
@@ -18,6 +18,7 @@
 - **[`improve-animations`](improve-animations/SKILL.md)** — Аудит и улучшение существующих анимаций в кодовой базе с готовыми исправлениями.
 - **[`learn-taste`](learn-taste/SKILL.md)** — Фиксация дизайнерских правок сессии в переиспользуемые правила вкуса (`DESIGN.md` / проектные гайдлайны).
 - **[`mobile-native`](mobile-native/SKILL.md)** — Набор CSS и meta-приёмов, превращающих мобильный веб-сайт в приложение с ощущением нативного iOS/Android.
+- **[`motion-design`](motion-design/SKILL.md)** — Универсальные принципы моушн-дизайна от LottieFiles: тайминги, easing-кривые, хореография и Disney-принципы (squash/stretch, anticipation, follow-through) в применении к UI — для CSS, Framer Motion, GSAP, Lottie и Spring.
 - **[`pick-ui-library`](pick-ui-library/SKILL.md)** — Выбор проверенных UI-примитивов (drawers, toasts, command menu, диалоги, графики) под задачу.
 - **[`prototype`](prototype/SKILL.md)** — Сборка нескольких контрастных вариантов UI-компонента с переключателем для живого сравнения.
 - **[`remove-animations`](remove-animations/SKILL.md)** — Поиск и удаление лишних анимаций, которые замедляют частые действия и клавиатурную навигацию.
