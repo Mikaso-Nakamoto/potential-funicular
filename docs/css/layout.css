@@ -1,0 +1,345 @@
+/* ============================================================================
+   Victoria Falls — layout: оболочка, трёхколоночная сетка, адаптив
+   Правила: agent-skills/web-platform (container queries, subgrid, clamp),
+            agent-skills/ui/break-ui (стресс-тест вёрстки),
+            agent-skills/web-quality (отсутствие горизонтального скролла)
+   ========================================================================== */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: var(--vf-shell-max);
+  margin-inline: auto;
+  padding-inline: clamp(var(--vf-space-sm), 2vw, var(--vf-space-xl));
+}
+
+/* ---------- Шапка ---------- */
+
+.KUI {
+  position: relative;
+  z-index: var(--vf-z-sticky);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--vf-space-sm) var(--vf-space-lg);
+  padding-block: clamp(var(--vf-space-lg), 3vw, var(--vf-space-2xl))
+    var(--vf-space-md);
+}
+
+.KUI::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    var(--vf-hairline) 0%,
+    var(--vf-hairline-soft) 55%,
+    transparent 100%
+  );
+}
+
+.wordmark {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vf-space-2xs);
+}
+
+/* Дисплейный серифный логотип: единственный «редакционный» акцент.
+   Осознанно не Inter и не дефолтный гротеск — см. Anti-Generic Guardrails. */
+.GLZG {
+  font-family: var(--vf-font-display);
+  font-size: var(--vf-text-display);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: var(--vf-tracking-display);
+  color: var(--vf-ink);
+  text-wrap: balance;
+}
+
+.GLZG em {
+  font-style: italic;
+  color: var(--vf-accent);
+}
+
+.wordmark .tagline {
+  font-size: var(--vf-text-2xs);
+  font-weight: 500;
+  letter-spacing: var(--vf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--vf-ink-tertiary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--vf-space-xs);
+}
+
+/* ---------- Трёхколоночная сетка ---------- */
+
+.three-columns {
+  display: grid;
+  grid-template-columns: var(--vf-sidebar-width) minmax(0, 1fr) var(
+      --vf-sidebar-width
+    );
+  align-items: start;
+  gap: clamp(var(--vf-space-sm), 1.4vw, var(--vf-space-lg));
+  width: 100%;
+  padding-block: var(--vf-space-md) var(--vf-space-xl);
+  flex: 1;
+}
+
+.Main-Content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vf-space-lg);
+  min-width: 0; /* критично: без этого grid-элемент не сжимается */
+  container-type: inline-size;
+  container-name: main;
+}
+
+/* ---------- Сайдбары ---------- */
+
+.sidebar {
+  position: sticky;
+  top: var(--vf-space-sm);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-height: calc(100dvh - var(--vf-space-xl));
+  border: 1px solid var(--vf-hairline);
+  border-radius: var(--vf-radius-2xl);
+  background:
+    linear-gradient(180deg, oklch(1 0 0 / 0.03), transparent 40%),
+    var(--vf-surface-glass);
+  backdrop-filter: blur(18px) saturate(120%);
+  box-shadow: var(--vf-shadow-2);
+  overflow: hidden;
+  transition:
+    max-height var(--vf-dur-slow) var(--vf-ease-out),
+    opacity var(--vf-dur-base) var(--vf-ease-out),
+    border-color var(--vf-dur-base) var(--vf-ease-out);
+}
+
+.sidebar.collapsed {
+  max-height: 0;
+  opacity: 0;
+  border-color: transparent;
+  pointer-events: none;
+}
+
+.sidebar-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--vf-space-xs);
+  padding: var(--vf-space-sm) var(--vf-space-md);
+  border-bottom: 1px solid var(--vf-hairline-soft);
+  font-size: var(--vf-text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--vf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--vf-ink-subtle);
+  background: oklch(1 0 0 / 0.02);
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vf-space-sm);
+  padding: var(--vf-space-md);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vf-surface-3) transparent;
+}
+
+.sidebar-content > h4 {
+  font-size: var(--vf-text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--vf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--vf-ink-tertiary);
+}
+
+/* ---------- Кнопки управления сайдбарами ---------- */
+
+.sidebar-toggle {
+  position: fixed;
+  top: 50%;
+  z-index: var(--vf-z-sticky);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 68px;
+  border: 1px solid var(--vf-hairline);
+  border-radius: var(--vf-radius-pill);
+  background: var(--vf-surface-1);
+  color: var(--vf-ink-subtle);
+  font-size: var(--vf-text-xs);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--vf-dur-base) var(--vf-ease-out),
+    transform var(--vf-dur-base) var(--vf-ease-out),
+    color var(--vf-dur-fast) var(--vf-ease-out);
+}
+
+.toggle-left {
+  left: max(4px, calc(50vw - var(--vf-shell-max) / 2 - 22px));
+  transform: translateY(-50%);
+}
+
+.toggle-right {
+  right: max(4px, calc(50vw - var(--vf-shell-max) / 2 - 22px));
+  transform: translateY(-50%);
+}
+
+.three-columns:hover .sidebar-toggle,
+.sidebar-toggle:focus-visible {
+  opacity: 1;
+}
+
+.sidebar-toggle:hover {
+  color: var(--vf-ink);
+  border-color: var(--vf-hairline-strong);
+}
+
+/* ---------- Адаптив: планшет ---------- */
+
+@media (max-width: 1360px) {
+  :root {
+    --vf-sidebar-width: 260px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .three-columns {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+
+  #left-sidebar {
+    order: 3;
+    position: static;
+    max-height: none;
+  }
+
+  .toggle-left {
+    display: none;
+  }
+}
+
+/* ---------- Адаптив: мобильный ---------- */
+
+@media (max-width: 900px) {
+  .three-columns {
+    display: flex;
+    flex-direction: column;
+    gap: var(--vf-space-md);
+  }
+
+  .sidebar {
+    position: static;
+    width: 100%;
+    max-height: none;
+  }
+
+  .sidebar-toggle {
+    display: none;
+  }
+
+  .KUI {
+    align-items: center;
+  }
+
+  .GLZG {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  /* На мобильных подписи становятся аккордеоном (см. main.js) */
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding-block: var(--vf-space-xs);
+  }
+
+  .accordion-header::after {
+    content: "＋";
+    color: var(--vf-ink-tertiary);
+    font-size: var(--vf-text-md);
+    transition: transform var(--vf-dur-base) var(--vf-ease-out);
+  }
+
+  .accordion-header.active::after {
+    transform: rotate(45deg);
+  }
+
+  .sidebar-content > :is(ul, .paragr, .left-sidebar-content) {
+    display: none;
+  }
+
+  .sidebar-content > :is(ul, .paragr, .left-sidebar-content).show {
+    display: block;
+  }
+
+  /* Инфо-панель валюты — тоже аккордеон */
+  .currency-info-panel #info-description {
+    display: none;
+  }
+
+  .currency-info-panel #info-description.show {
+    display: block;
+  }
+
+  .currency-info-panel #info-currency-name.active::after {
+    transform: rotate(45deg);
+  }
+}
+
+/* ---------- Отдельные раскладки плотных блоков ---------- */
+
+.paragr {
+  display: flex;
+  gap: var(--vf-space-sm);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--vf-surface-3) transparent;
+}
+
+.mini-charts-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--vf-space-sm);
+}
+
+@container main (max-width: 620px) {
+  .mini-charts-row {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+}
+
+/* ---------- Шапка: дополнительные состояния ---------- */
+
+.app-header {
+  container-type: inline-size;
+  container-name: header;
+}
+
+@container header (max-width: 560px) {
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .lang-dropdown {
+    right: auto;
+    left: 0;
+    transform-origin: top left;
+  }
+}

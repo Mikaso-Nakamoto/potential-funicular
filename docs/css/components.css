@@ -1,0 +1,509 @@
+/* ============================================================================
+   Victoria Falls — components
+   Кнопки, переключатели, вкладки, модальные окна, скроллбары, тултипы.
+   Правила: agent-skills/design-engineering (тактильность, состояния),
+            agent-skills/antislop-ui (никаких transition-all, только transform/opacity)
+   ========================================================================== */
+
+/* ---------- Кнопки ---------- */
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--vf-radius-md);
+  background: transparent;
+  color: var(--vf-ink-subtle);
+  cursor: pointer;
+  transition:
+    color var(--vf-dur-fast) var(--vf-ease-out),
+    background-color var(--vf-dur-fast) var(--vf-ease-out),
+    transform var(--vf-dur-fast) var(--vf-ease-out);
+}
+
+.icon-btn:hover {
+  color: var(--vf-ink);
+  background: oklch(1 0 0 / 0.06);
+}
+
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+.fullscreen-btn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding-inline: var(--vf-space-2xs);
+  border: 1px solid var(--vf-hairline);
+  border-radius: var(--vf-radius-sm);
+  background: var(--vf-surface-1);
+  color: var(--vf-ink-subtle);
+  font-size: var(--vf-text-xs);
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color var(--vf-dur-fast) var(--vf-ease-out),
+    border-color var(--vf-dur-fast) var(--vf-ease-out),
+    transform var(--vf-dur-fast) var(--vf-ease-out);
+}
+
+.fullscreen-btn:hover {
+  color: var(--vf-ink);
+  border-color: var(--vf-hairline-strong);
+  transform: translateY(-1px);
+}
+
+.save-btn {
+  padding: var(--vf-space-xs) var(--vf-space-md);
+  border: 1px solid transparent;
+  border-radius: var(--vf-radius-md);
+  background: var(--vf-accent);
+  color: var(--vf-on-accent);
+  font-size: var(--vf-text-sm);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  cursor: pointer;
+  transition:
+    background-color var(--vf-dur-fast) var(--vf-ease-out),
+    transform var(--vf-dur-fast) var(--vf-ease-out);
+}
+
+.save-btn:hover {
+  background: var(--vf-accent-hover);
+}
+
+.save-btn:active {
+  background: var(--vf-accent-press);
+  transform: translateY(1px);
+}
+
+/* ---------- Переключатель языка ---------- */
+
+.langToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vf-space-xs);
+  padding: var(--vf-space-2xs) var(--vf-space-sm);
+  border: 1px solid var(--vf-hairline);
+  border-radius: var(--vf-radius-pill);
+  background: var(--vf-surface-1);
+  color: var(--vf-ink-muted);
+  font-size: var(--vf-text-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--vf-dur-fast) var(--vf-ease-out),
+    color var(--vf-dur-fast) var(--vf-ease-out),
+    transform var(--vf-dur-base) var(--vf-ease-out);
+}
+
+.langToggle:hover {
+  color: var(--vf-ink);
+  border-color: var(--vf-hairline-strong);
+}
+
+.langToggle span.fi {
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 0.12);
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + var(--vf-space-2xs));
+  right: 0;
+  z-index: var(--vf-z-dropdown);
+  display: grid;
+  gap: var(--vf-space-3xs);
+  min-width: 232px;
+  padding: var(--vf-space-xs);
+  border: 1px solid var(--vf-hairline);
+  border-radius: var(--vf-radius-lg);
+  background: var(--vf-surface-2);
+  box-shadow: var(--vf-shadow-3);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top right;
+  transition:
+    opacity var(--vf-dur-base) var(--vf-ease-out),
+    transform var(--vf-dur-base) var(--vf-ease-out),
+    visibility var(--vf-dur-base);
+}
+
+.lang-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.lang-main-group {
+  display: grid;
+  gap: 2px;
+}
+
+.lang-main-group .lang-option {
+  display: flex;
+  align-items: center;
+  gap: var(--vf-space-xs);
+  padding: var(--vf-space-2xs) var(--vf-space-xs);
+  border-radius: var(--vf-radius-sm);
+  font-size: var(--vf-text-sm);
+  color: var(--vf-ink-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--vf-dur-fast) var(--vf-ease-out),
+    color var(--vf-dur-fast) var(--vf-ease-out);
+}
+
+.lang-main-group .lang-option:hover {
+  background: oklch(1 0 0 / 0.06);
+  color: var(--vf-ink);
+}
+
+.lang-separator {
+  height: 1px;
+  background: var(--vf-hairline-soft);
+  margin-block: var(--vf-space-3xs);
+}
+
+.lang-other small {
+  display: block;
+  padding: var(--vf-space-3xs) var(--vf-space-xs);
+  color: var(--vf-ink-tertiary);
+  font-size: var(--vf-text-xs);
+  line-height: 1.4;
+}
+
+.lang-other a {
+  color: var(--vf-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+/* ---------- Вкладки графика ---------- */
+
+.chart-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--vf-space-sm);
+}
+
+.main-tabs,
+.alt-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--vf-space-3xs);
+}
+
+.chart-tab {
+  padding: var(--vf-space-3xs) var(--vf-space-xs);
+  border-radius: var(--vf-radius-sm);
+  font-size: var(--vf-text-sm);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--vf-ink-tertiary);
+  cursor: pointer;
+  transition:
+    color var(--vf-dur-fast) var(--vf-ease-out),
+    background-color var(--vf-dur-fast) var(--vf-ease-out);
+}
+
+.chart-tab:hover {
+  color: var(--vf-ink-muted);
+  background: oklch(1 0 0 / 0.05);
+}
+
+.chart-tab.active {
+  color: var(--vf-ink);
+  background: var(--vf-accent-soft);
+  box-shadow: inset 0 0 0 1px oklch(0.8 0.125 192 / 0.3);
+}
+
+.chart-tab.small-tab {
+  font-size: var(--vf-text-xs);
+  color: var(--vf-ink-tertiary);
+}
+
+/* ---------- Скроллбары ---------- */
+
+.currency-list-scroll,
+.grid-scroll-area,
+.sidebar-content,
+.paragr,
+.mini-charts-row {
+  scrollbar-width: thin;
+  scrollbar-color: var(--vf-surface-3) transparent;
+}
+
+.currency-list-scroll::-webkit-scrollbar,
+.grid-scroll-area::-webkit-scrollbar,
+.sidebar-content::-webkit-scrollbar,
+.paragr::-webkit-scrollbar,
+.mini-charts-row::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.currency-list-scroll::-webkit-scrollbar-track,
+.grid-scroll-area::-webkit-scrollbar-track,
+.sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.currency-list-scroll::-webkit-scrollbar-thumb,
+.grid-scroll-area::-webkit-scrollbar-thumb,
+.sidebar-content::-webkit-scrollbar-thumb,
+.paragr::-webkit-scrollbar-thumb,
+.mini-charts-row::-webkit-scrollbar-thumb {
+  border-radius: var(--vf-radius-pill);
+  background: var(--vf-surface-3);
+}
+
+.currency-list-scroll::-webkit-scrollbar-thumb:hover,
+.grid-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: var(--vf-hairline-strong);
+}
+
+/* ---------- Модальное окно выбора регионов ---------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--vf-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--vf-space-md);
+  background: oklch(0.1 0.01 250 / 0.72);
+  backdrop-filter: blur(6px);
+  animation: vf-fade-in var(--vf-dur-base) var(--vf-ease-out);
+}
+
+.settings-modal-content {
+  width: min(420px, 100%);
+  max-height: min(560px, 86dvh);
+  overflow-y: auto;
+  padding: var(--vf-space-lg);
+  border: 1px solid var(--vf-hairline);
+  border-radius: var(--vf-radius-xl);
+  background: var(--vf-surface-2);
+  box-shadow: var(--vf-shadow-3);
+}
+
+.settings-modal-content h3 {
+  margin-bottom: var(--vf-space-md);
+  font-size: var(--vf-text-lg);
+  font-weight: 600;
+  letter-spacing: var(--vf-tracking-tight);
+}
+
+.settings-option {
+  display: flex;
+  align-items: center;
+  gap: var(--vf-space-xs);
+  padding: var(--vf-space-xs);
+  border-radius: var(--vf-radius-sm);
+  color: var(--vf-ink-muted);
+  font-size: var(--vf-text-base);
+  cursor: pointer;
+  transition: background-color var(--vf-dur-fast) var(--vf-ease-out);
+}
+
+.settings-option:hover {
+  background: oklch(1 0 0 / 0.05);
+}
+
+.settings-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--vf-accent);
+  cursor: pointer;
+}
+
+/* ---------- Тултип графика ---------- */
+
+.history-tooltip {
+  position: absolute;
+  z-index: var(--vf-z-dropdown);
+  min-width: 168px;
+  padding: var(--vf-space-xs) var(--vf-space-sm);
+  border: 1px solid var(--vf-hairline);
+  border-radius: var(--vf-radius-md);
+  background: var(--vf-surface-2);
+  box-shadow: var(--vf-shadow-2);
+  font-size: var(--vf-text-xs);
+  color: var(--vf-ink-muted);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity var(--vf-dur-fast) var(--vf-ease-out),
+    transform var(--vf-dur-fast) var(--vf-ease-out),
+    visibility var(--vf-dur-fast);
+}
+
+.history-tooltip.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.history-tooltip h5 {
+  margin-bottom: var(--vf-space-3xs);
+  font-size: var(--vf-text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--vf-tracking-wide);
+  text-transform: uppercase;
+  color: var(--vf-ink-tertiary);
+}
+
+/* ---------- Плашки предупреждений ---------- */
+
+.moex-status-note {
+  display: none;
+  padding: var(--vf-space-2xs) var(--vf-space-sm);
+  border: 1px solid oklch(0.85 0.135 85 / 0.28);
+  border-radius: var(--vf-radius-sm);
+  background: oklch(0.85 0.135 85 / 0.08);
+  color: var(--vf-gold);
+  font-size: var(--vf-text-xs);
+  line-height: 1.45;
+}
+
+.moex-status-note.show {
+  display: block;
+}
+
+/* Демо-режим: явно показываем, что данные синтетические */
+.demo-badge {
+  position: fixed;
+  right: var(--vf-space-md);
+  bottom: var(--vf-space-md);
+  z-index: var(--vf-z-toast);
+  display: none;
+  align-items: center;
+  gap: var(--vf-space-2xs);
+  padding: var(--vf-space-2xs) var(--vf-space-sm);
+  border: 1px solid oklch(0.85 0.135 85 / 0.4);
+  border-radius: var(--vf-radius-pill);
+  background: oklch(0.28 0.03 85 / 0.9);
+  backdrop-filter: blur(10px);
+  color: var(--vf-gold);
+  font-size: var(--vf-text-xs);
+  font-weight: 500;
+  box-shadow: var(--vf-shadow-2);
+}
+
+.demo-badge.show {
+  display: inline-flex;
+}
+
+.demo-badge::before {
+  content: "◇";
+  font-size: var(--vf-text-sm);
+}
+
+/* ---------- Анимации ---------- */
+
+@keyframes vf-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vf-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Модальные состояния и чекбоксы ---------- */
+
+body.modal-open {
+  overflow: hidden;
+}
+
+/* На широких экранах панели валют — это колонки конвертера */
+.currency-selector.left,
+.currency-selector.right {
+  position: relative;
+}
+
+/* На узких экранах они превращаются в модальные списки (см. container query) */
+@media (max-width: 900px) {
+  .currency-selector.left.show-modal {
+    inset: 12% var(--vf-space-md) auto var(--vf-space-md);
+  }
+
+  .currency-selector.right.show-modal {
+    inset: auto var(--vf-space-md) 12% var(--vf-space-md);
+  }
+}
+
+.sidebar-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--vf-accent);
+  cursor: pointer;
+}
+
+.footer-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vf-space-2xs);
+  padding-block: 1px;
+  font-size: var(--vf-text-sm);
+  color: var(--vf-ink-tertiary);
+  transition: color var(--vf-dur-fast) var(--vf-ease-out);
+}
+
+.footer-lang-btn:hover {
+  color: var(--vf-ink);
+}
+
+/* ---------- Модальное окно: состояния через класс ---------- */
+
+.modal-overlay {
+  display: none;
+}
+
+.modal-overlay.is-open {
+  display: flex;
+}
+
+.settings-hint {
+  margin-top: var(--vf-space-sm);
+  padding: var(--vf-space-2xs) var(--vf-space-sm);
+  border: 1px solid oklch(0.7 0.185 22 / 0.35);
+  border-radius: var(--vf-radius-sm);
+  background: oklch(0.7 0.185 22 / 0.1);
+  color: var(--vf-ink-muted);
+  font-size: var(--vf-text-xs);
+}
+
+.settings-option label {
+  cursor: pointer;
+  flex: 1;
+}
+
+/* Активная кнопка режима (TradingView) */
+.fullscreen-btn.is-active {
+  color: var(--vf-accent);
+  border-color: oklch(0.8 0.125 192 / 0.55);
+  background: var(--vf-accent-soft);
+}
