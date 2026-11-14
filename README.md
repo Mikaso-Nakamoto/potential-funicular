@@ -8,10 +8,10 @@
 
 ---
 
-## Проекты, собранные на этих навыках
+## Отдельный проект, использующий навыки
 
-- **Живая демо: https://mikaso-nakamoto.github.io/potential-funicular/**
-- **[`projects/victoria-falls/`](projects/victoria-falls/README.md)** — биржевой терминал (валюты ЦБ РФ, крипта, акции MOEX, индексы страха/альтсезона, конвертер). Переработан по 10 навыкам волта: oklch-дизайн-система по гибридной ДНК `linear.app` + `stripe` + `mercury`, современный CSS вместо внешних обоев и иконочного шрифта, честная деградация в демо-режим при недоступности API, доступность и разгон Core Web Vitals. Дизайн-правила — в [`DESIGN.md`](projects/victoria-falls/DESIGN.md).
+**Victoria Falls** хранится и публикуется отдельно — этот репозиторий не содержит копии сайта:
+[исходный репозиторий](https://github.com/Mikaso-Nakamoto/Victoria_Falls) · [GitHub Pages](https://mikaso-nakamoto.github.io/Victoria_Falls/).
 
 ---
 
@@ -53,11 +53,6 @@ agent-skills/
   security-crypto/     # Прикладная криптография, управление ключами и защита (6)
   YA_SKILLS/           # Аудит модерации и авто-фиксер для Яндекс Игр (2)
 
-projects/
-  victoria-falls/      # Биржевой терминал, собранный на этих навыках
-
-docs/                  # Сгенерированная сборка для GitHub Pages (scripts/build-pages.sh)
-scripts/               # Служебные скрипты репозитория
 ```
 
 Правила автоматического применения и жёсткие фронтенд-ограничения (`Anti-Generic Guardrails`) прописаны в [CLAUDE.md](CLAUDE.md). Индекс локальных демо и скриншотов: [DEMOS.md](DEMOS.md), [SCREENSHOTS.md](SCREENSHOTS.md), [SCREENSHOTS.html](SCREENSHOTS.html).
