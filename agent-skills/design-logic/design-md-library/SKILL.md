@@ -24,19 +24,19 @@ license: MIT (файлы DESIGN.md — анализ дизайн-систем, �
 
 ## Каталог
 
-Полный список всех 84 систем с описаниями: **[`BRANDS.md`](BRANDS.md)**.
+Полный список всех 84 систем с описаниями: **[`BRANDS.md`](BRANDS.md)** (таблица «бренд → файл → о чём система»).
 
 Файлы: [`brands/<бренд>/DESIGN.md`](brands/) — по одному на бренд.
 
 Кластеры, по которым удобно искать:
 
-- **B2B SaaS / инфраструктура:** `stripe`, `linear.app`, `vercel`, `supabase`, `resend`, `posthog`, `sentry`, `sanity`, `clickhouse`, `hashicorp`, `mongodb`, `sap`, `oracle`, `ibm`, `airtable`, `notion`, `miro`, `intercom`, `mintlify`, `warp`, `raycast`, `replicate`, `together.ai`, `ollama`, `cohere`, `mistral.ai`, `expo`, `lovable`, `clay`, `composio`, `jobright`, `cal`, `mercury`, `superhuman`, `oura`
-- **Финтех и крипта:** `coinbase`, `binance`, `kraken`, `revolut`, `mastercard`, `n26`-стиль через `mercury`
-- **Авто и премиум:** `ferrari`, `lamborghini`, `bmw`, `bmw-m`, `bugatti`, `renault`, `tesla` (см. `spacex`), `spacex`, `nvidia`
-- **E-commerce и бренды:** `shopify`, `nike`, `starbucks`, `mydealz`, `1win`
-- **Медиа и контент:** `theverge`, `aljazeera`, `pinterest`
-- **Геймдев и развлечения:** `playstation`, `nintendo-2001`, `dell-1996` (ретро-стилистика)
-- **AI и дизайн-инструменты:** `claude`, `cursor`, `figma`, `framer`, `webflow`, `minimax`, `elevenlabs`, `runwayml`, `opencode.ai`, `voltagent`, `meta`, `apple`
+- **B2B SaaS и инфраструктура:** `stripe`, `linear.app`, `vercel`, `supabase`, `resend`, `posthog`, `sentry`, `sanity`, `clickhouse`, `hashicorp`, `mongodb`, `sap`, `oracle`, `ibm`, `hp`, `airtable`, `notion`, `miro`, `intercom`, `mintlify`, `warp`, `raycast`, `replicate`, `together.ai`, `ollama`, `cohere`, `mistral.ai`, `expo`, `lovable`, `clay`, `composio`, `jobright`, `cal`, `zapier`, `webflow`, `slack`
+- **Финтех и крипта:** `coinbase`, `binance`, `kraken`, `revolut`, `wise`, `mastercard`, `mercury`, `nerdwallet`
+- **Авто, аэро и премиум:** `ferrari`, `lamborghini`, `bmw`, `bmw-m`, `bugatti`, `renault`, `tesla`, `spacex`, `dji`, `nvidia`
+- **E-commerce и потребительские бренды:** `shopify`, `nike`, `starbucks`, `airbnb`, `uber`, `spotify`, `oura`, `mydealz`, `1win`
+- **Медиа и контент:** `theverge`, `wired`, `aljazeera`, `pinterest`
+- **Геймдев и развлечения:** `playstation`, `nintendo-2001`, `dell-1996` (ретро-стилистика 90-х)
+- **AI и дизайн-инструменты:** `claude`, `cursor`, `figma`, `framer`, `minimax`, `elevenlabs`, `runwayml`, `opencode.ai`, `voltagent`, `meta`, `x.ai`, `apple`, `superhuman`
 
 ## Процесс
 
