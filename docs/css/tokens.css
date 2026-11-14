@@ -1,0 +1,118 @@
+/* ============================================================================
+   Victoria Falls — design tokens
+   Дизайн-ДНК: гибрид linear.app (плотность, тёмная сетка, hairline-границы),
+   stripe (табличные цифры, лёгкие дисплеи, отрицательный трекинг)
+   и mercury (спокойная геометрия поверхностей).
+   Источник правил: agent-skills/design-logic/design-md-library/brands/*
+   Акцент — «брызги водопада»: холодный аква вместо дефолтного indigo/purple.
+   ========================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* ---------- Canvas и поверхности (z-слои) ---------- */
+  --vf-canvas: oklch(0.168 0.012 250);
+  --vf-canvas-deep: oklch(0.135 0.012 252);
+  --vf-surface-1: oklch(0.212 0.014 250);
+  --vf-surface-2: oklch(0.248 0.016 250);
+  --vf-surface-3: oklch(0.288 0.018 250);
+  --vf-surface-glass: oklch(0.24 0.016 250 / 0.72);
+
+  /* ---------- Текст ---------- */
+  --vf-ink: oklch(0.975 0.004 250);
+  --vf-ink-muted: oklch(0.86 0.01 250);
+  --vf-ink-subtle: oklch(0.72 0.012 250);
+  --vf-ink-tertiary: oklch(0.58 0.014 250);
+
+  /* ---------- Границы ---------- */
+  --vf-hairline: oklch(0.36 0.016 250 / 0.55);
+  --vf-hairline-strong: oklch(0.44 0.02 250 / 0.7);
+  --vf-hairline-soft: oklch(0.36 0.016 250 / 0.28);
+
+  /* ---------- Акцент: водопадная «взвесь» ---------- */
+  --vf-accent: oklch(0.8 0.125 192);
+  --vf-accent-hover: oklch(0.87 0.115 192);
+  --vf-accent-press: oklch(0.72 0.13 194);
+  --vf-accent-soft: oklch(0.8 0.125 192 / 0.14);
+  --vf-on-accent: oklch(0.22 0.04 215);
+  --vf-gold: oklch(0.85 0.135 85);
+
+  /* ---------- Семантика рынка ---------- */
+  --vf-up: oklch(0.79 0.155 155);
+  --vf-up-soft: oklch(0.79 0.155 155 / 0.14);
+  --vf-down: oklch(0.7 0.185 22);
+  --vf-down-soft: oklch(0.7 0.185 22 / 0.14);
+  --vf-neutral: oklch(0.64 0.012 250);
+  --vf-neutral-soft: oklch(0.64 0.012 250 / 0.12);
+
+  /* ---------- Типографика ---------- */
+  --vf-font-display: "Iowan Old Style", "Palatino Linotype", Palatino,
+    "Book Antiqua", Georgia, ui-serif, serif;
+  --vf-font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  --vf-font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono",
+    Menlo, Consolas, monospace;
+
+  --vf-text-2xs: 0.6875rem; /* 11 */
+  --vf-text-xs: 0.75rem; /* 12 */
+  --vf-text-sm: 0.8125rem; /* 13 */
+  --vf-text-base: 0.875rem; /* 14 */
+  --vf-text-md: 1rem; /* 16 */
+  --vf-text-lg: clamp(1.0625rem, 0.95rem + 0.35vw, 1.25rem);
+  --vf-text-xl: clamp(1.375rem, 1.1rem + 0.9vw, 1.75rem);
+  --vf-text-2xl: clamp(1.75rem, 1.2rem + 1.9vw, 2.75rem);
+  --vf-text-display: clamp(2rem, 1.1rem + 3.4vw, 4.25rem);
+
+  --vf-tracking-display: -0.025em;
+  --vf-tracking-tight: -0.015em;
+  --vf-tracking-wide: 0.09em;
+
+  /* ---------- Ритм ---------- */
+  --vf-space-3xs: 0.25rem;
+  --vf-space-2xs: 0.375rem;
+  --vf-space-xs: 0.5rem;
+  --vf-space-sm: 0.75rem;
+  --vf-space-md: 1rem;
+  --vf-space-lg: 1.5rem;
+  --vf-space-xl: 2rem;
+  --vf-space-2xl: 3rem;
+  --vf-space-3xl: 4rem;
+
+  /* ---------- Геометрия ---------- */
+  --vf-radius-xs: 4px;
+  --vf-radius-sm: 6px;
+  --vf-radius-md: 8px;
+  --vf-radius-lg: 12px;
+  --vf-radius-xl: 16px;
+  --vf-radius-2xl: 22px;
+  --vf-radius-pill: 9999px;
+
+  /* ---------- Тени: многослойные, с внутренним светом ---------- */
+  --vf-shadow-1: 0 1px 1px oklch(0 0 0 / 0.35), 0 2px 8px oklch(0 0 0 / 0.28);
+  --vf-shadow-2: 0 1px 1px oklch(0 0 0 / 0.4), 0 8px 24px oklch(0 0 0 / 0.38),
+    inset 0 1px 0 oklch(1 0 0 / 0.045);
+  --vf-shadow-3: 0 2px 4px oklch(0 0 0 / 0.45), 0 24px 60px oklch(0 0 0 / 0.5),
+    inset 0 1px 0 oklch(1 0 0 / 0.06);
+  --vf-ring-accent: 0 0 0 1px oklch(0.8 0.125 192 / 0.45),
+    0 8px 28px oklch(0.8 0.125 192 / 0.16);
+  --vf-focus-ring: 0 0 0 2px var(--vf-canvas), 0 0 0 4px var(--vf-accent);
+
+  /* ---------- Движение ---------- */
+  --vf-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --vf-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --vf-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --vf-dur-fast: 120ms;
+  --vf-dur-base: 220ms;
+  --vf-dur-slow: 380ms;
+
+  /* ---------- Слои ---------- */
+  --vf-z-base: 0;
+  --vf-z-sticky: 20;
+  --vf-z-dropdown: 40;
+  --vf-z-modal: 60;
+  --vf-z-toast: 80;
+
+  /* ---------- Раскладка ---------- */
+  --vf-sidebar-width: 288px;
+  --vf-shell-max: 1720px;
+}

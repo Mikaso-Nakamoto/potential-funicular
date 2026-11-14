@@ -1,0 +1,61 @@
+/* Флаги: локальные SVG из flag-icons 7.3.2 (MIT, © Panayiotis Lipiridis) */
+
+.fi {
+  display: inline-block;
+  width: 1.333em;
+  height: 1em;
+  background-color: var(--vf-surface-3);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.08);
+  flex: none;
+}
+
+/* 4x3 варианты, по одному правилу на валюту */
+.fi-ae { background-image: url("../iconss/flags/ae.svg"); }
+.fi-am { background-image: url("../iconss/flags/am.svg"); }
+.fi-au { background-image: url("../iconss/flags/au.svg"); }
+.fi-az { background-image: url("../iconss/flags/az.svg"); }
+.fi-bh { background-image: url("../iconss/flags/bh.svg"); }
+.fi-br { background-image: url("../iconss/flags/br.svg"); }
+.fi-by { background-image: url("../iconss/flags/by.svg"); }
+.fi-ca { background-image: url("../iconss/flags/ca.svg"); }
+.fi-ch { background-image: url("../iconss/flags/ch.svg"); }
+.fi-cn { background-image: url("../iconss/flags/cn.svg"); }
+.fi-cz { background-image: url("../iconss/flags/cz.svg"); }
+.fi-dk { background-image: url("../iconss/flags/dk.svg"); }
+.fi-eg { background-image: url("../iconss/flags/eg.svg"); }
+.fi-eu { background-image: url("../iconss/flags/eu.svg"); }
+.fi-gb { background-image: url("../iconss/flags/gb.svg"); }
+.fi-ge { background-image: url("../iconss/flags/ge.svg"); }
+.fi-hk { background-image: url("../iconss/flags/hk.svg"); }
+.fi-hu { background-image: url("../iconss/flags/hu.svg"); }
+.fi-id { background-image: url("../iconss/flags/id.svg"); }
+.fi-il { background-image: url("../iconss/flags/il.svg"); }
+.fi-in { background-image: url("../iconss/flags/in.svg"); }
+.fi-jo { background-image: url("../iconss/flags/jo.svg"); }
+.fi-jp { background-image: url("../iconss/flags/jp.svg"); }
+.fi-kr { background-image: url("../iconss/flags/kr.svg"); }
+.fi-kw { background-image: url("../iconss/flags/kw.svg"); }
+.fi-kz { background-image: url("../iconss/flags/kz.svg"); }
+.fi-mx { background-image: url("../iconss/flags/mx.svg"); }
+.fi-my { background-image: url("../iconss/flags/my.svg"); }
+.fi-no { background-image: url("../iconss/flags/no.svg"); }
+.fi-nz { background-image: url("../iconss/flags/nz.svg"); }
+.fi-om { background-image: url("../iconss/flags/om.svg"); }
+.fi-ph { background-image: url("../iconss/flags/ph.svg"); }
+.fi-pl { background-image: url("../iconss/flags/pl.svg"); }
+.fi-qa { background-image: url("../iconss/flags/qa.svg"); }
+.fi-ru { background-image: url("../iconss/flags/ru.svg"); }
+.fi-sa { background-image: url("../iconss/flags/sa.svg"); }
+.fi-se { background-image: url("../iconss/flags/se.svg"); }
+.fi-sg { background-image: url("../iconss/flags/sg.svg"); }
+.fi-th { background-image: url("../iconss/flags/th.svg"); }
+.fi-tj { background-image: url("../iconss/flags/tj.svg"); }
+.fi-tr { background-image: url("../iconss/flags/tr.svg"); }
+.fi-ua { background-image: url("../iconss/flags/ua.svg"); }
+.fi-us { background-image: url("../iconss/flags/us.svg"); }
+.fi-uz { background-image: url("../iconss/flags/uz.svg"); }
+.fi-za { background-image: url("../iconss/flags/za.svg"); }
