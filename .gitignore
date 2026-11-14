@@ -1,0 +1,27 @@
+# OS & Editor files
+.DS_Store
+Thumbs.db
+*.swp
+
+# Dependencies & Environments
+node_modules/
+.venv/
+venv/
+__pycache__/
+
+# Local credentials and account-specific configuration
+.env
+.env.*
+!.env.example
+.npmrc
+config/local/
+
+# Generated private outputs
+outputs/
+
+# Private keys and signing material
+*.key
+*.pem
+*.p12
+*.pfx
+*.keystore
