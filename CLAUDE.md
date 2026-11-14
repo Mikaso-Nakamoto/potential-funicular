@@ -1,11 +1,13 @@
 # Claude Code & AI Agents — Repo Guide
 
-Этот репозиторий содержит единую библиотеку из **241 навыка (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, 3D/WebGL сцен, браузерных игр и защищённых приложений.
+Этот репозиторий содержит единую библиотеку из **243 навыков (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, нативных возможностей современной веб-платформы, 3D/WebGL сцен, браузерных игр и защищённых приложений.
 
 ## Рекомендуемый пайплайн для фронтенда и веб-дизайна
 
 Перед написанием любого UI/HTML/CSS/React-кода **всегда** загружай профильные навыки из `agent-skills/`:
 
+0. **Современная веб-платформа без устаревших JS-костылей (Chrome / Edge / Firefox / MDN):**
+   - `agent-skills/web-platform/modern-web-guidance/SKILL.md` (и локальные гайды в `agent-skills/web-platform/modern-web-guidance/guides/`) — нативные `<dialog>`, Popover API, CSS Anchor Positioning, `oklch()`, `subgrid`, `@starting-style`, View Transitions, оптимизация INP.
 1. **Выбор направления и защита от стокового ИИ-стиля (обязательно на старте):**
    - Лендинги, промо-сайты, портфолио: `agent-skills/ui/taste-skill/SKILL.md` + `agent-skills/ui/no-ai-design-slop/SKILL.md`
    - Продуктовый UI и веб-приложения: `agent-skills/ui/frontend-design/SKILL.md` или `agent-skills/ui/anthropic-frontend-design/SKILL.md`

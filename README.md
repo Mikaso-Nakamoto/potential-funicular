@@ -1,8 +1,8 @@
 # Agent Skills Vault
 
-Масштабная библиотека переиспользуемых навыков (**241 Agent Skills**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
+Масштабная библиотека переиспользуемых навыков (**243 Agent Skills**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
 
-Собраны топовые мировые решения против шаблонного «пластикового» ИИ-дизайна (**Taste Skill**, **UI/UX Pro Max**, **Impeccable**, **Emil Kowalski Skills**, **Anthropic Frontend Design**, **Claude Design Skill**, **Vercel Web Design Guidelines**), полная коллекция **MengTo/Skills** (все 94 навыка веб-дизайна, 3D и иллюстрации), а также паки по геймдеву, Яндекс Играм и прикладной криптографии.
+Собраны топовые мировые решения против шаблонного «пластикового» ИИ-дизайна (**Taste Skill**, **UI/UX Pro Max**, **Impeccable**, **Emil Kowalski Skills**, **Anthropic Frontend Design**, **Claude Design Skill**, **Vercel Web Design Guidelines**), официальный пакет современных веб-стандартов **GoogleChrome Modern Web Guidance** (совместно с Edge, Firefox и MDN), полная коллекция **MengTo/Skills** (все 94 навыка веб-дизайна, 3D и иллюстрации), а также паки по геймдеву, Яндекс Играм и прикладной криптографии.
 
 ![Галерея превью навыков](SCREENSHOTS-preview.jpg)
 
@@ -17,6 +17,7 @@
 | **Сделать отзывчивые микро-анимации как в Linear / Apple** | [`emil-design-eng`](agent-skills/design-engineering/emil-design-eng/SKILL.md) + [`animate`](agent-skills/design-engineering/animate/SKILL.md) + [`choreograph`](agent-skills/design-engineering/choreograph/SKILL.md) |
 | **Вычистить и отполировать уже свёрстанный сайт** | [`impeccable`](agent-skills/ui/impeccable/SKILL.md) + [`audit-ai-design-slop`](agent-skills/ui/audit-ai-design-slop/SKILL.md) + [`web-design-guidelines`](agent-skills/vercel/web-design-guidelines/SKILL.md) |
 | **Собрать сайт уровня Awwwards со скролл-сценами и 3D** | [`build-awwwards-quality-sites`](agent-skills/web-design/build-awwwards-quality-sites/SKILL.md) + [`cinematic-gsap-lenis-motion-system`](agent-skills/web-design/cinematic-gsap-lenis-motion-system/SKILL.md) |
+| **Писать на свежем нативном CSS/HTML без устаревших JS-костылей** | [`modern-web-guidance`](agent-skills/web-platform/modern-web-guidance/SKILL.md) (250 фич современной веб-платформы от Chrome, Edge, Firefox и MDN) |
 
 ---
 
@@ -27,6 +28,7 @@ agent-skills/
   ui/                  # Дизайн-системы, Taste Skill, UI/UX Pro Max, Impeccable, Anti-Slop (23)
   design-engineering/  # Микро-анимации, жесты и полировка UI от Эмиля Ковальски (19)
   web-design/          # Полная база тем, шейдеров, WebGL и скролл-сторителлинга (94)
+  web-platform/        # Современные веб-стандарты и расширения Chrome/Edge/Firefox/MDN (2)
   vercel/              # Аудит UI, View Transitions и производительность React/Next.js (9)
   3d/                  # Реалистичные PBR-материалы, вода, свет и 3D-туры в Three.js (16)
   illustration/        # Авторские векторные SVG-иллюстрации в 14 стилях (14)
@@ -43,7 +45,7 @@ agent-skills/
 
 ---
 
-## Полный каталог навыков (241)
+## Полный каталог навыков (243)
 
 ### 1. UI, дизайн-системы и борьба со стоковым ИИ ([`agent-skills/ui/`](agent-skills/ui/README.md) — 23)
 
@@ -324,6 +326,11 @@ agent-skills/
 
 - **[`yandex-games-moderation-auditor`](agent-skills/YA_SKILLS/yandex-games-moderation-auditor.md)** — Технический и продуктовый аудит HTML5/Web-игр на соответствие требованиям модерации Яндекс Игр.
 - **[`yandex-games-auto-fixer`](agent-skills/YA_SKILLS/yandex-games-auto-fixer.md)** — Автоматизированное внесение исправлений в веб-игру по результатам аудита для прохождения модерации Яндекс Игр.
+
+### 14. Современная веб-платформа и расширения браузера ([`agent-skills/web-platform/`](agent-skills/web-platform/README.md) — 2)
+
+- **[`modern-web-guidance`](agent-skills/web-platform/modern-web-guidance/SKILL.md)** — Официальный пакет от команд Google Chrome, Microsoft Edge, Mozilla Firefox и MDN: 250 современных возможностей веб-платформы и 200+ локальных гайдов (`guides/` — `visual-design`, `ui-components`, `css`, `forms`, `performance`, `accessibility`, `built-in-ai`).
+- **[`chrome-extensions`](agent-skills/web-platform/chrome-extensions/SKILL.md)** — Разработка современных расширений на Manifest V3, service workers, API расширений и публикация в Chrome Web Store.
 
 ---
 
