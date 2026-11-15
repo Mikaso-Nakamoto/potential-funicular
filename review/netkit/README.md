@@ -39,3 +39,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Invoke-LeakCheck.ps1
   `inbox/dist/LibreWolf-USB-fixed.zip`, md5 `1f6991211abdb7d527b2be82de2ea49b`.
 - Копия для скачивания: https://drive.google.com/file/d/1Cew0ExezjbhAEBzNCqrR6mLbJw1t57G7/view
 - Что проверено статически и что требует живой машины — в §«Чего не проверял» отчёта.
+
+## Проверка синтаксиса PowerShell без Windows
+
+`tests/ps-lint.py` разбирает `.ps1` настоящей грамматикой (tree-sitter-powershell)
+и дополнительно ловит три класса ошибок, которых парсер не видит: `$var.имя`
+внутри двойных кавычек (класс F-15), `ConvertTo-Json` без `-Depth`,
+`Invoke-WebRequest` без `-UseBasicParsing`.
+
+```bash
+python3 -m venv /tmp/psvenv
+/tmp/psvenv/bin/pip install tree_sitter tree-sitter-powershell
+/tmp/psvenv/bin/python review/netkit/tests/ps-lint.py review/netkit/inbox/LibreWolf-USB/app/*.ps1
+```
+
+На исправленном комплекте — 0 находок; на исходном архиве — те самые 6 мест из F-15.
