@@ -24,6 +24,7 @@ function Get-SystemExe([string]$Name) {
 }
 $Curl = Get-SystemExe 'curl.exe'
 $Tar  = Get-SystemExe 'tar.exe'
+. (Join-Path $PSScriptRoot 'ui-bar.ps1')
 
 function Fail([string]$msg) {
     Write-Host ""
@@ -32,10 +33,10 @@ function Fail([string]$msg) {
     exit 1
 }
 
-function Download([string]$url, [string]$out) {
+function Download([string]$url, [string]$out, [string]$label = 'Загрузка') {
     Write-Host "     $url"
-    & $Curl -L --fail --proto '=https' --tlsv1.2 --retry 3 --connect-timeout 20 --progress-bar -o "$out" "$url"
-    if ($LASTEXITCODE -ne 0) { Fail "Не скачалось: $url" }
+    $code = Invoke-DownloadBar $Curl $url $out $label
+    if ($code -ne 0) { Fail "Не скачалось: $url" }
     if (-not (Test-Path $out) -or (Get-Item $out).Length -lt 100000) { Fail "Файл пустой/битый: $out" }
 }
 
@@ -75,8 +76,8 @@ if ((Test-Path $zipPath) -and ((Get-Item $zipPath).Length -gt 20000000)) {
 foreach ($u in $candidates) {
     if ($okDl) { break }
     Write-Host "     пробую скачать..."
-    & $Curl -L --fail --proto '=https' --tlsv1.2 --retry 2 --connect-timeout 20 --progress-bar -o "$zipPath" "$u"
-    if ($LASTEXITCODE -eq 0 -and (Test-Path $zipPath) -and (Get-Item $zipPath).Length -gt 20000000) { $okDl = $true; $usedUrl = $u; break }
+    $dlCode = Invoke-DownloadBar $Curl $u $zipPath 'LibreWolf'
+    if ($dlCode -eq 0 -and (Test-Path $zipPath) -and (Get-Item $zipPath).Length -gt 20000000) { $okDl = $true; $usedUrl = $u; break }
     Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
 }
 if (-not $okDl) {

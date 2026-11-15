@@ -13,6 +13,7 @@ $App  = $PSScriptRoot
 $Root = Split-Path -Parent $App
 
 function Say([string]$text, [string]$color = 'Gray') { Write-Host $text -ForegroundColor $color }
+. (Join-Path $PSScriptRoot 'ui-bar.ps1')
 
 $exePath  = Join-Path $App 'LibreWolf\LibreWolf.exe'
 $xrayPath = Join-Path $Root 'vpn\xray.exe'
@@ -61,6 +62,10 @@ Say ''
 Say ('[..] Упаковываю файлов: ' + $files.Count + ' — на большом браузере это может занять пару минут...') 'DarkGray'
 if (Test-Path $out) { Remove-Item $out -Force }
 $zip = [IO.Compression.ZipFile]::Open($out, [IO.Compression.ZipArchiveMode]::Create)
+$barTop = 0
+try { $barTop = [Console]::CursorTop } catch { }
+$barGlyph = 0
+$barLast = [DateTime]::MinValue
 try {
     $i = 0
     foreach ($f in $files) {
@@ -68,11 +73,20 @@ try {
         [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
             $zip, $f.FullName, $rel, [IO.Compression.CompressionLevel]::Optimal)
         $i++
-        if (($i % 500) -eq 0) { Say ('     файлов: ' + $i) 'DarkGray' }
+        if (((Get-Date) - $barLast).TotalMilliseconds -ge 110 -and -not [Console]::IsOutputRedirected) {
+            Show-BarFrame $barTop $barGlyph 'Сборка zip' $i $files.Count 0 -Counts
+            $barGlyph++
+            $barLast = Get-Date
+        } elseif (($i % 500) -eq 0) { Say ('     файлов: ' + $i) 'DarkGray' }
     }
 }
 finally {
     $zip.Dispose()
+    if (-not [Console]::IsOutputRedirected) {
+        Clear-BarArea $barTop 3
+        try { [Console]::SetCursorPosition(0, $barTop) } catch { }
+        Say ('[ok] упаковано файлов: ' + $i) 'Green'
+    }
 }
 
 $size = (Get-Item $out).Length
