@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-56'
+$Build = 'F-58'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -170,6 +170,9 @@ function Show-Help([string]$num) {
                 '',
                 'Сервер выбирается балансировщиком на каждое соединение, поэтому выходной',
                 'IP меняется. Для YouTube, Google и Госуслуг это плохо — используй пункт 2.',
+                '',
+                'Когда закроешь окно браузера, сессия сама погасит VPN и предложит почистить',
+                'следы на этом ПК: Enter — чистить, N — оставить, 30 секунд без ответа — пропустить.',
                 '',
                 'Команда: powershell -ExecutionPolicy Bypass -File app\start.ps1'
             )

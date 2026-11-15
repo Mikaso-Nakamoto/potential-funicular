@@ -134,6 +134,43 @@ function Get-ListenerPid([int]$P) {
     return 0
 }
 
+function Ask-Cleanup {
+    # После закрытия браузера спрашивает, чистить ли следы этой сессии.
+    # Enter/Y — чистить, N/Esc — нет, 30 секунд без ответа — пропустить.
+    # При перенаправленном вводе (запуск из скрипта) не спрашивает вовсе.
+    try {
+        if ([Console]::IsInputRedirected) { return $false }
+    } catch { return $false }
+
+    Write-Host ''
+    Write-Host '[?] Почистить следы этой сессии на этом ПК?' -ForegroundColor Cyan
+    Write-Host '    История PowerShell, временные файлы, кэш миниатюр, недавние документы, DNS-кэш.' -ForegroundColor DarkGray
+    Write-Host '    Enter или Y — чистить,   N — оставить,   30 секунд — пропустить.' -ForegroundColor DarkGray
+    Write-Host '    > ' -ForegroundColor Green -NoNewline
+
+    $buf = ''
+    $answered = $false
+    $deadline = (Get-Date).AddSeconds(30)
+    while ((Get-Date) -lt $deadline) {
+        try {
+            if ([Console]::KeyAvailable) {
+                $k = [Console]::ReadKey($true)
+                if ($k.Key -eq 'Enter') { $answered = $true; break }
+                if ($k.Key -eq 'Escape') { Write-Host ''; return $false }
+                if ("$($k.KeyChar)" -match '^[A-Za-zА-Яа-я]$') {
+                    $buf += $k.KeyChar
+                    Write-Host $k.KeyChar -NoNewline
+                }
+            }
+        } catch { return $false }
+        Start-Sleep -Milliseconds 100
+    }
+    Write-Host ''
+    if (-not $answered) { return $false }
+    if ($buf -eq '') { return $true }
+    return ($buf -match '^(y|Y|д|Д)')
+}
+
 function Get-FreePort {
     for ($i = 0; $i -lt 40; $i++) {
         $p = Get-Random -Minimum 20000 -Maximum 60000
@@ -720,8 +757,17 @@ while (-not $s.stop) {
 
     Log 'браузер закрыт пользователем, xray остановлен, сессия чистая'
     Write-Host ''
-    Write-Host '[OK] Браузер закрыт, VPN остановлен.' -ForegroundColor Green
-    Write-Host '[i] Перед извлечением флешки запусти ЧИСТКА.bat (сотрёт следы на этом ПК).' -ForegroundColor Cyan
+    Write-Host '[OK] Браузер закрыт. VPN выключен, правила брандмауэра снимаются.' -ForegroundColor Green
+
+    if (Ask-Cleanup) {
+        Write-Host ''
+        Log 'чистка следов по запросу после закрытия браузера'
+        & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $App 'clean-traces.ps1')
+        Write-Host ''
+        Write-Host '[OK] Следы этой сессии убраны. Флешку можно вынимать.' -ForegroundColor Green
+    } else {
+        Write-Host '[i] Следы не тронуты. Убрать позже: меню → пункт 6.' -ForegroundColor DarkGray
+    }
 }
 catch {
     $msg = "$($_.Exception.Message)"
