@@ -1,7 +1,10 @@
 ﻿# make-bundle.ps1 — собрать ПОЛНУЮ сборку (браузер + xray + скрипты) в один zip.
 # Нужна, чтобы не перекачивать и не перезаписывать браузер при каждом обновлении:
 # обновляешь только скрипты (маленький архив), а полную сборку делаешь этой кнопкой.
-param([string]$OutFile = '')
+param(
+    [string]$OutFile = '',
+    [switch]$NoSecrets        # не класть в архив vpn\sub.txt и vpn\config.json
+)
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -22,6 +25,17 @@ else { Say '[!] Браузер не найден (app\LibreWolf\LibreWolf.exe) �
 if (Test-Path $xrayPath) { Say ('xray: ' + $xrayPath) }
 else { Say '[!] Xray не найден (vpn\xray.exe) — архив будет без него.' 'Yellow' }
 
+$hasSub = Test-Path (Join-Path $Root 'vpn\sub.txt')
+$hasCfg = Test-Path (Join-Path $Root 'vpn\config.json')
+if (($hasSub -or $hasCfg) -and $NoSecrets) {
+    Say '[-NoSecrets] vpn\sub.txt и vpn\config.json в архив НЕ попадут: на новой флешке ключ или подписку нужно будет ввести заново.' 'Yellow'
+} elseif ($hasSub -or $hasCfg) {
+    Say ''
+    Say '[!] В архив попадут vpn\sub.txt и vpn\config.json — это твоя подписка (URL с токеном)' 'Red'
+    Say '    и ключи узлов. Такую сборку нельзя никому передавать и нельзя выкладывать в облака.' 'Red'
+    Say '    Нужен архив без секретов: запусти СОБРАТЬ-СБОРКУ.bat -NoSecrets' 'Red'
+}
+
 $out = $OutFile
 if (-not $out) {
     $out = Join-Path $Root ('LibreWolf-USB-full-' + (Get-Date -Format 'yyyyMMdd-HHmm') + '.zip')
@@ -39,6 +53,7 @@ foreach ($f in @(Get-ChildItem -Path $Root -Recurse -File -ErrorAction SilentlyC
         if ($p -like '_speedtest_*') { $skip = $true }
     }
     if ($rel -like 'LibreWolf-USB-full-*.zip') { $skip = $true }
+    if ($NoSecrets -and ($rel -match '^vpn[\\/](sub\.txt|config\.json)$')) { $skip = $true }
     if (-not $skip) { [void]$files.Add($f) }
 }
 
