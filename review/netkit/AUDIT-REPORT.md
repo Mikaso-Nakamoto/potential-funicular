@@ -226,6 +226,13 @@ python3 -m venv /tmp/psvenv && /tmp/psvenv/bin/pip install tree_sitter tree-sitt
 /tmp/psvenv/bin/python review/netkit/tests/ps-lint.py review/netkit/inbox/LibreWolf-USB/app/*.ps1
 ```
 
+В комплект добавлена и **самопроверка для машины пользователя**: `ПРОВЕРКА.bat` →
+`app/self-check.ps1`. Она без сети и без запуска Xray прогоняет шесть тестовых ссылок
+через конвертер, собирает из них конфиг и проверяет 30 утверждений: теги, `alpn`
+массивом, `realitySettings.publicKey/spiderX`, `tcpSettings.header.request.path`,
+правила `direct`/`block`, base64-подписку и то, что кавычка в `path` не ломает JSON.
+Это ровно та часть, которую парсер проверить не может, а человек — может, за 30 секунд.
+
 Проверен и сам линтер: на заведомо битом скрипте (незакрытая скобка + `$s.Value`
 в строке) он выдаёт обе находки — то есть он не «молчит всегда».
 
