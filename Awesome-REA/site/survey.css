@@ -1,0 +1,242 @@
+/* Scholarly reading layout. Uses the shared palette and system fonts only. */
+:root{--abstract:#fbfaff}
+@media (prefers-color-scheme: dark){:root{--abstract:#1f1e2c}}
+.survey-page {
+  --survey-serif:Georgia,"Times New Roman","Songti SC","Noto Serif CJK SC",SimSun,serif;
+  --survey-measure:72ch;
+  background:var(--paper);
+  color:var(--body);
+}
+.survey-main {max-width:1200px;padding-bottom:80px}
+.survey-language {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid var(--strong);border-radius:6px;background:var(--surface);color:var(--ink);font-size:14px;font-weight:550;line-height:1.5;white-space:nowrap}
+.survey-language:hover {background:var(--tint);border-color:var(--steel)}
+.survey-language>.icon {width:17px;height:17px;font-size:17px;color:var(--muted)}
+.github-link>.survey-github-fallback {font:700 11px/19px var(--sans);text-align:center}
+.survey-breadcrumbs {display:flex;align-items:baseline;gap:7px 10px;padding-top:26px;font-size:14px;line-height:1.7;color:var(--muted)}
+.survey-breadcrumbs a {flex:none;color:var(--link);text-decoration:underline;text-underline-offset:3px}
+.survey-breadcrumbs [aria-current] {min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.survey-header {padding:28px 0 36px;border-bottom:1px solid var(--strong)}
+.survey-kicker {display:flex;align-items:center;gap:12px;margin:0 0 20px;color:var(--link);font-size:12px;font-weight:650;line-height:1.6;letter-spacing:.1em}
+.survey-kicker::before {content:"";width:30px;height:2px;flex:none;background:var(--accent)}
+.survey-title {max-width:29ch;margin:0;color:var(--ink);font-family:var(--survey-serif);font-size:clamp(36px,4.4vw,56px);font-weight:500;line-height:1.15;letter-spacing:-.025em;overflow-wrap:break-word;text-wrap:balance}
+.survey-deck {max-width:70ch;margin:22px 0 0;color:var(--body);font-size:19px;line-height:1.8;text-wrap:pretty}
+.survey-meta {display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;max-width:80ch;margin:22px 0 0;color:var(--muted);font-size:14px;line-height:1.75;font-variant-numeric:tabular-nums}
+/* Each byline part is one flex item; its trailing dot sits inside it, so the gap matches the margin. */
+.survey-meta>span:not(:last-child)::after {content:"·";content:"·"/"";margin-left:10px}
+.survey-meta p {margin:0}
+.survey-meta a {color:var(--link);text-decoration:underline;text-underline-offset:3px}
+.survey-actions {display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.survey-actions a,.survey-actions button {display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;max-width:100%;padding:9px 14px;border:1px solid var(--strong);border-radius:6px;background:var(--surface);color:var(--link);font-size:14px;font-weight:600;line-height:1.5;text-align:center;overflow-wrap:anywhere}
+.survey-actions a:hover,.survey-actions button:hover {background:var(--tint);border-color:var(--steel)}
+.survey-actions .icon {width:16px;height:16px;font-size:16px}
+
+/* A quiet contents rail; the DOM keeps its ordinary navigation/list semantics. */
+.survey-layout {display:grid;grid-template-columns:224px minmax(0,1fr);gap:clamp(32px,4vw,60px);align-items:start;padding-top:38px}
+.survey-toc {position:sticky;top:96px;align-self:start;min-width:0;max-height:calc(100vh - 120px);max-height:calc(100dvh - 120px);overflow-y:auto;overscroll-behavior:contain;padding:0 16px 8px 0;border-right:1px solid var(--line);scrollbar-width:thin}
+.survey-toc h2,.survey-toc summary {margin:0 0 12px;color:var(--ink);font:650 14px/1.6 var(--sans);letter-spacing:.025em}
+.survey-toc summary {cursor:pointer;min-height:44px;padding-block:10px}
+.survey-toc ul,.survey-toc ol {margin:0;padding:0;list-style:none}
+.survey-toc li {margin:0}
+.survey-toc a {display:block;min-height:40px;padding:8px 10px;border-left:2px solid transparent;border-radius:0 4px 4px 0;color:var(--muted);font-size:14px;line-height:1.65;overflow-wrap:anywhere}
+.survey-toc a:hover {color:var(--link);background:var(--soft);border-left-color:var(--strong)}
+.survey-toc a:focus-visible {outline-offset:-2px}
+.survey-toc a[aria-current] {color:var(--link);font-weight:650;background:var(--tint);border-left-color:var(--link)}
+.survey-toc a[aria-current="false"] {color:var(--muted);font-weight:400;background:transparent;border-left-color:transparent}
+.survey-toc li ul,.survey-toc li ol {padding-left:12px}
+.survey-toc li li a {font-size:13px;padding-block:6px}
+
+/* Paragraphs keep the full text and a consistent reading measure. */
+.survey-article {min-width:0;max-width:var(--survey-measure);font-size:17px;line-height:1.85;overflow-wrap:break-word}
+.survey-article p {margin:0 0 1.2em;text-wrap:pretty}
+.survey-article strong {color:var(--ink);font-weight:650}
+.survey-article a {color:var(--link);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;overflow-wrap:anywhere}
+.survey-article a:hover {text-decoration-thickness:2px}
+.survey-article :is(h2,h3,h4),.survey-section,.survey-reference {scroll-margin-top:104px}
+.survey-article h2 {margin:0 0 20px;color:var(--ink);font-family:var(--survey-serif);font-size:clamp(27px,2.6vw,34px);font-weight:500;line-height:1.3;letter-spacing:-.015em;text-wrap:balance;overflow-wrap:break-word}
+.survey-article h3 {margin:28px 0 12px;color:var(--ink);font-family:var(--survey-serif);font-size:23px;font-weight:600;line-height:1.4;text-wrap:balance}
+.survey-article h4 {margin:24px 0 10px;color:var(--ink);font-size:17px;font-weight:650;line-height:1.5}
+.survey-article ul,.survey-article ol {margin:0 0 24px;padding-left:24px}
+.survey-article li+li {margin-top:10px}
+.survey-article li>p {margin-bottom:8px}
+.survey-article li ul,.survey-article li ol {margin-block:10px}
+.survey-article code {font-family:var(--mono);font-size:.88em;overflow-wrap:anywhere}
+.survey-article pre {max-width:100%;margin:24px 0;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--soft);font-size:14px;line-height:1.7}
+.survey-article pre code {font-size:inherit;overflow-wrap:normal}
+.survey-section {margin-top:44px;padding-top:32px;border-top:1px solid var(--line)}
+.survey-section:first-child {margin-top:0;padding-top:0;border-top:0}
+.survey-section>:last-child {margin-bottom:0}
+.survey-section-intro {color:var(--ink);font-size:18px;line-height:1.8}
+
+.survey-abstract {margin:0 0 32px;padding:25px 28px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;background:var(--abstract)}
+.survey-abstract h2 {margin-bottom:14px;font-size:25px}
+.survey-abstract p:last-child {margin-bottom:0}
+.survey-findings {margin:28px 0;padding:24px 28px;border-block:1px solid var(--strong);background:var(--soft)}
+.survey-findings h2,.survey-findings h3 {margin:0 0 14px;font-family:var(--sans);font-size:17px;font-weight:650;letter-spacing:0}
+.survey-findings :is(ol,ul) {margin-bottom:0}
+:is(ol,ul).survey-findings {padding-left:48px}
+.survey-findings li::marker {color:var(--link);font-weight:700}
+.survey-callout {margin:26px 0;padding:19px 22px;border-left:3px solid var(--steel);background:var(--soft);border-radius:0 5px 5px 0}
+.survey-callout h2,.survey-callout h3,.survey-callout h4 {margin:0 0 9px;font-family:var(--sans);font-size:17px;font-weight:650;letter-spacing:0}
+.survey-callout>:last-child {margin-bottom:0}
+.survey-article .survey-note {color:var(--muted);font-size:14px;line-height:1.8;margin-block:12px 20px}
+
+/* Native table semantics remain intact; only this wrapper scrolls on small screens. */
+.survey-table-wrap {min-width:0;max-width:100%;margin:26px 0;overflow-x:auto;overscroll-behavior-x:contain;border:1px solid var(--strong);border-radius:6px;background:var(--surface)}
+.survey-table-wrap:focus-visible {outline:3px solid var(--link);outline-offset:3px}
+.survey-table {width:100%;border-collapse:collapse;font-size:14px;line-height:1.65;text-align:left}
+.survey-table caption {padding:15px 18px;color:var(--ink);font-weight:650;text-align:left;caption-side:top}
+.survey-table th,.survey-table td {padding:13px 15px;border-top:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere}
+.survey-table thead th {background:var(--soft);color:var(--ink);font-weight:650;border-bottom:1px solid var(--strong)}
+.survey-table tbody th {color:var(--ink);font-weight:600}
+.survey-table tbody tr:nth-child(even) {background:var(--faint)}
+.survey-table p {margin:0 0 8px}
+.survey-table p:last-child {margin-bottom:0}
+.survey-table :is(ul,ol) {margin:0;padding-left:18px}
+.survey-table li+li {margin-top:5px}
+
+.survey-figure {margin:30px 0;padding:20px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.survey-figure>img,.survey-figure>svg {display:block;max-width:100%;height:auto;margin-inline:auto}
+.survey-figure figcaption {margin-top:15px;color:var(--muted);font-size:14px;line-height:1.75;overflow-wrap:anywhere}
+.survey-figure figcaption strong {color:var(--ink)}
+.survey-article .survey-pipeline {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;counter-reset:survey-step;list-style:none;margin:0;padding:0}
+.survey-pipeline li {position:relative;min-width:0;counter-increment:survey-step;padding:14px 12px 16px;border-top:2px solid var(--strong);border-radius:2px;background:var(--soft)}
+.survey-pipeline li+li {margin-top:0}
+.survey-pipeline li::before {content:counter(survey-step,decimal-leading-zero);display:block;margin-bottom:8px;color:var(--link);font-size:12px;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.survey-pipeline li:not(:last-child)::after {content:"→";position:absolute;top:36px;right:-16px;color:var(--steel);font:18px/1 var(--sans)}
+.survey-pipeline strong {display:block;margin-bottom:7px;font-size:15px;line-height:1.5;overflow-wrap:anywhere}
+.survey-pipeline span {display:block;font-size:14px;line-height:1.7;overflow-wrap:anywhere}
+.survey-corpus {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;max-width:var(--survey-measure);margin:26px 0;padding:18px 0;border-block:1px solid var(--line)}
+.survey-corpus>* {min-width:0;margin:0}
+.survey-corpus>*+* {padding-left:18px;border-left:1px solid var(--line)}
+.survey-corpus strong {display:block;margin-bottom:3px;color:var(--ink);font-family:var(--survey-serif);font-size:28px;font-weight:500;line-height:1.3;font-variant-numeric:tabular-nums}
+.survey-corpus span,.survey-corpus p {display:block;margin:0;color:var(--muted);font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.survey-article .survey-cite {font-size:.9em;font-weight:600;font-variant-numeric:tabular-nums;text-decoration:none}
+.survey-article .survey-cite:hover {text-decoration:underline}
+.survey-article .survey-references {margin:0;padding-left:25px}
+.survey-reference {padding:16px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.8;overflow-wrap:anywhere}
+.survey-references .survey-reference+.survey-reference {margin-top:0}
+.survey-reference::marker {color:var(--link);font-weight:650;font-variant-numeric:tabular-nums}
+.survey-reference p {margin:0 0 6px}
+.survey-reference p:last-child {margin-bottom:0}
+.survey-reference:target {background:var(--tint);outline:6px solid var(--tint);border-radius:2px}
+.survey-reference-links {display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;margin-top:6px}
+.survey-reference-links a,.survey-backlink {display:inline-flex;align-items:center;min-height:36px;padding-block:6px;font-size:14px;line-height:1.7}
+.survey-article .survey-citation-block {max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.75 var(--mono);tab-size:2}
+.survey-article .survey-citation-block code {white-space:inherit;overflow-wrap:inherit}
+
+/* CJK titles use installed serif faces; prose keeps a comfortable local rhythm. */
+html[lang="zh-CN"] .survey-title {max-width:22em;line-height:1.35;letter-spacing:0}
+html[lang="zh-CN"] .survey-deck {max-width:38em;line-height:1.9}
+html[lang="zh-CN"] .survey-article {max-width:38em;line-height:1.95}
+html[lang="zh-CN"] .survey-article h2,html[lang="zh-CN"] .survey-article h3 {line-height:1.5;letter-spacing:0}
+html[lang="zh-CN"] .survey-kicker {letter-spacing:.05em}
+
+@media(max-width:999px) {
+  .survey-layout {grid-template-columns:minmax(0,1fr);gap:30px}
+  .survey-toc {position:static;max-height:none;overflow:visible;border-right:0;border-bottom:1px solid var(--line);padding:0 0 20px;max-width:var(--survey-measure)}
+  .survey-toc a {min-height:44px}
+  .survey-article {width:100%}
+}
+@media(max-width:700px) {
+  .survey-main.shell {width:calc(100% - 36px)}
+  .survey-header {padding:30px 0 28px}
+  .survey-kicker {margin-bottom:14px;font-size:11px}
+  .survey-title {font-size:36px;line-height:1.2;letter-spacing:-.02em}
+  .survey-deck {margin-top:18px;font-size:17px;line-height:1.8}
+  .survey-meta {margin-top:18px;font-size:13px}
+  .survey-actions {gap:8px;margin-top:20px}
+  .survey-actions a,.survey-actions button {padding:9px 12px}
+  .survey-layout {padding-top:26px;gap:26px}
+  .survey-article {font-size:16px;line-height:1.85}
+  .survey-section-intro {font-size:17px}
+  .survey-section {margin-top:34px;padding-top:26px}
+  .survey-article h2 {font-size:28px;margin-bottom:16px}
+  .survey-article h3 {font-size:22px}
+  .survey-abstract {padding:20px 18px;margin-bottom:26px}
+  .survey-abstract h2 {font-size:24px}
+  .survey-findings {padding:20px 18px}
+  :is(ol,ul).survey-findings {padding-left:40px}
+  .survey-callout {padding:16px 18px}
+  .survey-table {min-width:640px}
+  .survey-table th,.survey-table td {padding:11px 12px}
+  .survey-figure {padding:14px;margin-block:24px}
+  .survey-article .survey-pipeline {grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .survey-pipeline li::after {display:none}
+  .survey-corpus {gap:12px}
+  .survey-corpus>*+* {padding-left:12px}
+  .survey-corpus strong {font-size:25px}
+  .survey-reference-links a,.survey-backlink {min-height:44px}
+}
+@media(max-width:480px) {
+  .survey-article .survey-pipeline {grid-template-columns:minmax(0,1fr);gap:24px}
+  .survey-pipeline li:not(:last-child)::after {content:"↓";display:block;top:auto;bottom:-21px;right:auto;left:calc(50% - 6px)}
+}
+@media(prefers-reduced-motion:reduce) {
+  html {scroll-behavior:auto}
+}
+
+/* Printed copies contain the article, not the site's browsing controls. */
+@media print {
+  @page {margin:18mm 16mm}
+  html {scroll-behavior:auto;scroll-padding-top:0}
+  .survey-page {background:#fff;color:#111;font-size:10.5pt}
+  .survey-page .site-header,.survey-page .site-footer,.survey-page .skip-link,.survey-toc,.survey-actions {display:none!important}
+  .survey-main,.survey-main.shell {width:100%;max-width:none;margin:0;padding:0}
+  .survey-header {padding:0 0 16pt;border-bottom:1pt solid #777}
+  .survey-kicker {font-size:9pt;margin-bottom:10pt;color:#333}
+  .survey-title {font-size:27pt;max-width:none;line-height:1.2;color:#111}
+  .survey-deck {max-width:none;margin-top:12pt;font-size:11pt;line-height:1.6}
+  .survey-meta {max-width:none;margin-top:10pt;font-size:9pt;color:#333}
+  .survey-layout {display:block;padding-top:18pt}
+  .survey-article,html[lang="zh-CN"] .survey-article {max-width:none;width:100%;font-size:10.5pt;line-height:1.7}
+  .survey-article h2 {font-size:19pt;color:#111}
+  .survey-article h3 {font-size:14pt;color:#111}
+  .survey-article h4 {font-size:11pt;color:#111}
+  .survey-article :is(h2,h3,h4),.survey-table caption {break-after:avoid}
+  .survey-article p,.survey-article li {orphans:3;widows:3}
+  .survey-section {margin-top:22pt;padding-top:16pt;break-inside:auto}
+  .survey-abstract,.survey-callout,.survey-findings {background:transparent;border-color:#aaa;padding:12pt 14pt;box-shadow:none}
+  .survey-article pre {white-space:pre-wrap;overflow:visible;overflow-wrap:anywhere;font-size:9pt}
+  .survey-article pre code {overflow-wrap:anywhere}
+  .survey-table-wrap {overflow:visible;max-width:none;border:0;border-radius:0}
+  .survey-table {width:100%;min-width:0;table-layout:fixed;font-size:9pt;line-height:1.5}
+  .survey-table th,.survey-table td {padding:6pt;white-space:normal;overflow-wrap:anywhere;hyphens:auto;border-color:#bbb}
+  .survey-table thead {display:table-header-group}
+  .survey-table tr {break-inside:avoid}
+  .survey-table thead th,.survey-table tbody tr:nth-child(even) {background:transparent}
+  .survey-figure {padding:10pt;break-inside:avoid}
+  .survey-article .survey-pipeline {grid-template-columns:repeat(4,minmax(0,1fr));gap:8pt}
+  .survey-pipeline li {padding:8pt;background:transparent;border-color:#999}
+  .survey-pipeline li::after {display:none!important}
+  .survey-pipeline strong {font-size:10pt}
+  .survey-pipeline span {font-size:9pt}
+  .survey-corpus {break-inside:avoid;margin:14pt 0;padding:10pt 0}
+  .survey-corpus strong {font-size:19pt}
+  .survey-corpus span,.survey-corpus p {font-size:9pt}
+  .survey-section-intro {font-size:11pt}
+  .survey-reference-links {gap:4pt 12pt}
+  .survey-reference-links a {min-height:0;padding:0;font-size:9pt}
+  .survey-backlink {display:none!important}
+  .survey-article .survey-citation-block {font-size:9pt;overflow:visible}
+  .survey-figure figcaption,.survey-article .survey-note,.survey-reference {font-size:9pt;color:#333}
+  .survey-reference {break-inside:avoid}
+  .survey-reference:target {background:transparent;outline:0}
+  .survey-article a,.survey-meta a {color:#111;text-decoration:underline}
+}
+
+
+/* Short task-oriented navigation keeps the article close on small screens. */
+.survey-toc-mobile{display:none}
+.survey-actions .button-primary{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.survey-actions .button-primary:hover{background:var(--link)}
+.survey-header{padding-top:40px;padding-bottom:28px}
+.survey-toc-desktop a{min-height:36px;padding-block:6px}
+@media(max-width:999px){
+ .survey-toc-desktop{display:none}
+ .survey-toc-mobile{display:block;border-block:1px solid var(--line);padding:6px 0;margin-bottom:26px}
+ .survey-toc-mobile>summary{cursor:pointer;min-height:44px;padding:10px 0;color:var(--link);font-size:15px;font-weight:650}
+ .survey-toc-mobile ol{list-style:none;margin:0;padding:0 0 10px}
+ .survey-toc-mobile a{display:block;min-height:44px;padding:9px 8px;color:var(--muted);font-size:14px;line-height:1.7}
+}
+@media(max-width:700px){.survey-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.survey-actions a{font-size:13px;padding:9px 10px}.survey-header{padding-top:26px;padding-bottom:22px}}
+@media print{.survey-toc-mobile{display:none!important}.survey-header{padding-top:0;padding-bottom:16pt}}

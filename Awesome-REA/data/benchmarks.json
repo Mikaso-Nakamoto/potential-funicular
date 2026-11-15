@@ -1,0 +1,482 @@
+[
+  {
+    "id": 1209966933,
+    "full_name": "morluto/rea",
+    "url": "https://github.com/morluto/rea",
+    "category": "upstream_tool",
+    "stars": 270109,
+    "stars_display": "270,109",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:46Z",
+    "description_zh": "REA 上游工具，以 CLI 与 MCP 连接 Agent 和逆向分析工作流。",
+    "mechanisms": [
+      "把设置、第一次提问、CLI 使用和案例证据放在同一条上手路径",
+      "用具体调查案例展示产出，同时说明原生分析 provider 的前提"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/morluto/rea",
+      "https://github.com/morluto/rea/blob/c1fd496e6a1d3a08b30ee0f2157e827bb1049b58/README.md"
+    ],
+    "license": "MIT",
+    "license_notes": "REA 原创代码为 MIT；第三方材料与外部分析工具保留各自条款。",
+    "created_at": "2026-04-14T00:51:32Z",
+    "pushed_at": "2026-10-16T00:38:05Z",
+    "readme_blob_sha": "89a53ff75546ede74869ea85faee0b769cb48ea2"
+  },
+  {
+    "id": 1134426800,
+    "full_name": "sickn33/agentic-awesome-skills",
+    "url": "https://github.com/sickn33/agentic-awesome-skills",
+    "category": "distribution_reference",
+    "stars": 47688,
+    "stars_display": "47,688",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "AAS Core 与 2,690+ Skill 目录，包含本地 MCP、CLI、选择清单、预览计划和 Workbench。",
+    "mechanisms": [
+      "按宿主提供设置和首次使用入口",
+      "把选择保存成精确清单，验证后再预览计划",
+      "使用角色 bundle 和有顺序的 workflow 帮用户从目录走向任务",
+      "机器可读索引与网站共用目录",
+      "贡献模板、自动校验、人工逻辑审查、归因账本"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/sickn33/agentic-awesome-skills",
+      "https://github.com/sickn33/agentic-awesome-skills/blob/a3072641b750a1fb2f6ce695a5f984ea3d4c3ec1/README.md",
+      "https://github.com/sickn33/agentic-awesome-skills/blob/6197800e0eca61aea5bd76244b661abf4d8a0b6f/CONTRIBUTING.md",
+      "https://github.com/sickn33/agentic-awesome-skills/blob/a3072641b750a1fb2f6ce695a5f984ea3d4c3ec1/docs/users/aas-core.md",
+      "https://github.com/sickn33/agentic-awesome-skills/blob/a1e0adbed068ef8cf24e819e5929314b19ce2f9b/LICENSE-CONTENT"
+    ],
+    "license": "MIT (code); CC-BY-4.0 (original written content)",
+    "license_notes": "README 和 LICENSE-CONTENT 区分代码与原创文字；第三方来源可能有不同许可证。",
+    "created_at": "2026-01-14T17:48:09Z",
+    "pushed_at": "2026-10-15T23:27:43Z",
+    "readme_blob_sha": "6db460dc63d0c68bdec5f401eff43e1bd1d50907"
+  },
+  {
+    "id": 1415518084,
+    "full_name": "jyjyxt/awesome-rea",
+    "url": "https://github.com/jyjyxt/awesome-rea",
+    "category": "direct_catalog",
+    "stars": 0,
+    "stars_display": "0",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "同名 REA 调查案例目录，提供中英界面、来源语言与证据类型筛选。",
+    "mechanisms": [
+      "案例展示调查对象、步骤、结果和原始证据",
+      "区分公开代码、作者报告、官方案例与相关灵感",
+      "静态页面与搜索筛选并存"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/jyjyxt/awesome-rea",
+      "https://github.com/jyjyxt/awesome-rea/blob/934eb95fed94a8580901b9c3b6a40d20412954bb/README.md"
+    ],
+    "license": null,
+    "license_notes": "GitHub API 未识别许可证；核验时根目录未见 LICENSE，不能据此获得再分发授权。",
+    "created_at": "2026-10-12T11:43:28Z",
+    "pushed_at": "2026-10-12T13:00:47Z",
+    "readme_blob_sha": "670651e003bd4ae79faac06b06e3f34a1efddf50"
+  },
+  {
+    "id": 1415010946,
+    "full_name": "kaixinbaba/awesome-rea",
+    "url": "https://github.com/kaixinbaba/awesome-rea",
+    "category": "direct_catalog",
+    "stars": 4,
+    "stars_display": "4",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "同名独立目录，收录开源重建、兼容替代品与 REA 资源；不要求项目使用 REA。",
+    "mechanisms": [
+      "按用途分类并保留逐条证据、许可证与限制",
+      "明确区分 REA 实际参与范围和独立重建项目",
+      "中英 README 与可搜索网站互相承接"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/kaixinbaba/awesome-rea",
+      "https://github.com/kaixinbaba/awesome-rea/blob/9e2a8c9eb98e384f59c447d7fa588e2b871bb359/README.md",
+      "https://awesomerea.com/"
+    ],
+    "license": "MIT",
+    "license_notes": "目录本身 MIT；被链接项目及图片保留自身权利。",
+    "created_at": "2026-10-12T03:32:15Z",
+    "pushed_at": "2026-10-15T14:18:49Z",
+    "readme_blob_sha": "c35103aa17ff170956b3a6f9007905599dfddccd"
+  },
+  {
+    "id": 1415075956,
+    "full_name": "songshikang0111/awesome-REA-cases",
+    "url": "https://github.com/songshikang0111/awesome-REA-cases",
+    "category": "direct_catalog",
+    "stars": 62,
+    "stars_display": "62",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "REA 与 AI 辅助逆向案例、项目和想法合集，维护首页精选与完整索引。",
+    "mechanisms": [
+      "首页精选控制阅读负担，INDEX 承载完整案例",
+      "记录检索窗口、待核实条目和证据截止时间",
+      "区分作者自述、具体想法和已公开的实现"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/songshikang0111/awesome-REA-cases",
+      "https://github.com/songshikang0111/awesome-REA-cases/blob/305da967206912faebb096fab8fba60ffca27842/README.md"
+    ],
+    "license": "MIT",
+    "license_notes": "原创摘要、数据整理和代码为 MIT；外链内容保留各自权利。",
+    "created_at": "2026-10-12T04:52:44Z",
+    "pushed_at": "2026-10-16T00:14:47Z",
+    "readme_blob_sha": "01c862b2b96236556472fc2a3a34c262a84785be"
+  },
+  {
+    "id": 1297941714,
+    "full_name": "DiscoverBox/awesome-ai-reverse",
+    "url": "https://github.com/DiscoverBox/awesome-ai-reverse",
+    "category": "direct_catalog",
+    "stars": 73,
+    "stars_display": "73",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "覆盖 Web、二进制、移动端和流量分析的 AI 逆向工具目录。",
+    "mechanisms": [
+      "先解释 MCP、Skill、插件、Agent 的区别",
+      "按目标与宿主提供快速选型",
+      "表格同时显示用途、最近更新和 release 信息"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/DiscoverBox/awesome-ai-reverse",
+      "https://github.com/DiscoverBox/awesome-ai-reverse/blob/9e562ce75010fa45f42ee86cacc5e50f946996cd/README.md"
+    ],
+    "license": "MIT",
+    "license_notes": "MIT 适用于列表；链接工具采用各自许可证。",
+    "created_at": "2026-07-12T03:14:27Z",
+    "pushed_at": "2026-10-15T07:25:51Z",
+    "readme_blob_sha": "acd85773abed9c3be2cc2f1acb93a08b6e845f3c"
+  },
+  {
+    "id": 1412022658,
+    "full_name": "morluto/awesome-reverse-engineering",
+    "url": "https://github.com/morluto/awesome-reverse-engineering",
+    "category": "direct_catalog",
+    "stars": 564,
+    "stars_display": "564",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "REA 作者维护的广义逆向工具与学习资源目录。",
+    "mechanisms": [
+      "以用户任务组织 Start here 入口",
+      "把商业分析工具与开源资源区别标注",
+      "关联 REA 及其它社区列表，保留贡献和维护入口"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/morluto/awesome-reverse-engineering",
+      "https://github.com/morluto/awesome-reverse-engineering/blob/c93a95169d94de9c1e9f39de0f4c865b48c7a9ed/README.md"
+    ],
+    "license": "CC0-1.0",
+    "license_notes": "CC0-1.0 适用于目录；外部项目保持自己的许可证。",
+    "created_at": "2026-10-09T14:58:20Z",
+    "pushed_at": "2026-10-15T02:18:56Z",
+    "readme_blob_sha": "3aa1808e2e06537aeda779e3a4cb5aa4174cbdbd"
+  },
+  {
+    "id": 79042753,
+    "full_name": "wtsxDev/reverse-engineering",
+    "url": "https://github.com/wtsxDev/reverse-engineering",
+    "category": "adjacent_catalog",
+    "stars": 10580,
+    "stars_display": "10,580",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "经典逆向学习与工具清单，覆盖书籍、课程、练习和分析工具。",
+    "mechanisms": [
+      "学习材料与实际工具按阶段并列",
+      "简单锚点目录支持直接定位"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/wtsxDev/reverse-engineering",
+      "https://github.com/wtsxDev/reverse-engineering/blob/b25498551c6d7110685896078afeb27097aa1e24/README.md"
+    ],
+    "license": null,
+    "license_notes": "GitHub API 未识别许可证；核验时根目录未见许可证文件。最后推送是 2023 年，条目时效需单独核验。",
+    "created_at": "2017-01-15T15:58:21Z",
+    "pushed_at": "2023-07-29T08:23:45Z",
+    "readme_blob_sha": "9c1bc917960082030d73c6b170dc58c28f07194c"
+  },
+  {
+    "id": 227038548,
+    "full_name": "alphaSeclab/awesome-reverse-engineering",
+    "url": "https://github.com/alphaSeclab/awesome-reverse-engineering",
+    "category": "adjacent_catalog",
+    "stars": 5127,
+    "stars_display": "5,127",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "跨平台的大型逆向资源索引，覆盖分析工具生态、文章与视频。",
+    "mechanisms": [
+      "按平台、工具和细分任务多层分类",
+      "提供中文与英文索引以及完整版本"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/alphaSeclab/awesome-reverse-engineering",
+      "https://github.com/alphaSeclab/awesome-reverse-engineering/blob/1a7445d2c7e3e42350a2556c70b469fb3429d49a/Readme.md"
+    ],
+    "license": null,
+    "license_notes": "GitHub API 未识别许可证；核验时根目录未见许可证文件。最后推送是 2021 年，不能把累计 Star 当作近期活跃度。",
+    "created_at": "2019-12-10T05:45:37Z",
+    "pushed_at": "2021-09-01T16:55:49Z",
+    "readme_blob_sha": "b8b0cf553177c38fc58245630b5cdebd12302808"
+  },
+  {
+    "id": 896335270,
+    "full_name": "punkpeye/awesome-mcp-servers",
+    "url": "https://github.com/punkpeye/awesome-mcp-servers",
+    "category": "distribution_reference",
+    "stars": 96407,
+    "stars_display": "96,407",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "MCP Server 目录，配套多语言 README 和同步网站。",
+    "mechanisms": [
+      "统一标识官方来源、实现语言、运行环境与操作系统",
+      "区分自行部署与远程托管服务器入口",
+      "网站目录与仓库联动"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/punkpeye/awesome-mcp-servers",
+      "https://github.com/punkpeye/awesome-mcp-servers/blob/8a8b37d9a4c1c5e4fda88e6a56ba23d7755f6236/README.md",
+      "https://github.com/punkpeye/awesome-mcp-servers/blob/23a7558c5c9117e3381d122f20a2b01668c6be4e/LICENSE"
+    ],
+    "license": "MIT",
+    "license_notes": "GitHub API 识别为 MIT；单个服务器拥有独立许可证。",
+    "created_at": "2024-11-30T04:49:10Z",
+    "pushed_at": "2026-10-15T06:32:19Z",
+    "readme_blob_sha": "e7c8e8012784025eb074d99f1d62c05fa7bd167b"
+  },
+  {
+    "id": 1084853233,
+    "full_name": "VoltAgent/awesome-agent-skills",
+    "url": "https://github.com/VoltAgent/awesome-agent-skills",
+    "category": "distribution_reference",
+    "stars": 35790,
+    "stars_display": "35,790",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:48Z",
+    "description_zh": "以官方开发团队与社区作者为入口的跨宿主 Skill 索引。",
+    "mechanisms": [
+      "强调来源与作者，而非只按热度排序",
+      "说明不同宿主的 Skill 路径",
+      "公布描述、渐进加载、路径与工具范围等质量要求"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/VoltAgent/awesome-agent-skills",
+      "https://github.com/VoltAgent/awesome-agent-skills/blob/3cd17ca9f40796a5dc564ebc6d76b4aa1303ff07/README.md",
+      "https://github.com/VoltAgent/awesome-agent-skills/blob/83169c00a2e097906f391acb5a5679108cb82b9d/LICENSE"
+    ],
+    "license": "MIT",
+    "license_notes": "目录 MIT；具体 Skill 应检查其来源仓库。",
+    "created_at": "2025-10-28T08:55:32Z",
+    "pushed_at": "2026-10-15T13:58:02Z",
+    "readme_blob_sha": "dbb9ef83bc5a7b68dadaa7dc9f617c3c79428ea3"
+  },
+  {
+    "id": 969302809,
+    "full_name": "hesreallyhim/awesome-claude-code",
+    "url": "https://github.com/hesreallyhim/awesome-claude-code",
+    "category": "distribution_reference",
+    "stars": 55775,
+    "stars_display": "55,775",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:47Z",
+    "description_zh": "Claude Code 社区资源目录，覆盖 Skill、插件、工作流、工具和学习材料。",
+    "mechanisms": [
+      "设置 Start Here 与 Recently Added 入口",
+      "单条资源显示创建、更新、许可及 Star 等元数据",
+      "从结构化资源数据生成 README"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/hesreallyhim/awesome-claude-code",
+      "https://github.com/hesreallyhim/awesome-claude-code/blob/c57b440b25a5c2a5a96bd06d6f42da89fc1486bb/README.md",
+      "https://github.com/hesreallyhim/awesome-claude-code/blob/21372d9e2dfb8bbeadff2b3a9907ee4c41569044/LICENSE"
+    ],
+    "license": "CC-BY-NC-ND-4.0",
+    "license_notes": "LICENSE 明确为署名-非商业性使用-禁止演绎 4.0；GitHub API 仅返回 NOASSERTION。本研究自写摘要，不复制或改写该清单内容。",
+    "created_at": "2025-04-19T20:55:59Z",
+    "pushed_at": "2026-10-16T00:23:58Z",
+    "readme_blob_sha": "1f63f50c7877099d75c7f65b2d1a095d1f37c92a"
+  },
+  {
+    "id": 1078079172,
+    "full_name": "ComposioHQ/awesome-claude-skills",
+    "url": "https://github.com/ComposioHQ/awesome-claude-skills",
+    "category": "distribution_reference",
+    "stars": 77194,
+    "stars_display": "77,194",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:48Z",
+    "description_zh": "Claude Skills 任务目录与应用连接插件入口。",
+    "mechanisms": [
+      "用插件设置和首次任务把读者导向实际操作",
+      "按文档、开发、数据、沟通等任务分类",
+      "提供 Skill 模板与贡献步骤"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/ComposioHQ/awesome-claude-skills",
+      "https://github.com/ComposioHQ/awesome-claude-skills/blob/be2a406907dbc61b73e6827ded415c96139d13a2/README.md"
+    ],
+    "license": "Apache-2.0 (README declaration)",
+    "license_notes": "README 声明 Apache-2.0，但 GitHub API 未识别且根目录未见 LICENSE；子目录 Skill 可能使用其它许可证，复用前需查具体文件。",
+    "created_at": "2025-10-17T07:15:01Z",
+    "pushed_at": "2026-09-18T07:16:11Z",
+    "readme_blob_sha": "d28b9c3515147fba1242461eb2c11155ffca5bbf"
+  },
+  {
+    "id": 1061953414,
+    "full_name": "anthropics/skills",
+    "url": "https://github.com/anthropics/skills",
+    "category": "official_skill_reference",
+    "stars": 181398,
+    "stars_display": "181,398",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:48Z",
+    "description_zh": "Anthropic 官方 Skill 示例仓库，提供独立 Skill 目录、模板与插件入口。",
+    "mechanisms": [
+      "以自包含 SKILL.md 与元数据定义可复用单元",
+      "示例、模板和宿主使用说明放在一起",
+      "明确标记文档 Skill 与其它示例的许可差异"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/anthropics/skills",
+      "https://github.com/anthropics/skills/blob/f458cee31a7577a47ba0c9a101976fa599385174/README.md"
+    ],
+    "license": "Mixed: Apache-2.0 examples; source-available document skills",
+    "license_notes": "README 明确多数示例为 Apache-2.0，docx/pdf/pptx/xlsx 为 source-available、非开源；不存在可套用于全仓的单一开源许可。",
+    "created_at": "2025-09-22T15:53:31Z",
+    "pushed_at": "2026-10-09T18:45:52Z",
+    "readme_blob_sha": "eb54ee8b92f2d40b4b26569be0772be3c1e23156"
+  },
+  {
+    "id": 1073224795,
+    "full_name": "obra/superpowers",
+    "url": "https://github.com/obra/superpowers",
+    "category": "workflow_product",
+    "stars": 299893,
+    "stars_display": "299,893",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:48Z",
+    "description_zh": "由可组合 Skills 组成的软件开发方法与插件产品。",
+    "mechanisms": [
+      "把设计、计划、执行、验证和审查连接成具体流程",
+      "按宿主提供安装指引",
+      "解释失败时如何处理与如何更新"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/obra/superpowers",
+      "https://github.com/obra/superpowers/blob/bb92a77741419a4ab5f06e711a283343f1ada0c3/README.md"
+    ],
+    "license": "MIT",
+    "license_notes": "GitHub API 与 README 均标注 MIT。",
+    "created_at": "2025-10-09T19:45:18Z",
+    "pushed_at": "2026-10-10T03:03:30Z",
+    "readme_blob_sha": "e40ddfa8f87a374e1b9a3663b80c1aa954cf8eec"
+  },
+  {
+    "id": 21737465,
+    "full_name": "sindresorhus/awesome",
+    "url": "https://github.com/sindresorhus/awesome",
+    "category": "distribution_reference",
+    "stars": 519514,
+    "stars_display": "519,514",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:48Z",
+    "description_zh": "跨主题 Awesome 列表索引，是分类与互相发现方式的参考。",
+    "mechanisms": [
+      "每个主题给出清晰入口而非复制下游内容",
+      "通过贡献规范维持列表的一致性"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/sindresorhus/awesome",
+      "https://github.com/sindresorhus/awesome/blob/bc98e517ddca672f55f9857d714fc3ea3c3540b2/readme.md"
+    ],
+    "license": "CC0-1.0",
+    "license_notes": "GitHub API 识别为 CC0-1.0；下游列表与项目独立授权。",
+    "created_at": "2014-07-11T13:42:37Z",
+    "pushed_at": "2026-09-02T02:10:47Z",
+    "readme_blob_sha": "0acaa99d5f45582ecf70f987213f59ae1855226f"
+  },
+  {
+    "id": 173228436,
+    "full_name": "NationalSecurityAgency/ghidra",
+    "url": "https://github.com/NationalSecurityAgency/ghidra",
+    "category": "mature_re_tool",
+    "stars": 88749,
+    "stars_display": "88,749",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:48Z",
+    "description_zh": "成熟的软件逆向工程框架，支持反汇编、反编译、脚本和扩展。",
+    "mechanisms": [
+      "安装、开发、扩展与贡献入口分开",
+      "明确支持平台和分析能力边界"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/NationalSecurityAgency/ghidra",
+      "https://github.com/NationalSecurityAgency/ghidra/blob/864999d7ca67cd3f533be600860f102e54370661/README.md"
+    ],
+    "license": "Apache-2.0",
+    "license_notes": "GitHub API 识别为 Apache-2.0；本研究未进行依赖和第三方组件许可审计。",
+    "created_at": "2019-03-01T03:27:48Z",
+    "pushed_at": "2026-10-15T12:02:03Z",
+    "readme_blob_sha": "3f1eea7b35d8551f2433f3074f68ba736d72673f"
+  },
+  {
+    "id": 33791743,
+    "full_name": "x64dbg/x64dbg",
+    "url": "https://github.com/x64dbg/x64dbg",
+    "category": "mature_re_tool",
+    "stars": 49888,
+    "stars_display": "49,888",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:48Z",
+    "description_zh": "面向 Windows 用户态逆向与调试的成熟工具。",
+    "mechanisms": [
+      "使用截图呈现工具价值",
+      "区分安装使用与开发贡献入口",
+      "将插件生态与主工具边界写入许可文本"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/x64dbg/x64dbg",
+      "https://github.com/x64dbg/x64dbg/blob/ac4db12e133a3b2a91756fd2fbe864aa8dd1c453/README.md",
+      "https://github.com/x64dbg/x64dbg/blob/4fc92664f0ea63136c07c68ea848a994ea2749c6/LICENSE"
+    ],
+    "license": "Modified GPLv3 text with plugin exception",
+    "license_notes": "LICENSE 标记为修改过的 GPLv3 文本，并含插件例外；GitHub API 返回 NOASSERTION，不能简化成未经限定的 GPL-3.0。",
+    "created_at": "2015-04-11T20:48:23Z",
+    "pushed_at": "2026-10-09T10:40:58Z",
+    "readme_blob_sha": "87b9d6330995766cab9b793eaf9856769df5f35a"
+  },
+  {
+    "id": 954963562,
+    "full_name": "mrexodia/ida-pro-mcp",
+    "url": "https://github.com/mrexodia/ida-pro-mcp",
+    "category": "agent_re_tool",
+    "stars": 12920,
+    "stars_display": "12,920",
+    "stars_precision": "exact",
+    "observed_at": "2026-10-16T00:47:48Z",
+    "description_zh": "将 IDA Pro 接入语言模型的 MCP 项目；当前 README 建议优先使用 Hex-Rays 官方实现。",
+    "mechanisms": [
+      "用演示视频及配套数据集连接展示与实验",
+      "分别列出 prerequisites、不同客户端安装和能力接口",
+      "把迁移或替代建议放在 README 开头"
+    ],
+    "evidence_urls": [
+      "https://api.github.com/repos/mrexodia/ida-pro-mcp",
+      "https://github.com/mrexodia/ida-pro-mcp/blob/c133c3853faa111a9b00ee615c013b720d0c4acd/README.md"
+    ],
+    "license": "MIT",
+    "license_notes": "MCP 项目 MIT；IDA Pro 商业许可独立。当前推荐迁移的提示需与工具记录一同保留。",
+    "created_at": "2025-03-25T22:23:41Z",
+    "pushed_at": "2026-09-26T15:42:10Z",
+    "readme_blob_sha": "093858923025f816547cd3e565df5a05384d85ee"
+  }
+]

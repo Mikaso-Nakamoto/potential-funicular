@@ -1,0 +1,160 @@
+"""Review decisions for automated discovery records, kept apart from the immutable scan batches.
+
+data/discovery-reviews.json maps a scan ID to the decision a reviewer reached after reading its primary
+source: `exclude` (does not belong) or `hold` (may belong, but the evidence does not support a curated
+record yet). A promoted repository needs no entry: its curated record, matched by exact repository URL,
+takes it off the queue. A decided record leaves the unreviewed listing and stays in its batch, so the
+scheduled scan and the lead collector, which treat every batch ID as already held, never queue it again.
+"""
+from __future__ import annotations
+
+from datetime import date, datetime, timedelta, timezone
+import json
+from pathlib import Path
+import re
+
+from review_dates import review_date_is_future
+from strict_json import load_path
+
+ROOT = Path(__file__).resolve().parents[1]
+FILE = 'data/discovery-reviews.json'
+LEAD_ID = re.compile(r'lead-[0-9a-f]{24}')
+FIELDS = frozenset({'decision', 'reason_code', 'reason_en', 'reason_zh', 'readme_sha256', 'evidence_url', 'reviewed_at'})
+OPTIONAL_FIELDS = frozenset({'duplicate_of'})
+EXCLUDE_REASONS = frozenset({
+    'unrelated', 'general-application', 'general-programming-tutorial', 'general-security', 'security-testing',
+    'detection-only', 'forensics-only', 'development-tool', 'protection-tool', 'malware-samples', 'distribution-site',
+    'community-or-event', 'cheat-or-evasion', 'game-promotion-page', 'game-mod-no-re', 'personal-profile',
+    'no-real-content', 'duplicate-curated', 'duplicate-queue', 'fork-or-mirror', 'upstream-unavailable',
+})
+HOLD_REASONS = frozenset({'linking-policy', 'insufficient-docs', 'capability-unclear', 'target-unsupported',
+                          'needs-maintainer-decision'})
+REASONS = {'exclude': EXCLUDE_REASONS, 'hold': HOLD_REASONS}
+DUPLICATE_REASONS = frozenset({'duplicate-curated', 'duplicate-queue'})
+PINNED_EVIDENCE = re.compile(r'https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/(?:blob|tree)/[0-9a-f]{40}(?:/\S*)?')
+# Followed-source leads also come from other forges and the web. Their decisions name the reviewed revision in that
+# host's own form: a commit on GitLab, Codeberg, sr.ht, SourceForge, Hugging Face or a gist, or an archive.org snapshot.
+_SEGMENT = r'[A-Za-z0-9_.~-]+'
+LEAD_PINNED_EVIDENCE = re.compile('|'.join((
+    PINNED_EVIDENCE.pattern,
+    rf'https://gist\.github\.com/{_SEGMENT}/[0-9a-f]+/[0-9a-f]{{40}}(?:[/#]\S*)?',
+    rf'https://gitlab\.com/{_SEGMENT}(?:/(?!-/){_SEGMENT})+/-/(?:blob|tree)/[0-9a-f]{{40}}(?:/\S*)?',
+    rf'https://codeberg\.org/{_SEGMENT}/{_SEGMENT}/src/commit/[0-9a-f]{{40}}(?:/\S*)?',
+    rf'https://git\.sr\.ht/~{_SEGMENT}/{_SEGMENT}/tree/[0-9a-f]{{40}}(?:/item/\S*)?',
+    rf'https://sourceforge\.net/p/{_SEGMENT}/{_SEGMENT}/(?:ci/[0-9a-f]{{40}}/tree|[0-9]+/tree)(?:/\S*)?',
+    rf'https://huggingface\.co/(?:datasets/|spaces/)?{_SEGMENT}/{_SEGMENT}/(?:blob|tree)/[0-9a-f]{{40}}(?:/\S*)?',
+    r'https://web\.archive\.org/web/[0-9]{14}/https?://\S+',
+)))
+# a `.` or `..` path segment resolves in the browser and can step out of the pinned revision
+DOT_SEGMENT = re.compile(r'/(?:\.|%2e){1,2}(?:/|$|[?#])', re.I)
+CHINESE = re.compile(r'[一-鿿]')
+HASH = re.compile(r'[0-9a-f]{64}')
+
+
+def read_reviews(root=ROOT) -> dict:
+    """The ID-keyed decisions, or an empty mapping before the first review."""
+    path = Path(root) / FILE
+    return load_path(path) if path.is_file() else {}
+
+
+def validate_reviews(batches: list[dict], reviews, errors: list[str], *, lead_batches: list[dict] | None = None,
+                     now: datetime | None = None) -> None:
+    """Each decision binds to a scan snapshot or a lead in a discovery batch."""
+    now = datetime.now(timezone.utc) if now is None else now.astimezone(timezone.utc)
+    if not isinstance(reviews, dict):
+        errors.append(f'{FILE}: expected an object keyed by scan or lead ID.')
+        return
+    records = {record['id']: record for batch in batches for record in batch['resources']}
+    records.update((lead['id'], lead) for batch in (lead_batches or []) for lead in batch['leads'])
+    for identifier, entry in reviews.items():
+        where = f'{FILE}: {identifier}'
+        is_lead = isinstance(identifier, str) and LEAD_ID.fullmatch(identifier) is not None
+        record = records.get(identifier)
+        if record is None:
+            errors.append(f'{where}: not a record in a discovery batch')
+        required = FIELDS - {'readme_sha256'} if is_lead else FIELDS
+        if not isinstance(entry, dict) or not required <= set(entry) <= required | OPTIONAL_FIELDS:
+            errors.append(f'{where}: missing or unknown fields')
+            continue
+        decision, reason = entry['decision'], entry['reason_code']
+        if not isinstance(decision, str) or decision not in REASONS:
+            errors.append(f'{where}: decision must be exclude or hold')
+        elif not isinstance(reason, str) or reason not in REASONS[decision]:
+            errors.append(f'{where}: {reason!r} is not a {decision} reason')
+        for field in ('reason_en', 'reason_zh'):
+            if not isinstance(entry[field], str) or not entry[field].strip():
+                errors.append(f'{where}: missing {field}')
+        if isinstance(entry['reason_zh'], str) and not CHINESE.search(entry['reason_zh']):
+            errors.append(f'{where}: reason_zh must contain Chinese text')
+        if not is_lead:
+            if not isinstance(entry['readme_sha256'], str) or not HASH.fullmatch(entry['readme_sha256']):
+                errors.append(f'{where}: invalid README hash')
+            elif record is not None and entry['readme_sha256'] != record['readme_sha256']:
+                errors.append(f'{where}: README hash differs from the scanned snapshot')
+        pinned = LEAD_PINNED_EVIDENCE if is_lead else PINNED_EVIDENCE
+        if (not isinstance(entry['evidence_url'], str) or not pinned.fullmatch(entry['evidence_url'])
+                or DOT_SEGMENT.search(entry['evidence_url'])):
+            errors.append(f'{where}: evidence_url must be a ' + ('link pinned to a commit or an archive.org snapshot'
+                                                                if is_lead else 'GitHub link pinned to a commit'))
+        if (isinstance(reason, str) and reason in DUPLICATE_REASONS) != isinstance(entry.get('duplicate_of'), str):
+            errors.append(f'{where}: duplicate_of goes with a duplicate reason and only then')
+        try:
+            reviewed = date.fromisoformat(entry['reviewed_at'])
+        except (TypeError, ValueError):
+            errors.append(f'{where}: reviewed_at must be an ISO date')
+            continue
+        if review_date_is_future(reviewed, now):
+            errors.append(f'{where}: reviewed_at is in the future')
+        if record is not None:
+            observed = datetime.fromisoformat(record['observed_at'].replace('Z', '+00:00')).astimezone(timezone.utc).date()
+            if reviewed < observed - timedelta(days=1):
+                errors.append(f'{where}: review precedes the {"lead observation" if is_lead else "README scan"} it reviews')
+
+
+def split_queue(records: list[dict], reviews: dict, curated_urls: dict[str, str]) -> tuple[list[dict], list[dict]]:
+    """(still unreviewed, decided). A decided row carries `decision`, and `curated_id` when curated."""
+    pending, decided = [], []
+    for record in records:
+        curated = curated_urls.get(record['url'].rstrip('/').casefold())
+        if curated:
+            decided.append({**record, 'decision': 'curated', 'curated_id': curated})
+        elif record['id'] in reviews:
+            decided.append({**record, 'decision': reviews[record['id']]['decision'], 'review': reviews[record['id']]})
+        else:
+            pending.append(record)
+    return pending, decided
+
+
+def review_order(identifier: str) -> tuple[int, int | str]:
+    return (1, identifier) if identifier.startswith('lead-') else (0, int(identifier[5:]))
+
+
+def export_document(decided: list[dict], generated_at: str | None, lead_decided: list[dict] | None = None) -> dict:
+    """Every decision made on a discovery record, for /discoveries/reviews.json."""
+    rows = []
+    for record in sorted([*decided, *(lead_decided or [])], key=lambda row: review_order(row['id'])):
+        row = {'id': record['id'], 'full_name': record.get('full_name') or (record.get('github') or {}).get('full_name') or record['name'],
+               'url': record['url'], 'batch_id': record['batch_id'],
+               'decision': record['decision']}
+        if record['decision'] == 'curated':
+            row['curated_id'] = record['curated_id']
+        else:
+            review = record['review']
+            row.update({key: review[key] for key in ('reason_code', 'reason_en', 'reason_zh', 'evidence_url', 'reviewed_at')})
+            if review.get('duplicate_of'):
+                row['duplicate_of'] = review['duplicate_of']
+        rows.append(row)
+    document = {'version': 1, 'kind': 'discovery-review-decisions', 'generated_at': generated_at,
+                'counts': counts(decided), 'decisions': rows}
+    document['lead_counts'] = counts(lead_decided or [])
+    return document
+
+
+def counts(decided: list[dict]) -> dict:
+    return {decision: sum(row['decision'] == decision for row in decided) for decision in ('curated', 'exclude', 'hold')}
+
+
+def dumps(reviews: dict) -> str:
+    """The file's canonical form, with numeric scan IDs before lead IDs."""
+    ordered = {key: reviews[key] for key in sorted(reviews, key=review_order)}
+    return json.dumps(ordered, ensure_ascii=False, indent=2) + '\n'

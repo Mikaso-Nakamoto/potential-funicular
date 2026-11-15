@@ -1,0 +1,742 @@
+/* White collection canvas, readable navy typography, and restrained blue accents; a dark set follows the system theme. */
+:root {
+  color-scheme:light dark;
+  --paper:#faf3dd;
+  --surface:#fff;
+  --soft:#f8f9fc;
+  --tint:#f1f0ff;
+  --ink:#202335;
+  --muted:#525b6d;
+  --body:#414758;
+  --control:#8a8f9e;
+  --link:#5149a5;
+  --steel:#7770b1;
+  --cyan:#e5e1fb;
+  --accent:#7467cc;
+  --line:#e7e7ee;
+  --strong:#c9c7d8;
+  --focus:#5149a526;
+  --shadow:#17375409;
+  /* Fixed accents of individual components, tokenized so the dark theme can restate them. */
+  --on-ink:#fff;
+  --on-ink-icon:#dbeafa;
+  --tint-line:#d5e3f1;
+  --underline:#b7cadd;
+  --chip:#f5f8fc;
+  --chip-line:#e2eaf3;
+  --shelf:#fcfcff;
+  --shelf-line:#eeedf5;
+  --badge:#f6f4fc;
+  --badge-line:#e8e5f4;
+  --faint:#fcfcfe;
+  /* Evidence-class dots: C0 full evidence, C1 partial scope, C2 code and docs, C3 notes. */
+  --class-0:#2f8f4e;
+  --class-1:#b08a1e;
+  --class-2:#4a7fb5;
+  --class-3:#98a0ad;
+  --mono:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans","PingFang SC","Microsoft YaHei","Noto Sans CJK SC",Arial,sans-serif;
+}
+/* Dark theme: the same roles on a deep slate canvas. Ink-filled controls (selected filters, primary buttons) turn light,
+   so selected states keep their contrast against unselected ones. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:#1c1316;
+    --surface:#1a1b24;
+    --soft:#20212c;
+    --tint:#2b2945;
+    --ink:#ececf3;
+    --muted:#a7acbc;
+    --body:#c9ccd7;
+    --control:#7f8497;
+    --link:#b6afff;
+    --steel:#a19bdc;
+    --cyan:#3c3769;
+    --accent:#a397ef;
+    --line:#2e303e;
+    --strong:#4c4e63;
+    --focus:#b6afff40;
+    --shadow:#0000004d;
+    --on-ink:#13141b;
+    --on-ink-icon:#4a4677;
+    --tint-line:#433f70;
+    --underline:#625e92;
+    --chip:#22232f;
+    --chip-line:#353748;
+    --shelf:#1e1f2a;
+    --shelf-line:#272836;
+    --badge:#25243a;
+    --badge-line:#36345a;
+    --faint:#1e1f29;
+    --class-0:#5bc987;
+    --class-1:#d3ac4e;
+    --class-2:#79abe0;
+    --class-3:#818897;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:100px}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0}
+button,a,input,select,summary{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--link);outline-offset:3px}
+input::placeholder{color:var(--muted);opacity:1}
+::selection{background:var(--cyan);color:var(--ink)}
+[hidden]{display:none!important}
+.shell{width:min(1280px,calc(100% - 80px));margin-inline:auto}
+.mono,kbd{font-family:var(--mono)}
+.symbol-bank{position:absolute;width:0;height:0;overflow:hidden}
+.icon{display:inline-block;flex:none;width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+.icon-small{width:16px;height:16px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{position:fixed;top:-80px;left:16px;padding:12px 18px;background:var(--ink);color:var(--surface);border-radius:8px;z-index:100}
+.skip-link:focus{top:12px}
+/* Print: the static collection, directory, paper and entry pages print as plain documents without navigation, search,
+   filters or page actions. Listings print what the reader sees and every disclosure the reader opened; closed ones are
+   left out, except that each paper always prints its scope and limitations and the review notes always print. A
+   print-only line states this, and full entry pages, which have no disclosures, print every requirement and source.
+   Source links print their address and long identifiers wrap. Page stylesheets load after this one, hence !important. */
+@media print{
+  @page{margin:15mm 14mm}
+  html{scroll-behavior:auto!important;scroll-padding-top:0!important}
+  body{background:#fff!important;color:#111!important}
+  .site-header{position:static!important;background:#fff!important;border-bottom:1pt solid #999!important;box-shadow:none!important}
+  .skip-link,.browse-actions,.papers-actions,.paper-search,.paper-search-empty,.browse-category-nav,.papers-topic-nav,.entry-detail-link,.paper-citation-download{display:none!important}
+  .shell{width:auto!important;max-width:none!important;margin-inline:0!important}
+  .source-results,.paper-grid{display:block!important}
+  .source-card,.paper-card,.case-row{margin:0 0 8pt!important;padding:8pt 10pt!important;box-shadow:none!important;background:transparent!important;border-color:#bbb!important}
+  /* Long cards may continue on the next page; headings stay with their text and short items stay whole. */
+  :is(.source-card-head,.paper-card>header,.case-heading,.source-card,li,dt,dd){break-inside:avoid}
+  :is(h1,h2,h3,h4,summary,.browse-topline,.source-card-head,.paper-card>header,.case-heading){break-after:avoid}
+  :is(p,li,dd){orphans:3;widows:3}
+  main :is(a,summary,button){min-height:0!important}
+  details:not([open]):not(.browse-provenance,.cases-note,.paper-details){display:none!important}
+  :is(.browse-provenance,.cases-note,.paper-details:not([open]))::details-content{content-visibility:visible!important;display:block!important}
+  .paper-details:not([open])>:not(.paper-scope){display:none!important}
+  details>summary{list-style:none!important;width:auto!important;padding:4pt 0 2pt!important;color:#111!important;font-weight:650!important;text-decoration:none!important}
+  details>summary::-webkit-details-marker{display:none}
+  main a{color:#111!important}
+  main :is(.entry-link,.paper-link,.case-source){display:inline!important;min-height:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
+  main :is(a,dd,code){overflow-wrap:anywhere!important}
+  main :is(.source-title-link,.case-heading a,.paper-card h3 a,.paper-link,.case-source,.source-card-footer a,.entry-link,.entry-sources a)[href^="http"]::after{content:" <" attr(href) ">";font-size:8.5pt;font-weight:400;color:#444}
+  .cases-main .browse-intro::after,.papers-intro::after{display:block;margin-top:6pt;padding:5pt 8pt;border:1pt solid #999;font-size:9pt;line-height:1.5;color:#333}
+  .cases-main .browse-intro::after{content:"Printed listing: every entry’s title, description, targets, primary source, requirement and source counts, and review date. Each entry’s full page prints all of its requirements, limitations and sources."}
+  .papers-intro::after{content:"Printed listing: every paper with its scope and limitations, source count and review date, plus the authors and citation you opened before printing. Each paper’s full page prints its sources, publication details and review notes."}
+  html[lang="zh-CN"] .cases-main .browse-intro::after{content:"打印说明：列出每个条目的标题、简介、目标领域、一手来源、条件与来源数量及复核日期。每个条目的完整页面会打印其全部条件、局限与来源。"}
+  html[lang="zh-CN"] .papers-intro::after{content:"打印说明：列出每篇论文及其研究范围与局限、来源数量与复核日期，以及打印前展开的作者与引文信息。每篇论文的完整页面会打印其来源、发表详情与复核说明。"}
+}
+
+/* Masthead and collection introduction. */
+.site-header{border-bottom:1px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:20}
+.header-inner{height:72px;display:flex;align-items:center;justify-content:space-between;gap:28px}
+.wordmark{display:inline-flex;align-items:center;gap:11px;font-size:23px;letter-spacing:-.8px;font-weight:550;white-space:nowrap}
+.wordmark-rea{font-weight:800}
+.wordmark-domain{font-size:.66em;letter-spacing:-.15px;color:var(--muted)}
+.brand-mark{display:block;flex:none;width:33px;height:33px;object-fit:contain}
+.header-nav{display:flex;align-items:center;gap:24px;font-size:13px}
+/* Two ordinary links instead of a select, so arrow keys never navigate; the current language is marked. */
+.language-switch{display:flex;align-items:center;gap:2px;min-height:40px;padding:0 3px 0 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.language-switch>.icon{width:17px;height:17px;margin-right:5px;font-size:17px;color:var(--muted)}
+.language-switch a{display:inline-flex;align-items:center;min-height:32px;padding:4px 8px;border-radius:6px;color:var(--muted);white-space:nowrap}
+.language-switch a:hover{color:var(--ink);background:var(--soft)}
+.language-switch a[aria-current="true"]{color:var(--ink);font-weight:650;background:var(--tint)}
+.fa-symbol.fa-globe::before{content:"\f0ac"}
+.fa-symbol.fa-gamepad::before{content:"\f11b"}
+.github-link{display:inline-flex;align-items:center;gap:8px;min-height:40px;font-weight:600}
+.github-link>.icon{width:19px;height:19px;font-size:19px}
+.submit-link{display:inline-flex;align-items:center;gap:9px;min-height:40px;padding:8px 15px;border:1px solid var(--strong);border-radius:8px;font-size:13px;font-weight:600;background:var(--surface)}
+.submit-link:hover{background:var(--tint);border-color:var(--steel)}
+.collection-intro{padding:46px 0 34px}
+.eyebrow{display:flex;align-items:center;gap:10px;margin:0 0 16px;color:var(--link);font:650 12px/1.5 var(--sans);letter-spacing:1.4px}
+.eyebrow::before{content:"";width:24px;height:2px;background:var(--steel);border-radius:2px}
+.collection-intro h1{margin:0;max-width:1160px;font-size:clamp(34px,3.25vw,48px);line-height:1.16;font-weight:700;letter-spacing:-1.65px}
+.mobile-title-break{display:none}
+.title-dot{color:var(--accent)}
+.collection-description,.collection-intro>p:last-child:not(.collection-provenance){margin:17px 0 0;max-width:900px;color:var(--muted);font-size:16px;line-height:1.8}
+.collection-directory{display:flex;flex-wrap:wrap;align-items:center;gap:9px 22px;margin-top:20px;font-size:13px;color:var(--link)}
+.collection-directory a{display:inline-flex;align-items:center;gap:6px;min-height:30px}
+.collection-directory a:hover{text-decoration:underline;text-underline-offset:4px}
+.collection-directory strong{font-weight:650;font-variant-numeric:tabular-nums;color:var(--ink)}
+section.collection-intro>p.collection-provenance{margin:8px 0 0;color:var(--muted);font-size:12px;line-height:1.6}
+html[lang="zh-CN"] .collection-intro h1{letter-spacing:-.6px}
+.catalog-section{padding-bottom:56px}
+.catalog-heading{margin:12px 0 16px;font-size:24px;line-height:1.35;letter-spacing:-.4px;text-wrap:balance}
+
+/* Collection tabs, search, and target navigation. */
+.index-mode-switch{display:flex;gap:30px;border-bottom:1px solid var(--line);margin-bottom:24px}
+.index-mode{position:relative;display:inline-flex;align-items:center;gap:9px;min-height:50px;padding:0 2px 15px;margin-bottom:-1px;background:none;border-bottom:3px solid transparent;color:var(--muted);font-size:15px;font-weight:550}
+.index-mode>.icon{width:18px;height:18px;font-size:18px}
+.index-mode.active{color:var(--ink);border-bottom-color:var(--link);font-weight:700}
+.index-mode>.mono{color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font:500 12px/1.65 var(--sans);font-variant-numeric:tabular-nums}
+.index-mode.active>.mono{color:var(--link);background:var(--tint);border-color:var(--tint-line)}
+.search-box{display:flex;align-items:center;gap:14px;height:54px;padding:0 18px;background:var(--surface);border:1px solid var(--control);border-radius:10px;box-shadow:0 2px 5px var(--shadow)}
+.search-box:focus-within{border-color:var(--link);outline:2px solid var(--link);outline-offset:2px;box-shadow:0 0 0 4px var(--focus)}
+.search-box>.icon{color:var(--steel);width:22px;height:22px;font-size:22px}
+.search-box input{flex:1;min-width:0;height:100%;border:0;background:none;outline:0!important;font-size:16px}
+.search-box kbd{border:1px solid var(--line);background:var(--soft);color:var(--muted);border-radius:5px;padding:1px 8px;font-size:12px}
+.source-controls,.filter-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:22px 0 20px}
+.source-target-filters,.group-filters{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.target-filter{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 11px;min-height:42px;border:1px solid var(--control);border-radius:8px;background:var(--surface);color:var(--muted);font-size:13px;font-weight:550;white-space:nowrap}
+.target-filter>.icon{width:16px;height:16px;font-size:16px;color:var(--steel)}
+.target-filter:hover{border-color:var(--strong);background:var(--soft);color:var(--ink)}
+.target-filter.active{background:var(--ink);border-color:var(--ink);color:var(--surface);font-weight:600;box-shadow:0 2px 4px #1c335313}
+.target-filter.active>.icon{color:var(--on-ink-icon)}
+/* Live result counts; the build writes the unfiltered counts so the first paint already has them. */
+.target-filter>.filter-count{margin-left:-2px;color:var(--muted);font:500 12px/1.5 var(--sans);font-variant-numeric:tabular-nums}
+.target-filter.active>.filter-count{color:var(--on-ink-icon)}
+.target-filter:disabled,.target-filter:disabled:hover{opacity:.5;cursor:not-allowed;background:var(--surface);border-color:var(--control);color:var(--muted)}
+.source-selectors,.curated-selectors{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.source-field{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+.source-field>label{font-size:12px;line-height:1.4;font-weight:600;color:var(--muted)}
+.source-field>input,.source-field>select{height:42px;border:1px solid var(--control);border-radius:8px;padding:8px 11px;width:174px;min-width:0;background:var(--surface);font-size:13px;line-height:1.4}
+.source-field>input:focus,.source-field>select:focus{border-color:var(--steel)}
+/* A field brought into view by script (the Topic field after a topic chip) keeps its label below the sticky header. */
+.source-field>input,.source-field>select{scroll-margin-top:32px}
+.collection-note{display:flex;align-items:baseline;gap:8px 18px;flex-wrap:wrap;color:var(--muted);font-size:12px;line-height:1.75;padding:0 0 19px;border-bottom:1px solid var(--line)}
+.collection-note>p{margin:0}
+.collection-note>a,.collection-note summary{color:var(--link);font-size:12px;cursor:pointer;text-decoration:underline;text-decoration-color:var(--underline);text-underline-offset:4px}
+.collection-note details{flex-basis:auto}
+.collection-note details[open]{flex-basis:100%;padding:12px 15px;background:var(--soft);border:1px solid var(--line);border-radius:8px}
+.collection-note details p{max-width:1020px;margin:10px 0 0;line-height:1.75}
+.results-topline{display:flex;align-items:center;justify-content:space-between;gap:15px;min-height:58px;padding:16px 0}
+.results-topline p{margin:0;font:13px/1.6 var(--sans);font-variant-numeric:tabular-nums;color:var(--muted)}
+.clear-button{padding:5px 0;background:none;font-size:12px;color:var(--link);text-decoration:underline;text-underline-offset:4px}
+/* Filtered JSON export: beside Clear filters; its status line takes no space until it has text. */
+.results-topline{flex-wrap:wrap}.export-matches{margin-left:auto}.export-status{margin:-8px 0 12px;font:13px/1.6 var(--sans);color:var(--muted)}.export-status:empty{margin:0}
+
+/* Resource cards keep their content readable at both desktop and phone widths. */
+.resource-grid,.source-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.resource-card,.source-card{min-width:0;padding:24px 24px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:0 2px 5px var(--shadow);transition:border-color .15s ease,box-shadow .15s ease}
+.resource-card:hover,.source-card:hover{border-color:var(--strong);box-shadow:0 5px 18px #1737540c}
+.card-heading,.source-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.resource-card h3,.resource-card h4,.source-card h3{flex:1;min-width:0;margin:0;color:var(--ink);font:700 18px/1.5 var(--sans);letter-spacing:0;overflow-wrap:anywhere}
+.source-owner{color:var(--muted);font-weight:450}
+.source-project{color:var(--ink);font-weight:700}
+.card-title-link:hover,.source-title-link:hover{text-decoration:underline;text-decoration-color:var(--steel);text-underline-offset:4px}
+/* A repository title's last character and its external-link icon wrap together. */
+.title-icon-tail{white-space:nowrap}
+.card-title-link .icon,.source-title-link .icon{width:12px;height:12px;font-size:11px;vertical-align:baseline;margin-left:6px;color:var(--steel)}
+.resource-kind,.source-stars{flex:none;color:var(--muted);font:500 13px/1.5 var(--sans);font-variant-numeric:tabular-nums;border:1px solid var(--line);border-radius:6px;padding:3px 7px;background:var(--soft);white-space:nowrap}
+.evidence-class{flex:none;display:inline-flex;align-items:center;gap:6px;color:var(--muted);font:500 13px/1.5 var(--sans);border:1px solid var(--line);border-radius:6px;padding:3px 7px;background:var(--soft);white-space:nowrap;cursor:help}
+.card-heading .evidence-class{margin-left:8px;vertical-align:2px}
+.evidence-class::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--class-3)}
+.evidence-class-0::before{background:var(--class-0)}
+.evidence-class-1::before{background:var(--class-1)}
+.evidence-class-2::before{background:var(--class-2)}
+.evidence-class-3::before{background:var(--class-3)}
+.evidence-class-unknown::before{background:var(--muted)}
+.evidence-legend{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;margin:0 0 16px;color:var(--muted);font:500 13px/1.6 var(--sans)}
+.evidence-legend-label{color:var(--body);font-weight:600}
+.evidence-legend-item{display:inline-flex;align-items:center;gap:6px;white-space:normal}
+.evidence-legend-dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--class-3)}
+.evidence-legend-dot-0{background:var(--class-0)}
+.evidence-legend-dot-1{background:var(--class-1)}
+.evidence-legend-dot-2{background:var(--class-2)}
+.evidence-legend-dot-3{background:var(--class-3)}
+.evidence-legend-dot-unknown{background:var(--muted)}
+.evidence-legend-note{font-style:italic}
+.evidence-beta{margin:0 0 16px;color:var(--muted);font:500 13px/1.6 var(--sans);font-style:italic}
+/* Demo previews exist only for Class 0/1 entries that document an image or video demo. */
+.card-preview{position:relative;display:flex;justify-content:center;margin:14px 0 0}
+.card-preview img{display:block;max-width:100%;max-height:220px;width:auto;height:auto;border-radius:8px}
+.card-preview-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--on-ink);font-size:30px;line-height:1;text-shadow:0 2px 10px rgba(0,0,0,.65);pointer-events:none}
+.card-preview:has(.card-preview-demo){justify-content:flex-start}
+.card-preview-demo{display:inline-flex;min-height:0;max-width:max-content;align-items:center;gap:8px;padding:7px 12px 7px 9px;border:1px dashed var(--line);border-radius:8px;background:var(--soft);color:var(--muted);font:500 13px/1.5 var(--sans)}
+.card-preview-demo-icon{color:var(--ink);font-size:15px;line-height:1}
+/* Curated entries use a three-column card grid on wide screens; the repository
+   browser keeps two columns because its cards carry more metadata. */
+@media(min-width:1101px){.collection-home .resource-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}}
+@media(min-width:701px) and (max-width:1100px){.collection-home .resource-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}}
+html[data-layout="cards"] .collection-home .resource-card{padding:18px 18px 14px}
+html[data-layout="cards"] .collection-home .resource-card h3{font-size:17px}
+html[data-layout="cards"] .collection-home .card-description{font-size:15px;margin:10px 0 12px}
+html[data-layout="cards"] .collection-home .card-preview{margin:10px 0 0}
+html[data-layout="cards"] .collection-home .card-preview img{max-height:150px}
+.card-description,.source-card-description{max-width:68ch;margin:14px 0 16px;color:var(--body);font-size:16px;line-height:1.8;overflow-wrap:anywhere}
+.source-card-empty{font-style:italic;color:var(--muted)}
+.source-related{display:grid;gap:10px;min-width:0;margin:0 0 17px}
+.source-related-group{min-width:0}
+.source-related-label{display:block;margin-bottom:4px;color:var(--muted);font-size:14px;line-height:1.7;font-weight:600}
+.source-related-links{display:grid;gap:4px;min-width:0;margin:0;padding:0;list-style:none}
+.source-related-link{color:var(--link);font-size:14px;line-height:1.7;overflow-wrap:anywhere;text-decoration:underline;text-decoration-color:var(--strong);text-underline-offset:3px}
+.source-related-link:hover{text-decoration-color:currentColor}
+.source-related-link:focus-visible{outline-offset:3px;border-radius:2px}
+.source-topics{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:17px}
+.source-topic-chip{max-width:100%;padding:5px 9px;border:1px solid var(--chip-line);border-radius:5px;background:var(--chip);color:var(--link);font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.source-topic-chip:hover{background:var(--tint);border-color:var(--strong)}
+.card-meta,.source-card-footer{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;min-width:0;color:var(--muted);font:14px/1.7 var(--sans);overflow-wrap:anywhere}
+.card-meta a,.source-card-footer a{color:var(--link);font-weight:600}
+.card-meta a:hover,.source-card-footer a:hover{text-decoration:underline;text-underline-offset:4px}
+.card-meta .card-category{font:inherit}
+.card-meta .card-targets{color:var(--body)}
+/* Copy link: an icon button after a card's entry or README link; without clipboard access a selected field follows it. */
+:is(.card-meta,.source-card-footer)>.copy-link{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin:-3px 0;padding:0;border-radius:6px;background:none;color:var(--link)}
+:is(.card-meta,.source-card-footer)>.copy-link:hover{background:var(--soft)}
+:is(.card-meta,.source-card-footer)>.copy-link>.icon{width:15px;height:15px;font-size:15px}
+.copy-link-fallback{flex:1 1 100%;width:100%;min-width:0;padding:4px 8px;border:1px solid var(--control);border-radius:6px;background:var(--soft);color:var(--body);font:12px/1.6 var(--mono)}
+@media(min-width:1101px){html[data-layout="compact"] .collection-home .card-meta>:is(.copy-link,.copy-link-fallback){order:2}}
+.source-card-license{font-size:14px}
+.requirements,.source-record-details{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.requirements summary,.source-record-details summary{color:var(--link);font-size:14px;font-weight:550;line-height:1.7;cursor:pointer;width:fit-content;min-height:44px;padding:9px 0}
+.requirements[open] summary,.source-record-details[open] summary{color:var(--ink)}
+.requirements ul{max-width:68ch;margin:12px 0;padding-left:22px;color:var(--body);font-size:15px;line-height:1.8}
+.requirements li+li{margin-top:10px}
+.requirement-facet{color:var(--ink);font-weight:650}
+.requirements .requirements-pending{list-style:none;margin-left:-22px;color:var(--muted)}
+.resource-detail-meta{display:flex;flex-wrap:wrap;gap:8px 13px;color:var(--muted);font:14px/1.75 var(--sans)}
+.resource-entry-link{display:inline-flex;align-items:center;gap:6px;min-height:24px;color:var(--link);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.resource-entry-link .icon{width:14px;height:14px;font-size:14px}
+/* Browser-local shortlist: Save toggles on cards, a count button beside the collection tabs once something is saved,
+   and a dialog that reuses the data dialog's frame. In wide compact rows the toggle joins the links' line. */
+.save-toggle{display:inline-flex;align-items:center;gap:5px;min-height:32px;padding:0;background:none;color:var(--link);font:600 14px/1.5 var(--sans)}
+.save-toggle:hover{text-decoration:underline;text-underline-offset:4px}
+.save-toggle[aria-pressed="true"]{color:var(--ink)}
+.save-toggle>.icon{width:13px;height:13px;font-size:13px;color:var(--link)}
+@media(min-width:1101px){html[data-layout="compact"] .collection-home .card-meta>.save-toggle{order:2}}
+.shortlist-open{display:inline-flex;align-items:center;gap:8px;align-self:center;min-height:40px;margin:0 0 8px auto;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:600 14px/1 var(--sans)}
+.shortlist-open:hover{border-color:var(--steel);background:var(--soft)}
+.shortlist-open>.mono{color:var(--muted);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font:500 12px/1.65 var(--sans);font-variant-numeric:tabular-nums}
+/* A visible Shortlist button takes the right alignment; while it is hidden (nothing saved) Layout keeps margin-left:auto. */
+.shortlist-open:not([hidden])+.layout-control{margin-left:0}
+.shortlist-group{margin-top:20px}
+.shortlist-group h3{margin:0 0 4px;font-size:14px;font-weight:650}
+.shortlist-group>p{margin:0 0 6px;font-size:12px;color:var(--muted)}
+.shortlist-group ul{margin:6px 0 0;padding:0;list-style:none;border-top:1px solid var(--line)}
+.shortlist-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.6}
+.shortlist-text{min-width:0}
+.shortlist-link{color:var(--link);font-weight:600;overflow-wrap:anywhere}
+.shortlist-link:hover{text-decoration:underline;text-underline-offset:4px}
+.shortlist-missing{font:13px var(--mono);overflow-wrap:anywhere}
+.shortlist-note{display:block;font-size:12px;color:var(--muted)}
+.shortlist-remove{flex:none;min-height:36px;padding:0 2px;background:none;color:var(--link);font-size:13px;text-decoration:underline;text-underline-offset:4px}
+.shortlist-empty{margin:20px 0 0;font-size:14px;line-height:1.7;color:var(--muted)}
+.shortlist-dialog #shortlist-clear{font-size:13px}
+.source-record-details dl{display:grid;grid-template-columns:132px minmax(0,1fr);gap:8px 14px;margin:14px 0 2px;color:var(--body);font:14px/1.75 var(--sans)}
+.source-record-details dt{font-weight:600}
+.source-record-details dd{min-width:0;margin:0;overflow-wrap:anywhere}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:11px;padding:11px 18px;min-height:44px;border-radius:8px;font-size:13px;font-weight:600}
+.button>.icon{width:17px;height:17px;font-size:17px}
+.button-primary{background:var(--ink);color:var(--surface)}
+.button-primary:hover{background:var(--link)}
+.button-outline{background:var(--surface);border:1px solid var(--strong);color:var(--ink);box-shadow:0 1px 3px var(--shadow)}
+.button-outline:hover{border-color:var(--steel);background:var(--soft)}
+.empty-state{padding:50px 24px;border:1px dashed var(--strong);border-radius:12px;background:var(--soft);text-align:center}
+.empty-state h3{margin:0 0 10px;font-size:23px;letter-spacing:-.4px}
+.empty-state p{margin:0 0 23px;font-size:15px;color:var(--muted)}
+.empty-state-actions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:12px}
+.empty-state-actions .button{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.empty-state .empty-repositories-note{margin:16px 0 0;font-size:14px;line-height:1.7}
+.load-more-row{text-align:center;margin-top:32px}
+.load-more-row .button>.icon{transform:rotate(90deg)}
+.load-more-row .button>.mono{font-size:12px;color:var(--muted)}
+.load-more-row>p{margin:12px 0 0;font:12px/1.6 var(--sans);color:var(--muted)}
+.noscript-note{padding:24px 0}
+.noscript-note a{text-decoration:underline}
+/* Without scripting, the noscript directory links take the place of the catalog's inert controls. */
+@media(scripting:none){.script-only{display:none!important}}
+.site-footer{border-top:1px solid var(--line);padding:28px 0;background:var(--paper)}
+.footer-top{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.footer-top p{margin:0;color:var(--muted);font-size:13px}
+.footer-links{display:flex;gap:10px 20px;align-items:center;flex-wrap:wrap;color:var(--link);font-size:12px}
+/* The shared footer: one row of sections, one of downloads and GitHub, then any page extras. */
+.footer-nav{display:grid;gap:10px;justify-items:start}
+/* Start-aligned: with seven sections the nav wraps under the tagline at common desktop widths. */
+.footer-nav>.footer-links{justify-content:flex-start}
+.footer-submit{display:none}
+.footer-links a:hover{text-decoration:underline;text-underline-offset:4px}
+.footer-bottom{margin-top:17px;color:var(--muted);font:11px/1.75 var(--sans)}
+
+@media(max-width:1180px){
+  .source-controls,.filter-row{align-items:flex-start;flex-direction:column;gap:18px}
+  .source-selectors,.curated-selectors{width:100%}
+  .source-field{flex:1}
+  .source-field>input,.source-field>select{width:100%}
+}
+/* Three selects need about 550 px, so below ~1460 px the block wraps under the target buttons instead of
+   overflowing the viewport; its own flex-end keeps the fields right-aligned. */
+@media(min-width:1181px){.curated-selectors{flex:1 1 550px;min-width:0;flex-wrap:nowrap;justify-content:flex-end}.curated-selectors>.source-field:first-child{flex:none}.curated-selectors>.source-field:last-child{flex:0 1 auto}#category-select,#class-select{width:auto;max-width:100%}}
+/* The live counts widen the target buttons; tighter gaps keep the filter row compact at 1280 px. */
+@media(min-width:1181px){#curated-view .filter-row{gap:12px}#curated-view .group-filters{gap:6px}}
+@media(max-width:900px){
+  .shell{width:calc(100% - 48px)}
+  .header-nav{gap:18px}
+  .github-link>span:not(.icon){display:none}
+  .resource-grid,.source-results{gap:14px}
+  .resource-card,.source-card{padding:21px 20px 17px}
+  .source-card-head,.card-heading{flex-wrap:wrap;gap:9px}
+  .source-card-head h3,.card-heading h3,.card-heading h4{flex-basis:100%}
+}
+@media(max-width:700px){
+  html{scroll-padding-top:86px}
+  .shell{width:calc(100% - 40px)}
+  .header-inner{height:64px;gap:14px}
+  .wordmark{font-size:21px;gap:9px}
+  .brand-mark{width:30px;height:30px}
+  .header-nav{gap:12px}
+  .language-switch{min-height:38px;padding-left:9px}
+  .submit-link{font-size:12px;padding:8px 11px}
+  .submit-link>.icon{display:none}
+  .collection-intro{padding:24px 0 18px}
+  .eyebrow{letter-spacing:1.1px;margin-bottom:10px}
+  .collection-intro h1{font-size:34px;line-height:1.2;letter-spacing:-1.15px}
+  .mobile-title-break{display:inline}
+  .collection-intro>p:last-child{margin-top:12px;font-size:15px;line-height:1.7}
+  .index-mode-switch{gap:22px;margin-bottom:16px}
+  .index-mode{min-height:44px;font-size:14px;gap:7px;padding-bottom:10px}
+  .index-mode>.icon{width:17px;height:17px;font-size:17px}
+  .index-mode>.mono{padding:1px 6px}
+  .search-box{height:52px;padding:0 15px;gap:11px}
+  .search-box kbd{display:none}
+  .source-target-filters,.group-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+  .target-filter{min-height:40px;padding:7px 10px;font-size:13px;gap:7px}
+  .source-controls,.filter-row{padding:12px 0;gap:10px}
+  .source-selectors,.curated-selectors{gap:12px}
+  .source-field{flex:1 1 0}
+  /* Three selects do not fit on one phone row; pair Type with Category and give Evidence class its own row. */
+  #curated-view .source-field{flex:1 1 calc(50% - 6px)}
+  #curated-view .source-field:last-child{flex-basis:100%}
+  .source-field>input,.source-field>select{height:40px;font-size:14px}
+  .collection-note{gap:6px 14px;padding-bottom:12px}
+  .results-topline{min-height:48px;padding:12px 0}
+  .results-topline p{font-size:12px}
+  .resource-grid,.source-results{grid-template-columns:1fr;gap:14px}
+  .resource-card,.source-card{padding:22px 20px 17px}
+  .source-card-head h3,.card-heading h3,.card-heading h4{flex-basis:auto}
+  .source-card-head,.card-heading{flex-wrap:nowrap;gap:11px}
+  .source-stars,.resource-kind{padding:3px 6px}
+  .source-record-details dl{grid-template-columns:112px minmax(0,1fr);gap:8px 12px}
+  .footer-top{align-items:flex-start;flex-direction:column;gap:15px}
+  .footer-links{gap:10px 18px}
+  .footer-nav{gap:16px}
+}
+@media(max-width:520px){
+  .header-nav>.github-link,.header-nav>.submit-link{display:none}
+  /* The footer takes over the hidden header submission link, with 24px link targets. */
+  .collection-home .footer-links a{display:inline-flex;align-items:center;min-height:24px}
+  .collection-intro h1{font-size:32px}
+  html[lang="zh-CN"] .collection-intro h1{font-size:33px;letter-spacing:-.6px}
+  .index-mode-switch{gap:20px}
+  .index-mode{font-size:13px;gap:6px}
+  .index-mode>.icon{width:16px;height:16px;font-size:16px}
+}
+@media(max-width:390px){
+  .shell{width:calc(100% - 32px)}
+  .wordmark{font-size:20px;gap:8px}
+  .collection-intro h1{font-size:31px}
+  .index-mode-switch{gap:16px}
+  .index-mode{font-size:12px;gap:5px}
+  .index-mode>.mono{padding:1px 5px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* The homepage opens like a collection, with live text and ordinary source links. */
+.home-intro{padding:24px 0 24px}
+.hero-layout{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(300px,1fr);gap:48px;align-items:center}
+.hero-copy{min-width:0}
+.home-intro .eyebrow{font-size:12px;letter-spacing:1.4px;margin-bottom:12px}
+.home-intro h1{font-size:clamp(38px,3.8vw,54px);font-weight:700;line-height:1.1;letter-spacing:-2.2px;max-width:790px}
+.home-intro h1 em{font-family:Georgia,"Times New Roman",serif;font-weight:400;color:var(--link);letter-spacing:-2.4px}
+.home-intro .collection-description{max-width:570px;font-size:16px;line-height:1.8;margin:23px 0 0;color:var(--muted)}
+.hero-actions{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:20px}
+.hero-actions .button{padding:12px 19px;min-height:46px;border-radius:7px;background:var(--ink);font-size:13px}
+.hero-actions .button:hover{background:var(--link)}
+.hero-text-link{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:550;color:var(--muted);min-height:44px}
+.hero-text-link:hover{color:var(--link)}
+.collection-shelf{position:relative;padding:17px 20px 14px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(145deg,var(--shelf),var(--surface) 65%);box-shadow:0 14px 50px #27234c06}
+.collection-shelf::before{content:"";position:absolute;inset:7px -7px -7px 7px;border:1px solid var(--shelf-line);border-radius:15px;z-index:-1}
+.shelf-heading{display:flex;align-items:center;gap:8px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.shelf-dot{width:6px;height:6px;border-radius:50%;background:#8b80cf}
+.shelf-heading h2{margin:0;font-size:11px;font-weight:600;letter-spacing:.1px}
+.shelf-heading>.mono{margin-left:auto;font-size:10px;letter-spacing:1px;color:#8c8a9c}
+.shelf-link{display:grid;grid-template-columns:36px minmax(0,1fr) 12px;gap:10px;padding:11px 0;align-items:center;border-bottom:1px solid var(--line)}
+.shelf-link:last-of-type{border-bottom:0}
+.shelf-icon{display:grid;place-items:center;width:36px;height:38px;border:1px solid var(--badge-line);background:var(--badge);border-radius:9px;color:var(--link)}
+.shelf-icon>.icon{width:18px;height:18px;font-size:18px}
+.shelf-link strong{display:block;font-size:13px;font-weight:650;letter-spacing:-.1px}
+.shelf-link small{display:block;color:var(--muted);font-size:11px;line-height:1.6;margin-top:3px}
+.shelf-arrow{font-size:13px;color:#9390a5;transition:transform .15s ease}
+.shelf-link:hover strong{color:var(--link)}
+.shelf-link:hover .shelf-arrow{transform:translate(2px,-2px)}
+/* Same-site shelf links use → (↗ marks links that leave the site), so the hover nudge follows it. */
+.shelf-link[href^="/"]:hover .shelf-arrow{transform:translateX(2px)}
+.shelf-note{font-family:Georgia,serif;font-style:italic;font-size:11px;margin:1px 0 0;color:var(--muted)}
+.home-intro .collection-directory{margin-top:35px;padding:23px 0;gap:14px 34px;border-bottom:1px solid var(--line)}
+.home-intro .collection-directory a{gap:8px;color:var(--muted);font-size:12px}
+.home-intro .collection-directory strong{font-size:22px;letter-spacing:-.6px;color:var(--ink);font-weight:650}
+.home-intro .collection-directory .directory-about{margin-left:auto;font-size:12px;color:var(--link)}
+.subject-browser{margin-top:12px;border-bottom:1px solid var(--line)}
+.subject-browser>summary{width:fit-content;min-height:44px;padding:10px 0;color:var(--link);font-size:14px;font-weight:600;cursor:pointer}
+.subject-browser[open]{padding-bottom:18px}
+.subject-browser .subject-directory{margin-top:8px}
+.subject-directory{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:14px}
+.subject-directory a{display:flex;gap:9px;align-items:center;padding:12px 13px;border:1px solid var(--line);border-radius:8px;font-size:12px;font-weight:550;background:var(--surface);transition:border-color .15s ease,background .15s ease}
+.subject-directory a>.icon{color:var(--link);width:17px;height:17px;font-size:17px}
+.subject-directory .subject-arrow{margin-left:auto;color:#b0adbf;font-size:11px}
+.subject-directory a:hover{border-color:var(--strong);background:var(--soft)}
+.collection-home .catalog-section{border-top:1px solid transparent}
+.collection-home .index-mode.active{border-bottom-color:var(--link)}
+.collection-home .resource-card,.collection-home .source-card{box-shadow:none;border-radius:10px}
+.collection-home .resource-card:hover,.collection-home .source-card:hover{box-shadow:0 7px 28px #2b234b07}
+html[lang="zh-CN"] .home-intro h1{font-size:clamp(36px,3.6vw,52px);letter-spacing:0;line-height:1.25}
+html[lang="zh-CN"] .home-intro h1 em{font-family:var(--sans);font-style:normal;letter-spacing:-1px}
+html[lang="zh-CN"] .shelf-note{font-family:var(--sans);font-style:normal}
+/* Chinese eyebrow labels drop the wide tracking meant for Latin capitals. */
+html[lang="zh-CN"] .eyebrow{letter-spacing:0}
+@media(max-width:1100px){.hero-layout{gap:32px;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr)}.home-intro h1{font-size:48px;letter-spacing:-2.3px}.subject-directory{gap:8px}.subject-directory a{padding:11px 10px}}
+@media(max-width:850px){.hero-layout{grid-template-columns:1fr}.collection-shelf{display:none}.home-intro h1{font-size:48px;max-width:720px}.home-intro .collection-description{max-width:650px}.home-intro{padding-top:24px}.subject-directory{grid-template-columns:repeat(3,minmax(0,1fr))}.home-intro .collection-directory{gap:12px 24px}.home-intro .collection-directory .directory-about{margin-left:0}}
+@media(max-width:520px){.home-intro{padding:20px 0 18px}.home-intro h1{font-size:36px;line-height:1.15;letter-spacing:-1.5px}.home-intro h1 em{letter-spacing:-1.7px}.home-intro .eyebrow{margin-bottom:10px;letter-spacing:1px}.home-intro .collection-description{font-size:16px;line-height:1.7;margin-top:14px}.hero-actions{gap:9px 18px;margin-top:20px}.hero-actions .button{padding:11px 14px;font-size:12px}.hero-text-link{font-size:12px}.home-intro .collection-directory{margin-top:16px;padding:12px 0;gap:12px 19px}.home-intro .collection-directory a{font-size:10px;gap:5px}.home-intro .collection-directory strong{font-size:20px}.home-intro .collection-directory .directory-about{width:100%;font-size:11px}.subject-directory{margin-top:15px;gap:7px}.subject-directory a{font-size:11px;padding:10px 9px;gap:7px}.subject-arrow{display:none}html[lang="zh-CN"] .home-intro h1{font-size:35px}}
+@media(prefers-reduced-motion:reduce){.shelf-arrow,.subject-directory a{transition:none}.shelf-link:hover .shelf-arrow,.shelf-link[href^="/"]:hover .shelf-arrow{transform:none}}
+@media(max-width:520px){.hero-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}.hero-actions .button,.hero-actions .hero-text-link{min-width:0;min-height:44px;justify-content:center;font-size:13px;line-height:1.5}.hero-actions .button{padding:10px}.hero-text-link{font-size:11px}.home-intro .collection-directory{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.home-intro .collection-directory a:not(.directory-about){display:flex;flex-direction:column;align-items:flex-start;gap:0}.home-intro .collection-directory .directory-about{grid-column:1/-1;width:auto}.home-intro .collection-directory a{font-size:10px}}
+
+/* Reading sizes: descriptions and source evidence should not look like fine print. */
+.collection-note,.collection-note>a,.collection-note summary{font-size:14px}
+.results-topline p,.clear-button,.load-more-row>p{font-size:14px}
+.source-field>label{font-size:14px}
+.source-field>input,.source-field>select{min-height:44px;font-size:16px}
+.target-filter{min-height:44px;font-size:14px}
+.search-box input{font-size:17px}
+.home-intro{padding-top:24px}
+.home-intro .collection-description{font-size:17px;max-width:60ch}
+.home-intro .collection-directory{margin-top:18px;padding:14px 0}
+.home-intro .collection-directory a,.home-intro .collection-directory .directory-about{font-size:14px}
+.shelf-heading h2{font-size:13px}
+.shelf-link strong{font-size:15px;line-height:1.5}
+.shelf-link small{font-size:13px;line-height:1.55}
+.shelf-note{font-family:var(--sans);font-style:normal;font-size:12px;line-height:1.7}
+.subject-directory a{font-size:14px}
+.footer-top p,.footer-links{font-size:14px}
+.footer-bottom{font-size:13px}
+html[lang="zh-CN"] .card-description,html[lang="zh-CN"] .source-card-description,html[lang="zh-CN"] .requirements ul{max-width:36em;line-height:1.85}
+@media(max-width:900px){.resource-grid,.source-results{grid-template-columns:1fr}.resource-card,.source-card{padding:24px}}
+@media(max-width:700px){.source-field>input,.source-field>select,.target-filter{min-height:44px}.source-field>input,.source-field>select{font-size:16px}.resource-card,.source-card{padding:22px}.collection-note,.collection-note>a,.collection-note summary,.results-topline p{font-size:14px}.home-intro .collection-description{font-size:16px}.subject-directory a{font-size:14px}}
+@media(max-width:520px){.source-record-details dl{grid-template-columns:minmax(0,1fr);gap:3px}.source-record-details dd{margin-bottom:12px}.home-intro .collection-directory a{font-size:12px}.home-intro .collection-directory .directory-about{font-size:13px}.hero-text-link{font-size:13px}.collection-note details[open]{padding:13px}}
+@media(max-width:420px){.target-filter{font-size:14px;padding-inline:7px;gap:5px}.search-box{padding-inline:13px}}
+@media(max-width:360px){.source-target-filters,.group-filters,.subject-directory{grid-template-columns:repeat(2,minmax(0,1fr))}.source-field{flex-basis:100%}}
+/* Repository Topic, Category and Sort: on phones Topic takes its own row, so both selects keep their labels legible. */
+@media(max-width:520px){#source-view .source-selectors>.source-field:first-child{flex-basis:100%}#curated-view .source-field{flex-basis:100%}}
+/* Phones: the Layout control is hidden (both layouts are one column there), and Type and Category fold behind
+   “More filters”, which joins the target buttons, counts active selects and opens when the page starts filtered. */
+.more-filters{display:none}
+@media(max-width:700px){
+  .index-mode-switch>.layout-control{display:none}
+  .collection-home .index-mode-switch{margin-bottom:12px}
+  .more-filters{display:inline-flex}
+  .more-filters>.icon{width:13px;height:13px;font-size:13px;transition:transform .15s}
+  .more-filters[aria-expanded="true"]>.icon{transform:rotate(180deg)}
+  .more-filters-count{min-width:19px;padding:0 5px;border-radius:999px;background:var(--ink);color:var(--surface);font-size:12px;line-height:19px;text-align:center}
+  #curated-view .curated-selectors:not(.is-open){display:none}
+  #curated-view .filter-row:has(>.curated-selectors:not(.is-open)){padding-bottom:0}
+  #curated-view>.results-topline{min-height:0}
+  /* The review note follows the results on phones; it explains the list rather than filtering it. */
+  #curated-view:not([hidden]){display:flex;flex-direction:column}
+  #curated-view>.collection-note{order:1;margin-top:24px;padding-top:12px;border-top:1px solid var(--line);border-bottom:0}
+}
+/* Target buttons wrap at their own widths and stretch to fill each line, so phones need fewer rows than a fixed grid. */
+@media(min-width:361px) and (max-width:700px){.source-target-filters,.group-filters{display:flex;flex-wrap:wrap}.source-target-filters>.target-filter,.group-filters>.target-filter{flex:1 1 auto}}
+@media(max-width:420px){
+  .header-inner{gap:8px}
+  .wordmark{font-size:18px;gap:6px;letter-spacing:-.6px}
+  .brand-mark{width:28px;height:28px}
+  .header-nav{gap:0}
+  .language-switch{padding:0 2px;gap:0}
+  .language-switch>.icon{display:none}
+  .language-switch a{padding-inline:6px}
+  .header-nav .browse-language,.header-nav .papers-language{padding-inline:9px}
+}
+/* Both language names still fit beside the wordmark inside the 16px gutters at 320px. */
+@media(max-width:340px){.language-switch{padding-inline:1px}.language-switch a{padding-inline:3px;font-size:12px}}
+.clear-button{white-space:nowrap}
+.active-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;padding:0;list-style:none}
+.active-filter{display:inline-flex;align-items:baseline;gap:6px;max-width:100%;min-height:36px;padding:6px 12px;border:1px solid var(--control);border-radius:999px;background:var(--surface);font-size:14px;line-height:1.5;color:var(--ink);text-align:left}
+.active-filter:hover{border-color:var(--steel);background:var(--soft)}
+.active-filter-field{color:var(--muted)}
+.active-filter-value{font-weight:600;overflow-wrap:anywhere}
+.active-filter-remove{color:var(--link);font-size:16px;line-height:1}
+@media(max-width:700px){.active-filter{min-height:44px;align-items:center}}
+
+/* Compact entries follow one reading path: title, summary, then links and evidence. */
+.layout-control{display:flex;align-items:center;gap:8px;margin-left:auto;padding-bottom:12px;font-size:14px;color:var(--muted)}
+.layout-control select,.sort-control select{min-height:44px;padding:7px 30px 7px 10px;border:1px solid var(--control);border-radius:7px;background:var(--surface);font-size:14px}
+/* Curated result order closes the results line, after Export matches (which takes margin-left:auto) and Clear filters. */
+.sort-control{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.source-record-context{margin-top:14px}
+html[data-layout="compact"] .collection-home .resource-grid,html[data-layout="compact"] .collection-home .source-results{grid-template-columns:minmax(0,1fr);gap:0;border-top:1px solid var(--line)}
+html[data-layout="compact"] .collection-home .resource-card,html[data-layout="compact"] .collection-home .source-card{display:grid;grid-template-columns:fit-content(70%) minmax(0,1fr);grid-template-areas:"heading heading" "preview preview" "description description" "meta details";gap:8px 24px;padding:20px 8px;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;align-items:start}
+html[data-layout="compact"] .collection-home .card-preview{grid-area:preview;margin:6px 0 0}
+html[data-layout="compact"] .collection-home .card-preview img{max-height:190px}
+html[data-layout="compact"] .collection-home .resource-card:hover,html[data-layout="compact"] .collection-home .source-card:hover{background:var(--faint);box-shadow:none}
+html[data-layout="compact"] .collection-home .card-heading,html[data-layout="compact"] .collection-home .source-card-head{grid-area:heading;display:flex;flex-wrap:wrap;justify-content:flex-start;align-items:baseline;gap:6px 12px}
+html[data-layout="compact"] .collection-home .card-heading h3,html[data-layout="compact"] .collection-home .source-card-head h3{flex:0 1 auto;font-size:18px;line-height:1.5;font-weight:700;text-wrap:pretty}
+html[data-layout="compact"] .collection-home .resource-kind,html[data-layout="compact"] .collection-home .source-stars{display:inline-block;margin:0;font-size:13px;padding:2px 7px}
+html[data-layout="compact"] .collection-home .card-description,html[data-layout="compact"] .collection-home .source-card-description{grid-area:description;margin:0;font-size:16px;line-height:1.75;max-width:70ch;text-wrap:pretty}
+html[data-layout="compact"] .collection-home .card-meta,html[data-layout="compact"] .collection-home .source-card-footer{grid-area:meta;display:flex;flex-direction:row;align-items:baseline;gap:4px 20px;padding-block:10px;font-size:14px;line-height:1.65}
+html[data-layout="compact"] .collection-home .source-card-license{font-size:14px}
+html[data-layout="compact"] .collection-home .requirements,html[data-layout="compact"] .collection-home .source-record-details{grid-area:details;margin:0;padding:0;border:0}
+html[data-layout="compact"] .collection-home .requirements summary,html[data-layout="compact"] .collection-home .source-record-details summary{font-size:14px;line-height:1.65;min-height:44px;padding:10px 0;color:var(--link)}
+html[data-layout="compact"] .collection-home .requirements[open],html[data-layout="compact"] .collection-home .source-record-details[open]{grid-area:auto;grid-column:1/-1;border:1px solid var(--line);border-radius:8px;background:var(--soft);padding:12px 18px;margin-top:8px}
+html[data-layout="compact"] .collection-home .requirements[open] ul{color:var(--body)}
+html[data-layout="compact"] .collection-home .source-record-details[open] dl{max-width:76ch;color:var(--body)}
+/* A hint names the hidden field a query matched (other language, requirements, topics); compact rows give it a row. */
+.match-hint{margin:6px 0 0;font-size:14px;line-height:1.6;color:var(--muted);overflow-wrap:anywhere}
+.match-hint-label{font-weight:600}
+.match-field{color:var(--ink)}
+.match-hint mark{padding:0 2px;border-radius:3px;background:var(--cyan);color:var(--ink)}
+html[data-layout="compact"] .collection-home .resource-card:has(>.match-hint),html[data-layout="compact"] .collection-home .source-card:has(>.match-hint){grid-template-areas:"heading heading" "description description" "hint hint" "meta details"}
+html[data-layout="compact"] .collection-home .match-hint{grid-area:hint;margin:0;max-width:70ch}
+@media(min-width:1101px){html[data-layout="compact"] .collection-home .resource-card:has(>.match-hint),html[data-layout="compact"] .collection-home .source-card:has(>.match-hint){grid-template-areas:"heading meta" "description meta" "description details" "hint details"}html[data-layout="compact"] .collection-home .match-hint{margin-top:6px}}
+.source-context-label{font-size:14px;line-height:1.7;overflow-wrap:anywhere;margin:0 0 14px}
+@media(max-width:1050px){
+  html[data-layout="compact"] .collection-home .resource-card,html[data-layout="compact"] .collection-home .source-card{grid-template-columns:fit-content(65%) minmax(0,1fr);column-gap:20px}
+}
+@media(max-width:700px){
+  .index-mode-switch{flex-wrap:wrap;gap:0 22px}
+  .layout-control{width:100%;justify-content:flex-end;margin-top:6px;padding-bottom:8px}
+  .layout-control select,.sort-control select{min-height:44px;font-size:16px}
+  html[data-layout="compact"] .collection-home .resource-card,html[data-layout="compact"] .collection-home .source-card{display:block;padding:18px 2px}
+  html[data-layout="compact"] .collection-home .card-heading,html[data-layout="compact"] .collection-home .source-card-head{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+  html[data-layout="compact"] .collection-home .card-heading h3,html[data-layout="compact"] .collection-home .source-card-head h3{flex-basis:100%;font-size:18px}
+  html[data-layout="compact"] .collection-home .resource-kind,html[data-layout="compact"] .collection-home .source-stars{margin:2px 0 8px}
+  html[data-layout="compact"] .collection-home .card-description,html[data-layout="compact"] .collection-home .source-card-description{margin:4px 0 10px}
+  html[data-layout="compact"] .collection-home .card-meta,html[data-layout="compact"] .collection-home .source-card-footer{flex-direction:row;align-items:baseline;gap:6px 16px;font-size:14px}
+  html[data-layout="compact"] .collection-home .requirements,html[data-layout="compact"] .collection-home .source-record-details{margin-top:7px}
+  html[data-layout="compact"] .collection-home .requirements summary,html[data-layout="compact"] .collection-home .source-record-details summary{font-size:14px}
+}
+
+.detail-label-compact{display:none}
+html[data-layout="compact"] .collection-home .detail-label-full{display:none}
+html[data-layout="compact"] .collection-home .detail-label-compact{display:inline}
+/* Phone compact rows: the kind or stars badge follows the title and wraps only after a long one, and a closed
+   details toggle joins the links' line when it fits. Opened details still span the row; touch targets keep 44 px. */
+@media(max-width:700px){
+  html[data-layout="compact"] .collection-home .resource-card,html[data-layout="compact"] .collection-home .source-card{display:flex;flex-wrap:wrap;align-items:center;gap:0 16px}
+  html[data-layout="compact"] .collection-home .resource-card>:not(.card-meta,.requirements:not([open])),html[data-layout="compact"] .collection-home .source-card>:not(.source-card-footer,.source-record-details:not([open])){flex-basis:100%}
+  html[data-layout="compact"] .collection-home .resource-card .card-heading h3,html[data-layout="compact"] .collection-home .source-card .source-card-head h3{flex-basis:auto}
+  html[data-layout="compact"] .collection-home .resource-card .resource-kind,html[data-layout="compact"] .collection-home .source-card .source-stars{margin:0}
+  html[data-layout="compact"] .collection-home .requirements:not([open]),html[data-layout="compact"] .collection-home .source-record-details:not([open]){margin-top:0}
+  html[data-layout="compact"] .collection-home .card-meta,html[data-layout="compact"] .collection-home .source-card-footer{padding-block:0}
+}
+
+@media(min-width:701px){
+  html[data-layout="compact"] .collection-home .requirements:not([open]),html[data-layout="compact"] .collection-home .source-record-details:not([open]){align-self:start}
+}
+html[lang="zh-CN"][data-layout="compact"] .collection-home .card-description,html[lang="zh-CN"][data-layout="compact"] .collection-home .source-card-description{max-width:38em;line-height:1.85}
+/* Wide compact rows: targets, links and the details toggle sit in a right column beside the title and description.
+   DOM and focus order are unchanged, and an opened details panel still spans the row. A long description's extra
+   height goes to the third, flexible row, so the closed toggle stays directly under the links (as on /papers/);
+   a "Matched in" line takes a fourth, auto row. */
+@media(min-width:1101px){
+  html[data-layout="compact"] .collection-home .resource-card,html[data-layout="compact"] .collection-home .source-card{grid-template-columns:minmax(0,1fr) minmax(18rem,34%);grid-template-rows:auto auto auto 1fr;grid-template-areas:"heading heading" "preview preview" "description meta" "description details";gap:0 40px}
+  html[data-layout="compact"] .collection-home .card-preview{grid-area:preview;margin:8px 0 4px}
+  html[data-layout="compact"] .collection-home .card-preview img{max-height:200px}
+  html[data-layout="compact"] .collection-home .card-description,html[data-layout="compact"] .collection-home .source-card-description{margin-top:6px}
+  html[data-layout="compact"] .collection-home .card-meta,html[data-layout="compact"] .collection-home .source-card-footer{flex-wrap:wrap;align-content:flex-start;gap:0 16px;padding-block:2px 0}
+  /* Labels on the first line, links on the next: a zero-height break item, and links keep their DOM order. */
+  html[data-layout="compact"] .collection-home .card-meta::after{content:"";order:1;flex-basis:100%;height:0}
+  html[data-layout="compact"] .collection-home .card-meta>a{order:2}
+  /* The link sits directly above the details toggle here, so it keeps a 24 px target (WCAG 2.5.8). */
+  html[data-layout="compact"] .collection-home .card-meta>.resource-entry-link{min-height:24px}
+}
+
+/* Contrast themes replace backgrounds and shadows, so selected states and primary buttons use system colors.
+   Selected controls opt out of the text backplate, which would otherwise hide HighlightText. */
+@media(forced-colors:active){
+  .target-filter.active{forced-color-adjust:none;background:Highlight;border-color:Highlight;color:HighlightText}
+  .target-filter.active>.icon{color:HighlightText}
+  .target-filter.active:focus-visible{outline-color:CanvasText}
+  .index-mode{margin-bottom:0;border-bottom-color:Canvas}
+  .index-mode.active,.collection-home .index-mode.active{border-bottom-color:Highlight}
+  .button-primary{border:1px solid ButtonBorder}
+  .language-switch a[aria-current="true"]{text-decoration:underline;text-underline-offset:4px}
+}
+
+/* Public data: one quiet entry point, with formats and agent instructions on demand. */
+.hero-actions .get-data{background:var(--surface);color:var(--ink);box-shadow:none}
+.hero-actions .get-data:hover{background:var(--soft);border-color:var(--steel)}
+
+/* Repository mode opens directly on browsing; the curated landing keeps its full introduction. */
+html[data-index-mode="source-index"] .home-intro{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:24px;align-items:center;padding:18px 0 12px}
+html[data-index-mode="source-index"] .hero-layout{display:block;grid-column:1/-1}
+html[data-index-mode="source-index"] .hero-copy{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px 24px;align-items:center}
+html[data-index-mode="source-index"] .home-intro h1{max-width:none;font-size:28px;line-height:1.2;letter-spacing:-.7px}
+html[data-index-mode="source-index"] .home-intro h1 em{letter-spacing:-.8px}
+html[data-index-mode="source-index"] .home-intro .eyebrow,
+html[data-index-mode="source-index"] .home-intro .collection-description,
+html[data-index-mode="source-index"] .collection-shelf,
+html[data-index-mode="source-index"] .hero-actions .button-primary,
+html[data-index-mode="source-index"] .hero-actions .hero-text-link{display:none}
+html[data-index-mode="source-index"] .hero-actions{display:flex;margin:0;gap:0}
+html[data-index-mode="source-index"] .home-intro .collection-directory{margin-top:8px;padding:10px 0;gap:10px 28px}
+html[data-index-mode="source-index"] .subject-browser{margin-top:8px;border-bottom:0}
+html[data-index-mode="source-index"] .subject-browser[open]{grid-column:1/-1}
+html[data-index-mode="source-index"] .index-mode-switch{margin-bottom:12px}
+html[data-index-mode="source-index"] .source-controls{padding:12px 0}
+html[data-index-mode="source-index"] .collection-note{padding-bottom:12px}
+html[data-index-mode="source-index"] .results-topline{min-height:48px;padding:12px 0}
+html[lang="zh-CN"][data-index-mode="source-index"] .home-intro h1{letter-spacing:0}
+@media(max-width:850px){
+  html[data-index-mode="source-index"] .home-intro{display:block}
+  html[data-index-mode="source-index"] .subject-browser{margin-top:0}
+}
+@media(max-width:520px){
+  html[data-index-mode="source-index"] .home-intro{padding-top:16px}
+  html[data-index-mode="source-index"] .hero-copy{gap:12px}
+  html[data-index-mode="source-index"] .home-intro h1{font-size:25px;letter-spacing:-.5px}
+  html[data-index-mode="source-index"] .hero-actions .get-data{padding:10px 12px}
+  html[data-index-mode="source-index"] .hero-actions .get-data>.icon{display:none}
+  html[data-index-mode="source-index"] .home-intro .collection-directory{gap:8px 12px}
+}
+.data-dialog{width:min(620px,calc(100% - 32px));max-height:calc(100dvh - 40px);padding:30px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);box-shadow:0 24px 100px #20233526;overflow:auto}
+.data-dialog::backdrop{background:#20233555;backdrop-filter:blur(3px)}
+body.data-dialog-open{overflow:hidden}
+.data-dialog-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.data-dialog .eyebrow{margin-bottom:12px;letter-spacing:1px}
+.data-dialog h2{font-size:27px;line-height:1.25;letter-spacing:-.7px;margin:0;font-weight:650}
+.data-close{display:flex;flex:none;align-items:center;justify-content:center;width:36px;height:36px;margin:-9px -9px 0 0;border-radius:8px;background:transparent;color:var(--muted);font-size:27px;line-height:1}
+.data-close:hover{background:var(--soft);color:var(--ink)}
+.data-description{margin:14px 0 18px;font-size:14px;color:var(--muted);line-height:1.7}
+.data-counts{display:flex;flex-wrap:wrap;gap:6px 24px;margin:0 0 22px;font-size:13px;color:var(--muted)}
+.data-counts strong{color:var(--ink);font-size:20px;font-weight:650;font-variant-numeric:tabular-nums;margin-right:4px}
+.data-clone h3{margin:0 0 10px;font-size:14px;font-weight:600}
+.data-clone-command{display:block;padding:15px 17px;border:1px solid var(--line);border-radius:8px;background:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.8 var(--mono)}
+.data-clone-command:focus-visible{outline:3px solid var(--link);outline-offset:3px}
+.data-clone-actions{display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap;margin-top:12px}
+.data-clone-actions>a{font-size:12px;color:var(--link)}
+.data-clone-actions>a:hover{text-decoration:underline;text-underline-offset:4px}
+.data-clone .data-copy-status{margin-bottom:0}
+.data-agent-details{margin:12px 0 18px}
+.data-agent-details>summary{min-height:36px;cursor:pointer;color:var(--link);font-size:13px;font-weight:600;line-height:36px}
+.data-agent-details .data-agent-heading{justify-content:flex-end;margin:0 0 7px}
+.data-agent-details .data-copy-status{margin-bottom:0}
+.data-agent-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:25px 0 10px}
+.data-agent-heading h3{margin:0;font-size:14px;font-weight:600}
+.data-copy{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:4px 0 4px 8px;background:none;color:var(--link);font-size:12px}
+.data-copy:hover{text-decoration:underline;text-underline-offset:4px}
+.data-instructions{margin:0;padding:15px 17px;border:1px solid var(--line);border-radius:8px;background:var(--soft);white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.8 var(--mono);color:var(--body)}
+.data-instructions:focus-visible{outline:3px solid var(--link);outline-offset:3px}
+.data-copy-status{min-height:20px;margin:6px 0 12px;font-size:12px;color:var(--link)}
+.data-file-links{display:flex;flex-wrap:wrap;gap:8px 17px;font-size:12px;color:var(--link);border-top:1px solid var(--line);padding-top:18px}
+.data-file-links a:hover{text-decoration:underline;text-underline-offset:4px}
+.data-note{font-size:12px;line-height:1.7;color:var(--muted);margin:16px 0 0}
+@media(max-width:520px){.hero-actions .hero-text-link{grid-column:1/-1;justify-content:flex-start;min-height:28px}.data-dialog{padding:23px 20px;border-radius:12px;max-height:calc(100dvh - 24px)}.data-dialog h2{font-size:23px;letter-spacing:-.4px}.data-clone-command{font-size:12px}.data-clone-actions{gap:10px 14px}.data-clone-actions .button{font-size:12px;padding:9px 13px}.data-counts{gap:6px 16px}.data-counts strong{font-size:18px}}
+
+/* Reviewed resource rows: keep provenance with the requirements it supports. */
+.resource-detail-meta .resource-evidence-link{color:var(--link);text-decoration:underline;text-underline-offset:3px;min-height:44px;display:inline-flex;align-items:center}
+
+/* Repository context is shared by both layouts; complete capture fingerprints are a separate disclosure. */
+.source-topic-match{margin:-6px 0 14px;color:var(--muted);font-size:14px;line-height:1.6}
+.source-scan-evidence{margin-top:16px;padding-top:5px;border-top:1px solid var(--line)}
+.source-scan-evidence>summary{font-weight:500;color:var(--link)}
+.source-scan-evidence code{font:12px/1.8 var(--mono);overflow-wrap:anywhere}
+.source-record-details .source-context-label{margin-bottom:8px;font-weight:600}
+
+/* Entry pages link back to their listing card by fragment; mark that card so it stands out from its neighbours.
+   Borderless rows extend the tint past their text with a shadow instead of changing their padding; the target
+   paints above the following card so that card's background cannot cover the outline. */
+.resource-card:target,.case-row:target,.paper-card:target{position:relative;z-index:1;background:var(--tint);outline:3px solid var(--link);outline-offset:3px}
+.case-row:target,html[data-paper-layout="compact"] .paper-card:target{box-shadow:0 0 0 10px var(--tint);outline-offset:10px}
+@media(forced-colors:active){.resource-card:target,.case-row:target,.paper-card:target{outline-color:Highlight}}

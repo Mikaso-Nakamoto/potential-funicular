@@ -1,0 +1,888 @@
+#!/usr/bin/env python3
+"""Review catalog PRs with trusted base-branch code; never execute PR code."""
+import fnmatch
+import hashlib
+import json
+import html
+import os
+from pathlib import Path
+import re
+import sys
+import tempfile
+import urllib.parse
+import urllib.request
+
+from validate import (evidence_pin_warnings, validate_benchmarks, validate_resources, validate_source_index,
+                      public_https_error)
+from validate_papers import validate_papers
+from localization import LOCALE_FILES, validate_localizations
+from curated_translations import CURATED_TRANSLATIONS, validate_curated_translations
+from source_scope import validate_scope
+from case_coverage import validate_case_coverage
+import strict_json
+
+ROOT = Path(__file__).resolve().parents[1]
+MARKER = '<!-- awesome-rea-automated-review -->'
+CATALOGS = ('data/rea-resources.json', 'data/tool-resources.json')
+CURATED_INPUTS = (*CATALOGS, CURATED_TRANSLATIONS)
+SOURCE_INDEX = 'data/source-index.json'
+SOURCE_SCOPE = 'data/source-scope.json'
+SOURCE_INPUTS = (SOURCE_INDEX, SOURCE_SCOPE, *LOCALE_FILES)
+CASE_COVERAGE = 'data/case-coverage.json'
+CASE_INPUTS = (CASE_COVERAGE, *CATALOGS, 'data/papers.json')
+SUPPLEMENT_INDEX = 'data/source-supplements/index.json'
+SUPPLEMENT_BATCH = 'data/source-supplements/public-cloud-39323601991-batch-01.json'
+SUPPLEMENT_SCOPE = 'data/source-supplements/public-cloud-39323601991-batch-01.scope.json'
+SUPPLEMENT_LOCALE = 'data/locales/source-supplements/public-cloud-39323601991-batch-01.json'
+# New batches require an explicit trusted-base review extension, not a path glob.
+SUPPLEMENT_INPUTS = (SUPPLEMENT_INDEX, SUPPLEMENT_BATCH, SUPPLEMENT_SCOPE, SUPPLEMENT_LOCALE)
+OPTIONAL_SUPPLEMENT_INPUTS = frozenset((SUPPLEMENT_SCOPE, SUPPLEMENT_LOCALE))
+# Evidence archives withdrawn at the maintainer's request, by run, digest and size (see data/source-evidence/README.md).
+EVIDENCE_WITHDRAWALS = 'data/source-evidence/withdrawn.json'
+DISCOVERY_REVIEWS = 'data/discovery-reviews.json'
+DISCOVERY_CLASSES = 'data/discovery-classes.json'
+REVIEW_FILES = frozenset((*CURATED_INPUTS, 'data/benchmarks.json', 'data/papers.json',
+                          *SOURCE_INPUTS, CASE_COVERAGE, *SUPPLEMENT_INPUTS, EVIDENCE_WITHDRAWALS, DISCOVERY_REVIEWS,
+                          DISCOVERY_CLASSES))
+CASE_PAGE = re.compile(r'docs/cases/[a-z0-9-]+(?:\.zh-CN)?\.md')
+# Automated discovery batches are added one file per scan run and reviewed as data by trusted base code.
+DISCOVERY_BATCH = re.compile(r'data/discoveries/run-[1-9][0-9]{0,19}-[1-9][0-9]{0,2}\.json')
+# Followed-source lead batches: one file per lead-discovery run, in a directory per collection month.
+LEAD_BATCH = re.compile(r'data/discoveries/leads/20[0-9]{2}-(?:0[1-9]|1[0-2])/leads-[1-9][0-9]{0,19}-[1-9][0-9]{0,2}\.json')
+LEAD_REGISTRY = 'data/discovery-sources.json'
+LOCALE_FIELDS = {'description_en', 'description_zh', 'english_retains_name', 'technical_only'}
+SENSITIVE = re.compile(r'gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[A-Z0-9]{16}|-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----')
+# Personal paths: macOS/Linux homes, Windows or WSL profiles with either separator, /root, ~ and $HOME.
+# Matches stop before the next separator.
+_NAME = r'[^\s/\\"\'`<>{}()\[\]|:;,*?]'
+_SEGMENT = _NAME + '+'
+_SEP = r'(?:/|\\+)'
+_PROFILE = _SEP + '(?i:users)' + _SEP + _SEGMENT
+LOCAL_PATH = re.compile('|'.join((
+    r'/(?:Users|home)/' + _SEGMENT + '(?=' + _SEP + ')',
+    # The other forms must start at a path boundary, so URLs and prose such as login/root/premium do not match.
+    r'/(?<![\w.~$%-]/)(?:(?:Users|home)/' + _SEGMENT + '|(?i:users|home)/' + _SEGMENT + '(?=' + _SEP + ')'
+    r'|(?:mnt/)?[A-Za-z]' + _PROFILE + '|root(?=/' + _NAME + '))',
+    r'[A-Za-z]:(?<![\w.~$%-]..)' + _PROFILE,
+    r'~(?<![\w.~$%/\\-]~)(?=' + _SEP + _NAME + ')',
+    r'\$(?<![\w.~$%/\\-]\$)(?:HOME|\{HOME\})(?=' + _SEP + _NAME + ')',
+)))
+JSON_ESCAPE = re.compile(r'\\(?:u([0-9A-Fa-f]{4})|([\\/]))')
+SAFE_LABEL = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.:/-]{0,99}')
+# File-name rules cover every .gitignore pattern (tests/test_review_pr.py checks this) plus keys, captures and fonts.
+PRIVATE_NAMES = ('.env', '.env.*', 'secrets.json', 'credentials*.json', '*.local.json', '*.pem', '*.key',
+                 'id_rsa', 'id_dsa', 'id_ecdsa', 'id_ed25519', '*.har', '*.pcap', '*.pcapng', 'scan-seed-*.json.gz')
+PRIVATE_DIRS = {'.cloudflare', '.wrangler'}
+GENERATED_NAMES = ('*.py[cod]', '.ds_store', '*.woff', '*.woff2')
+GENERATED_DIRS = {'__pycache__', '.cache', '.venv', 'dist', 'node_modules', 'output'}
+# The SIL OFL subsets the site hosts itself, by exact path (site/fonts/LICENSE.md names their sources).
+# Every other font stays out of this public repository.
+SELF_HOSTED_FONTS = frozenset('site/fonts/' + name + '.woff2' for name in (
+    'eb-garamond-500-core', 'eb-garamond-500-ext', 'eb-garamond-italic-display',
+    'ibm-plex-mono', 'ibm-plex-mono-medium', 'ibm-plex-sans-core', 'ibm-plex-sans-ext'))
+PUBLIC_NAMES = {'.env.example'}
+MAX_FILE_BYTES = 32 * 1024 * 1024
+MAX_OMITTED_FILES = 20
+MAX_REVIEW_PAGES = 10
+
+
+def api(repository, endpoint, token, method='GET', payload=None, raw=False):
+    url = f'https://api.github.com/repos/{repository}/{endpoint}'
+    headers = {'Accept': 'application/vnd.github.raw+json' if raw else 'application/vnd.github+json',
+               'Authorization': f'Bearer {token}', 'X-GitHub-Api-Version': '2022-11-28',
+               'User-Agent': 'awesome-rea-catalog-review'}
+    body = json.dumps(payload).encode() if payload is not None else None
+    if body is not None:
+        headers['Content-Type'] = 'application/json'
+    request = urllib.request.Request(url, data=body, headers=headers, method=method)
+    with urllib.request.urlopen(request, timeout=45) as response:
+        data = response.read(MAX_FILE_BYTES + 1)
+    if len(data) > MAX_FILE_BYTES:
+        raise ValueError('API response exceeds the review size limit')
+    return data.decode('utf-8') if raw else json.loads(data)
+
+
+def raw_text_at(repository, filename, sha, token):
+    path = urllib.parse.quote(filename, safe='/')
+    return api(repository, f'contents/{path}?ref={sha}', token, raw=True)
+
+
+def content_at(repository, filename, sha, token):
+    # Contributor files are retrieved only as text from this exact data allowlist.
+    if filename not in REVIEW_FILES:
+        raise ValueError('File is not an allowed review data input')
+    return raw_text_at(repository, filename, sha, token)
+
+
+def omitted_text_at(repository, filename, sha, token):
+    # Only for a changed file whose diff GitHub omitted: its text is pattern-checked as
+    # size-bounded data and is never executed, parsed as code, or echoed.
+    if filename in REVIEW_FILES or path_rule(filename) or any(part in ('', '.', '..') for part in filename.split('/')):
+        raise ValueError('File is not an allowed omitted-diff input')
+    text = raw_text_at(repository, filename, sha, token)
+    if '\x00' in text:
+        raise UnicodeError('Binary file')
+    return text
+
+
+def private_text(text):
+    """Pattern backstop on raw text and on the same text with JSON-style escapes decoded."""
+    values = [text]
+    if '\\' in text:
+        values.append(JSON_ESCAPE.sub(lambda match: chr(int(match[1], 16)) if match[1] else match[2], text))
+    return any(pattern.search(value) for value in values for pattern in (SENSITIVE, LOCAL_PATH))
+
+
+def path_rule(path):
+    if path in SELF_HOSTED_FONTS:
+        return None
+    *directories, name = path.lower().split('/')
+    if ((name not in PUBLIC_NAMES and any(fnmatch.fnmatchcase(name, rule) for rule in PRIVATE_NAMES))
+            or PRIVATE_DIRS.intersection(directories)):
+        return 'private configuration, keys, and raw captures should not be committed.'
+    if any(fnmatch.fnmatchcase(name, rule) for rule in GENERATED_NAMES) or GENERATED_DIRS.intersection(directories):
+        return 'generated, raw, or licensed production assets do not belong in this public source repository.'
+    return None
+
+
+def private_json_locations(value, record=None, field=None, top=True):
+    """Return (record ID, field) for decoded JSON keys and strings that match the privacy patterns."""
+    if isinstance(value, str):
+        return [(record, field)] if private_text(value) else []
+    found = []
+    if isinstance(value, dict):
+        if isinstance(value.get('id'), str):
+            record = value['id']
+        for key, item in value.items():
+            if private_text(key):
+                found.append((record, None))
+            # Locale and scope files are objects keyed by resource ID.
+            found += private_json_locations(item, key if top and isinstance(item, dict) else record, key, False)
+    elif isinstance(value, list):
+        for item in value:
+            found += private_json_locations(item, record, field, False)
+    return found
+
+
+def json_privacy_findings(filename, text):
+    # GitHub can omit or truncate a large file's patch, and JSON escapes change raw text but
+    # not the published value, so check the fetched text and its decoded strings.
+    try:
+        locations = list(dict.fromkeys(private_json_locations(parse_json(text))))
+    except (ValueError, TypeError, RecursionError):
+        locations = []
+    if not locations:
+        return [f'{filename}: full JSON content contains a credential-like value or personal path; inspect locally. The value is omitted here.'] if private_text(text) else []
+    findings = []
+    for record, field in locations[:5]:
+        where = [f'{name} {value}' for name, value in (('record', record), ('field', field))
+                 if isinstance(value, str) and SAFE_LABEL.fullmatch(value) and not private_text(value)]
+        findings.append(f'{filename}: a decoded JSON string{" in " + ", ".join(where) if where else ""} contains a credential-like value or personal path; inspect locally. The value is omitted here.')
+    if len(locations) > 5:
+        findings.append(f'{filename}: {len(locations) - 5} more decoded JSON strings match these patterns.')
+    return findings
+
+
+class InvalidJSON(ValueError):
+    """A review input that is not strict JSON; the message names only its allowlisted path."""
+
+
+def parse_json(text, filename=None):
+    # The same parser as local validation, so both reject duplicate keys and NaN/Infinity.
+    try:
+        return strict_json.loads(text)
+    except ValueError as error:
+        if filename is None:
+            raise
+        raise InvalidJSON(f'{filename}: expected strict JSON without duplicate keys or NaN/Infinity.') from error
+
+
+def review_localizations(records, contents, errors):
+    translations = {}
+    for filename in LOCALE_FILES:
+        if filename not in contents:
+            errors.append(f'{filename}: required localization data is missing.')
+            continue
+        try:
+            entries = parse_json(contents[filename])
+        except (ValueError, TypeError):
+            errors.append(f'{filename}: expected valid JSON without duplicate keys.')
+            continue
+        if not isinstance(entries, dict):
+            errors.append(f'{filename}: expected an object keyed by resource ID.')
+            continue
+        overlap = translations.keys() & entries.keys()
+        if overlap:
+            errors.append(f'{filename}: {len(overlap)} localization IDs also occur in another locale file.')
+        for identifier, entry in entries.items():
+            if not isinstance(entry, dict):
+                errors.append(f'{filename}: localization {identifier!r} must be an object.')
+                continue
+            if set(entry) - LOCALE_FIELDS:
+                errors.append(f'{filename}: localization {identifier!r} has unsupported fields.')
+            for flag in ('english_retains_name', 'technical_only'):
+                if flag in entry and type(entry[flag]) is not bool:
+                    errors.append(f'{filename}: localization {identifier!r} has a non-boolean {flag}.')
+            translations[identifier] = entry
+    validate_localizations(records, translations, errors)
+    return len(translations)
+
+
+def changes_public_archive(entry):
+    paths = [entry['filename']]
+    if entry['status'] == 'renamed':
+        paths.append(entry.get('previous_filename', ''))
+    return any(name.startswith('data/source-evidence/') and name.endswith('.zip')
+               for name in paths)
+
+
+def review_withdrawals(repository, sha, token, files, errors):
+    """The archive paths this PR may remove: each is withdrawn by a new entry of the head registry that names the
+    trusted base archive's exact digest and size. The registry is parsed by trusted base code; an existing
+    withdrawal may not change or disappear, and a new one must remove its archive in the same PR."""
+    from public_source_supplements import (EVIDENCE_DIRECTORY, MAX_ARCHIVE_BYTES, bounded_bytes, cited_selections,
+                                           owned_file, parse_withdrawals, read_withdrawals)
+    changes = {entry['filename']: entry for entry in files}
+    changes.update({entry['previous_filename']: entry for entry in files
+                    if entry['status'] == 'renamed' and 'previous_filename' in entry})
+    try:
+        base = read_withdrawals(ROOT)
+    except (OSError, ValueError):
+        errors.append(f'{EVIDENCE_WITHDRAWALS}: the trusted base registry could not be read.')
+        return set()
+    change = changes.get(EVIDENCE_WITHDRAWALS)
+    if change is None:
+        head = base
+    elif change['status'] in ('removed', 'renamed') or change['filename'] != EVIDENCE_WITHDRAWALS:
+        errors.append(f'{EVIDENCE_WITHDRAWALS}: the withdrawn evidence registry cannot be removed or renamed.')
+        return set()
+    else:
+        try:
+            text = content_at(repository, EVIDENCE_WITHDRAWALS, sha, token)
+            errors.extend(json_privacy_findings(EVIDENCE_WITHDRAWALS, text))
+            head = parse_withdrawals(text.encode('utf-8'))
+        except (OSError, UnicodeError, ValueError):
+            errors.append(f'{EVIDENCE_WITHDRAWALS}: the withdrawn evidence registry is invalid; check it locally.')
+            return set()
+    if any(head.get(name) != entry for name, entry in base.items()):
+        errors.append(f'{EVIDENCE_WITHDRAWALS}: an existing withdrawal cannot be changed or removed.')
+    try:
+        selections = cited_selections(ROOT)
+    except (OSError, ValueError, KeyError, TypeError):
+        errors.append(f'{EVIDENCE_WITHDRAWALS}: the trusted base batches could not be read.')
+        return set()
+    permitted = set()
+    for name, entry in head.items():
+        if name in base:
+            continue
+        path = f'{EVIDENCE_DIRECTORY}/{name}'
+        removal = changes.get(path)
+        try:
+            raw = bounded_bytes(owned_file(ROOT, EVIDENCE_DIRECTORY, name), MAX_ARCHIVE_BYTES)
+        except (OSError, ValueError):
+            raw = None
+        if (removal is None or removal['status'] != 'removed' or raw is None or len(raw) != entry['size_in_bytes']
+                or 'sha256:' + hashlib.sha256(raw).hexdigest() != entry['artifact_digest']):
+            errors.append(f'{path}: a withdrawal must remove this exact trusted-base archive in the same pull request.')
+        elif entry['batch_selection_sha256'] != selections.get(name, {}):
+            # The selections fixed at withdrawal are those of the default branch, never ones this PR introduces.
+            errors.append(f'{EVIDENCE_WITHDRAWALS}: a withdrawal must fix the selections of the trusted-base batches citing {name}.')
+        else:
+            permitted.add(path)
+    return permitted
+
+
+def load_review_contents(repository, sha, token, files, changed, errors):
+    # The withdrawn evidence registry is fetched and checked once, by review_withdrawals.
+    needed = set(changed & REVIEW_FILES) - {EVIDENCE_WITHDRAWALS}
+    if set(CURATED_INPUTS) & changed:
+        needed.update(CURATED_INPUTS)
+    if set(SOURCE_INPUTS) & changed:
+        needed.update(SOURCE_INPUTS)
+    if set(CASE_INPUTS) & changed:
+        needed.update(CASE_INPUTS)
+    if (set(SUPPLEMENT_INPUTS) & changed
+            or ((ROOT / SUPPLEMENT_INDEX).is_file()
+                and {SOURCE_INDEX, SOURCE_SCOPE} & changed)):
+        needed.update(SUPPLEMENT_INPUTS)
+        needed.update((SOURCE_INDEX, SOURCE_SCOPE))
+    removed = {entry['filename'] for entry in files if entry['status'] == 'removed'}
+    removed.update(entry['previous_filename'] for entry in files
+                   if entry['status'] == 'renamed' and 'previous_filename' in entry)
+    archive_targets = {entry['filename'] for entry in files if changes_public_archive(entry)}
+    contents = {}
+    for filename in sorted(needed):
+        if filename in archive_targets:
+            errors.append(f'{filename}: a public archive change is not fetched as review data.')
+            continue
+        if filename in removed:
+            errors.append(f'{filename}: removing or renaming catalog, localization, or scope data requires maintainer review.')
+            continue
+        try:
+            if filename in changed:
+                contents[filename] = content_at(repository, filename, sha, token)
+            else:
+                # Unchanged source, locale, and scope dependencies come from the trusted base.
+                path = ROOT / filename
+                contents[filename] = ('{}' if filename in OPTIONAL_SUPPLEMENT_INPUTS and not path.exists()
+                                      else path.read_text(encoding='utf-8'))
+            if filename in changed:
+                errors.extend(json_privacy_findings(filename, contents[filename]))
+        except (OSError, UnicodeError, ValueError):
+            errors.append(f'{filename}: could not safely retrieve required JSON data for this review.')
+    return contents
+
+
+def review_public_supplements(contents):
+    """Validate PR JSON with base code and the base's immutable public archive."""
+    # These imports resolve in the trusted base checkout. This validator only
+    # materializes the fixed JSON inputs; it never loads PR code or archives.
+    from public_source_supplements import (
+        EVIDENCE_DIRECTORY, MAX_ARCHIVE_BYTES, WITHDRAWALS, bounded_bytes, check_source, load_supplements,
+        owned_file, project_additions, read_withdrawals, strict_json, withdrawal_for,
+    )
+    base_batch = strict_json(bounded_bytes(owned_file(
+        ROOT, 'data/source-supplements', Path(SUPPLEMENT_BATCH).name)))
+    source = base_batch['source']
+    check_source(source)
+    archive_name = source['archive_filename']
+    # A withdrawn archive is gone from the base: the base registry travels with the inputs instead.
+    withdrawn = withdrawal_for(source, read_withdrawals(ROOT)) is not None
+    archive = None if withdrawn else bounded_bytes(owned_file(ROOT, 'data/source-evidence', archive_name),
+                                                   MAX_ARCHIVE_BYTES)
+    with tempfile.TemporaryDirectory(prefix='trusted-supplement-review-') as directory:
+        temporary = Path(directory)
+        for filename in (*SUPPLEMENT_INPUTS, SOURCE_INDEX, SOURCE_SCOPE):
+            path = temporary / filename
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(contents[filename], encoding='utf-8')
+        if withdrawn:
+            registry = temporary / EVIDENCE_DIRECTORY / WITHDRAWALS
+            registry.parent.mkdir(parents=True, exist_ok=True)
+            registry.write_bytes(owned_file(ROOT, EVIDENCE_DIRECTORY, WITHDRAWALS).read_bytes())
+        else:
+            archive_path = temporary / 'data/source-evidence' / archive_name
+            archive_path.parent.mkdir(parents=True, exist_ok=True)
+            archive_path.write_bytes(archive)
+        admitted = load_supplements(temporary)
+        visible = sum(row.get('scope_status') != 'excluded'
+                      for row in project_additions(admitted))
+        return len(admitted['ready']), len(admitted['records']), visible, len(admitted['held'])
+
+
+def review_data(contents, changed):
+    errors, reviewed = [], []
+    if DISCOVERY_CLASSES in changed:
+        import discoveries
+        import discovery_classes
+        entries = parse_json(contents[DISCOVERY_CLASSES], DISCOVERY_CLASSES)
+        batches, problems = discoveries.load_batches(ROOT)
+        errors.extend(problems)
+        discovery_classes.validate_classes(batches, entries, errors)
+        reviewed.append(f'{len(entries):,} discovery class decisions checked for IDs, classes and reproduced text.')
+    if DISCOVERY_REVIEWS in changed:
+        import discoveries
+        import discovery_reviews
+        decisions = parse_json(contents[DISCOVERY_REVIEWS], DISCOVERY_REVIEWS)
+        batches, problems = discoveries.load_batches(ROOT)
+        errors.extend(problems)
+        import discovery_leads
+        lead_batches, problems = discovery_leads.load_batches(ROOT)
+        errors.extend(problems)
+        discovery_reviews.validate_reviews(batches, decisions, errors, lead_batches=lead_batches)
+        reviewed.append(f'{len(decisions):,} discovery review decisions checked against the base branch batches for reason codes, README hashes where applicable, pinned evidence and dates.')
+    if set(CASE_INPUTS) & changed:
+        case_records = []
+        for filename in CATALOGS:
+            data = parse_json(contents[filename], filename)
+            if not isinstance(data, list):
+                errors.append(f'{filename}: expected a JSON array for coverage mappings.')
+            else:
+                case_records.extend(data)
+        case_papers = parse_json(contents['data/papers.json'], 'data/papers.json')
+        if not isinstance(case_papers, list):
+            errors.append('Research papers must be an array for coverage mappings.')
+        else:
+            validate_case_coverage(parse_json(contents[CASE_COVERAGE], CASE_COVERAGE), case_records,
+                                   case_papers, errors, url_check=public_https_error)
+            reviewed.append('Case inventory checked for pinned sources, typed catalog mappings, alias decisions and occurrence/report counts; no project count or runtime reproduction inferred.')
+    if 'data/papers.json' in changed:
+        papers = parse_json(contents['data/papers.json'], 'data/papers.json')
+        validate_papers(papers, errors, url_check=public_https_error)
+        reviewed.append('Research papers checked separately for bibliography, bilingual scope, dates, duplicate identifiers and public source URLs.')
+    if set(CATALOGS) & changed:
+        records = []
+        for filename in CATALOGS:
+            data = parse_json(contents[filename], filename)
+            if not isinstance(data, list):
+                errors.append(f'{filename}: expected a JSON array.')
+            else:
+                records.extend(data)
+        validate_resources(records, errors)
+        reviewed.append(f'{len(records)} curated records checked together for schema, duplicate IDs/URLs, provenance, targets, dates, and review labels.')
+    if set(CURATED_INPUTS) & changed and CURATED_TRANSLATIONS in contents:
+        records = []
+        for filename in CATALOGS:
+            data = parse_json(contents[filename], filename)
+            records.extend(data if isinstance(data, list) else [])
+        # IDs in the base catalogs are not coverage findings: the PR head may predate them.
+        base_ids = {record.get('id') for filename in CATALOGS
+                    for record in parse_json((ROOT / filename).read_text(encoding='utf-8'), filename)
+                    if isinstance(record, dict)}
+        validate_curated_translations(records, parse_json(contents[CURATED_TRANSLATIONS], CURATED_TRANSLATIONS),
+                                      errors, known_ids=base_ids)
+        reviewed.append('Chinese resource names and requirements checked for value shapes and one entry per curated record the PR adds.')
+    if 'data/benchmarks.json' in changed:
+        data = parse_json(contents['data/benchmarks.json'], 'data/benchmarks.json')
+        if not isinstance(data, list):
+            errors.append('Benchmarks must be an array.')
+        else:
+            validate_benchmarks(data, errors)
+            reviewed.append(f'{len(data)} benchmark records checked for timestamp, count, and source consistency.')
+    if set(SOURCE_INPUTS) & changed:
+        data = parse_json(contents[SOURCE_INDEX], SOURCE_INDEX)
+        validate_source_index(data, errors)
+        reviewed.append('Automated source-index records checked separately from curated resources.')
+        if (isinstance(data, dict) and isinstance(data.get('resources'), list)
+                and all(isinstance(record, dict) and isinstance(record.get('id'), str)
+                        for record in data['resources'])):
+            count = review_localizations(data['resources'], contents, errors)
+            reviewed.append(f'{count} repository localizations checked across all locale files for coverage, duplicate IDs, bilingual descriptions, and explicit language exceptions.')
+            if SOURCE_SCOPE not in contents:
+                errors.append(f'{SOURCE_SCOPE}: required source-scope data is missing.')
+            else:
+                try:
+                    scope = parse_json(contents[SOURCE_SCOPE])
+                except (ValueError, TypeError):
+                    errors.append(f'{SOURCE_SCOPE}: expected valid JSON without duplicate keys.')
+                else:
+                    validate_scope(data['resources'], scope, errors)
+                    reviewed.append('Source-scope exclusions checked against repository IDs, README hashes, evidence links or availability rechecks, dates, and bilingual reasons.')
+    if (set(SUPPLEMENT_INPUTS) & changed
+            or ((ROOT / SUPPLEMENT_INDEX).is_file()
+                and {SOURCE_INDEX, SOURCE_SCOPE} & changed)):
+        try:
+            ready, selected, visible, held = review_public_supplements(contents)
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError):
+            errors.append('Public source supplements could not be validated against trusted-base capture evidence, localization coverage and scope decisions.')
+        else:
+            reviewed.append(
+                f'Public source supplements checked with trusted-base code and archive evidence: '
+                f'{ready} ready batch(es), {selected} selected records, {visible} browsable additions, '
+                f'{held} held batch(es). Original capture counts remain separate.')
+    return errors, reviewed
+
+
+def review_discovery_batches(repository, sha, token, files, errors, pull=None):
+    """Check added discovery batches with base code against the base's published layers and budget.
+
+    A batch is new data only: an existing batch is immutable, so changing, renaming or removing one is a
+    finding. Each added batch is fetched as size-bounded text, never executed. The ingest job verifies the
+    captures against its own run's checkpoint artifact before opening its pull request, so batches are
+    accepted only in that pull request: from the workflow token, on the ingest branch, changing nothing else.
+    A hand-made batch cites provenance that this review cannot verify and needs a maintainer.
+    """
+    import discoveries
+    entries = [entry for entry in files if DISCOVERY_BATCH.fullmatch(entry['filename'])
+               or (entry['status'] == 'renamed' and DISCOVERY_BATCH.fullmatch(entry.get('previous_filename', '')))]
+    if not entries:
+        return []
+    user, head = (pull or {}).get('user') or {}, (pull or {}).get('head') or {}
+    if (user.get('login') != discoveries.INGEST_AUTHOR or user.get('type') != 'Bot'
+            or head.get('ref') != discoveries.INGEST_BRANCH or len(files) != len(entries)):
+        errors.append('Discovery batches are added only by the scheduled ingest, whose job verifies them against its '
+                      'own checkpoint artifact, in a pull request that changes nothing else; this batch needs maintainer review.')
+    reviewed, added = [], []
+    for entry in entries:
+        if entry['status'] != 'added':
+            errors.append(f"{entry['filename']}: existing discovery batches are immutable; changing, renaming or removing one requires maintainer review.")
+            continue
+        try:
+            text = raw_text_at(repository, entry['filename'], sha, token)
+        except (OSError, UnicodeError, ValueError):
+            errors.append(f"{entry['filename']}: could not safely retrieve the discovery batch for this review.")
+            continue
+        errors.extend(json_privacy_findings(entry['filename'], text))
+        name = Path(entry['filename']).stem
+        try:
+            batch = parse_json(text, entry['filename'])
+        except InvalidJSON as error:
+            errors.append(str(error))
+            continue
+        problems = discoveries.validate_batch(batch, name)
+        if not problems and text.encode('utf-8') != discoveries.batch_bytes(batch):
+            problems.append(f"{entry['filename']}: use the repository JSON format (two-space indent, trailing newline).")
+        errors.extend(problems[:20])
+        if not problems:
+            added.append(batch)
+    if not added:
+        return reviewed
+    try:
+        base_batches, base_problems = discoveries.load_batches(ROOT)
+        existing = discoveries.existing_identities(ROOT, base_batches)
+        curated = discoveries.curated_urls(ROOT)
+    except (OSError, ValueError, KeyError, TypeError):
+        errors.append('Discovery batches could not be compared with the trusted base layers.')
+        return reviewed
+    errors.extend(base_problems[:5])
+    ids, names, readmes = set(existing['ids']), dict(existing['names']), set(existing['readmes'])
+    total, size = existing['records'], existing['bytes']
+    for batch in added:
+        where = f"data/discoveries/{batch['batch_id']}.json"
+        for record in batch['resources']:
+            name = record['full_name'].casefold()
+            if record['id'] in ids:
+                errors.append(f"{where}: {record['id']} is already in the source index, a public supplement or an earlier discovery batch.")
+            elif names.get(name, record['id']) != record['id']:
+                errors.append(f"{where}: {record['id']} reuses a repository name already recorded under another numeric ID.")
+            elif record['readme_sha256'] in readmes:
+                errors.append(f"{where}: {record['id']} repeats a README already published by another record.")
+            elif record['url'].rstrip('/').casefold() in curated:
+                errors.append(f"{where}: {record['id']} is already a curated resource.")
+            ids.add(record['id']); names.setdefault(name, record['id']); readmes.add(record['readme_sha256'])
+        total += len(batch['resources'])
+        size += len(discoveries.batch_bytes(batch))
+        reviewed.append(f"Discovery batch {batch['batch_id']}: {len(batch['resources'])} automated README captures from the scheduled ingest checked with trusted-base code for schema, explicit Git blob hash matches, the {discoveries.POLICY} screen, record fingerprints, recorded scan provenance and identities new to every base layer; the ingest job matched them to its checkpoint artifact, and they stay unreviewed.")
+    if total > discoveries.MAX_TOTAL_RECORDS or size > discoveries.MAX_TOTAL_BYTES:
+        errors.append(f'Discovery batches would exceed the documented budget ({discoveries.MAX_TOTAL_RECORDS:,} records, {discoveries.MAX_TOTAL_BYTES:,} bytes).')
+    return reviewed
+
+
+def review_lead_batches(repository, sha, token, files, errors, pull=None):
+    """Check added followed-source lead batches and registry changes with base code against the base's layers.
+
+    Like README-scan batches, a lead batch is new data only and is accepted only from the lead-discovery
+    workflow, which fetched every listed source itself, in a pull request on its branch that changes nothing
+    else. Registry changes are validated with the base's registry rules.
+    """
+    import discovery_leads
+    reviewed = []
+    registry = [entry for entry in files if entry['filename'] == LEAD_REGISTRY
+                or (entry['status'] == 'renamed' and entry.get('previous_filename') == LEAD_REGISTRY)]
+    for entry in registry:
+        if entry['status'] in ('removed', 'renamed'):
+            errors.append(f'{LEAD_REGISTRY}: removing or renaming the source registry requires maintainer review.')
+            continue
+        try:
+            text = raw_text_at(repository, LEAD_REGISTRY, sha, token)
+            document = parse_json(text, LEAD_REGISTRY)
+            papers = parse_json((ROOT / 'data/papers.json').read_text(encoding='utf-8'), 'data/papers.json')
+        except InvalidJSON as error:
+            errors.append(str(error))
+            continue
+        except (OSError, UnicodeError, ValueError):
+            errors.append(f'{LEAD_REGISTRY}: could not safely retrieve the source registry for this review.')
+            continue
+        errors.extend(json_privacy_findings(LEAD_REGISTRY, text))
+        problems = discovery_leads.validate_registry(document, papers)
+        errors.extend(problems[:20])
+        if not problems:
+            reviewed.append(f"Followed-source registry checked with trusted-base code: {len(document['sources'])} sources, "
+                            'known source types, valid scope patterns and reason codes, bounded limits.')
+    entries = [entry for entry in files if LEAD_BATCH.fullmatch(entry['filename'])
+               or (entry['status'] == 'renamed' and LEAD_BATCH.fullmatch(entry.get('previous_filename', '')))]
+    if not entries:
+        return reviewed
+    user, head = (pull or {}).get('user') or {}, (pull or {}).get('head') or {}
+    if (user.get('login') != discovery_leads.INGEST_AUTHOR or user.get('type') != 'Bot'
+            or head.get('ref') != discovery_leads.INGEST_BRANCH or len(files) != len(entries)):
+        errors.append('Lead batches are added only by the followed-source discovery workflow, which fetched every listed '
+                      'source itself, in a pull request that changes nothing else; this batch needs maintainer review.')
+    added = []
+    for entry in entries:
+        if entry['status'] != 'added':
+            errors.append(f"{entry['filename']}: existing lead batches are immutable; changing, renaming or removing one requires maintainer review.")
+            continue
+        try:
+            text = raw_text_at(repository, entry['filename'], sha, token)
+        except (OSError, UnicodeError, ValueError):
+            errors.append(f"{entry['filename']}: could not safely retrieve the lead batch for this review.")
+            continue
+        errors.extend(json_privacy_findings(entry['filename'], text))
+        month, name = entry['filename'].split('/')[-2], Path(entry['filename']).stem
+        try:
+            batch = parse_json(text, entry['filename'])
+        except InvalidJSON as error:
+            errors.append(str(error))
+            continue
+        problems = discovery_leads.validate_batch(batch, name, month)
+        if not problems and text.encode('utf-8') != discovery_leads.batch_bytes(batch):
+            problems.append(f"{entry['filename']}: use the repository JSON format (two-space indent, trailing newline).")
+        errors.extend(problems[:20])
+        if not problems:
+            added.append(batch)
+    if not added:
+        return reviewed
+    try:
+        base_batches, base_problems = discovery_leads.load_batches(ROOT)
+        existing = discovery_leads.existing_keys(ROOT, base_batches)
+    except (OSError, ValueError, KeyError, TypeError):
+        errors.append('Lead batches could not be compared with the trusted base layers.')
+        return reviewed
+    errors.extend(base_problems[:5])
+    known, total, size = dict(existing['known']), existing['records'], existing['bytes']
+    for batch in added:
+        where = f"{discovery_leads.DIRECTORY}/{batch['collected_at'][:7]}/{batch['batch_id']}.json"
+        for lead in batch['leads']:
+            held = sorted(key for key in discovery_leads.match_keys(lead) if key in known)
+            if held:
+                errors.append(f"{where}: {lead['id']} is already held by the repository ({known[held[0]]}).")
+            for key in discovery_leads.match_keys(lead):
+                known.setdefault(key, 'already-lead')
+        total += len(batch['leads'])
+        size += len(discovery_leads.batch_bytes(batch))
+        reviewed.append(f"Lead batch {batch['batch_id']}: {len(batch['leads'])} followed-source leads from the scheduled "
+                        'discovery checked with trusted-base code for schema, pinned listing evidence, record fingerprints, '
+                        'run provenance and identities new to every base layer; they stay unreviewed.')
+    if total > discovery_leads.MAX_TOTAL_RECORDS or size > discovery_leads.MAX_TOTAL_BYTES:
+        errors.append(f'Lead batches would exceed the documented budget ({discovery_leads.MAX_TOTAL_RECORDS:,} leads, '
+                      f'{discovery_leads.MAX_TOTAL_BYTES:,} bytes).')
+    return reviewed
+
+
+def review_advisories(contents, changed):
+    """Evidence-pin warnings for curated records this PR adds or changes; they never become findings."""
+    if not set(CATALOGS) & changed:
+        return []
+    records, base = [], {}
+    try:
+        for filename in CATALOGS:
+            rows, base_rows = parse_json(contents[filename]), parse_json((ROOT / filename).read_text(encoding='utf-8'))
+            if not isinstance(rows, list) or not isinstance(base_rows, list):
+                return []
+            records.extend(rows)
+            base.update((row['id'], row) for row in base_rows if isinstance(row, dict) and isinstance(row.get('id'), str))
+    except (KeyError, OSError, UnicodeError, ValueError, TypeError, RecursionError):
+        return []  # Unreadable catalogs are already findings; an advisory needs both versions.
+    # Records are compared by ID across both trusted base catalogs, so moving one between files is not a change.
+    return evidence_pin_warnings([row for row in records if isinstance(row, dict)
+                                  and (not isinstance(row.get('id'), str) or base.get(row['id']) != row)])
+
+
+def safe_text(value):
+    # Strip controls and join whitespace before redacting, so neither can rejoin a hidden value.
+    value = re.sub(r'[\x00-\x08\x0b-\x1f\x7f\u202a-\u202e\u2066-\u2069]', '', str(value))
+    value = SENSITIVE.sub('[redacted credential-like value]', ' '.join(value.split()))
+    value = LOCAL_PATH.sub('[redacted local path]', value)
+    if private_text(value):
+        value = '[redacted text with an escaped credential-like value or personal path]'
+    value = value[:500].replace('@', '@\u200b')
+    value = html.escape(value, quote=False)
+    return re.sub(r'([\\`*_{}\[\]()#+.!|])', r'\\\1', value)
+
+
+def find_existing_review(repository, number, sha, token):
+    # Reviews are listed oldest first; a deleted account's review has a null user.
+    for page in range(1, MAX_REVIEW_PAGES + 1):
+        batch = api(repository, f'pulls/{number}/reviews?per_page=100&page={page}', token)
+        for review in batch:
+            user = review.get('user')
+            if (isinstance(user, dict) and user.get('login') == 'github-actions[bot]' and user.get('type') == 'Bot'
+                    and MARKER in (review.get('body') or '') and review.get('commit_id') == sha):
+                return review
+        if len(batch) < 100:
+            break
+    return None
+
+
+CHECK_NAME = 'review'
+
+
+def dispatched():
+    return os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
+
+
+def dispatch_inputs(event):
+    """The PR number and the exact head commit a dispatched review must cover."""
+    inputs = event.get('inputs') or {}
+    number, head = str(inputs.get('pr_number', '')).strip(), str(inputs.get('head_sha', '')).strip()
+    if not re.fullmatch(r'[1-9][0-9]{0,9}', number):
+        raise ValueError('A dispatched review needs a positive pull request number')
+    if not re.fullmatch(r'[0-9a-f]{40}', head):
+        raise ValueError('A dispatched review needs the full SHA of the head commit to review')
+    return int(number), head
+
+
+def dispatch_binding_error(pull, repository, event, expected_head):
+    """Bind a dispatched review to one open same-repository PR head, as pull_request_target binds its event.
+
+    Pull requests opened with GITHUB_TOKEN start no pull_request_target run. The workflow is then
+    dispatched on the default branch, so its definition and this code are that trusted branch's; the
+    PR head is never checked out or executed. The result becomes the required `review` check run on
+    the named head commit. Strict up-to-date protection still requires that head to contain the
+    current default branch before it can merge.
+    """
+    head, base = pull.get('head') or {}, pull.get('base') or {}
+    default_branch = (event.get('repository') or {}).get('default_branch')
+    if not default_branch or os.environ.get('GITHUB_REF') != f'refs/heads/{default_branch}':
+        return 'a dispatched review runs only from the default branch'
+    if pull.get('state') != 'open':
+        return 'the pull request is not open'
+    if head.get('sha') != expected_head:
+        return 'the pull request head is not the commit named for review'
+    if (head.get('repo') or {}).get('full_name') != repository or (base.get('repo') or {}).get('full_name') != repository:
+        return 'only pull requests from a branch of this repository can be reviewed by dispatch'
+    if base.get('ref') != default_branch:
+        return 'only pull requests into the default branch can be reviewed by dispatch'
+    return None
+
+
+def report_check(repository, sha, token, number, errors, not_inspected):
+    """Record a dispatched review as the completed `review` check run on the reviewed head commit."""
+    run_url = (f"{os.environ.get('GITHUB_SERVER_URL', 'https://github.com')}/{repository}"
+               f"/actions/runs/{int(os.environ.get('GITHUB_RUN_ID', '0'))}")
+    if errors:
+        title = f'{len(errors)} finding(s) need attention'
+    elif not_inspected:
+        title = f'No findings; {len(not_inspected)} changed file(s) not inspected'
+    else:
+        title = 'No issues found by the automatic checks'
+    summary = (f'Rule-based review of pull request #{number} at `{sha[:12]}` by trusted default-branch code '
+               f"(`{os.environ.get('GITHUB_SHA', '')[:12]}`). The bot review comment on the pull request lists "
+               'every check and finding. This is not an approval or a runtime test.')
+    # Branch protection does not count check runs reported by a dispatched workflow toward the required
+    # checks, but it does count a commit status from GitHub Actions, so the status carries the result.
+    api(repository, f'statuses/{sha}', token, method='POST', payload={
+        'state': 'failure' if errors else 'success', 'context': CHECK_NAME, 'target_url': run_url,
+        'description': title[:140]})
+    api(repository, 'check-runs', token, method='POST', payload={
+        'name': CHECK_NAME, 'head_sha': sha, 'status': 'completed',
+        'conclusion': 'failure' if errors else 'success', 'details_url': run_url,
+        'external_id': f'pull-request-{number}', 'output': {'title': title, 'summary': summary}})
+
+
+def main():
+    token = os.environ['GITHUB_TOKEN']
+    repository = os.environ['GITHUB_REPOSITORY']
+    if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository):
+        raise ValueError('Invalid repository name')
+    event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text(encoding='utf-8'))
+    if dispatched():
+        number, expected_head = dispatch_inputs(event)
+    else:
+        number = int(event['pull_request']['number'])
+    pull = api(repository, f'pulls/{number}', token)
+    if dispatched():
+        problem = dispatch_binding_error(pull, repository, event, expected_head)
+        if problem:
+            print(f'Dispatched review refused: {problem}.', file=sys.stderr)
+            sys.exit(1)
+    sha = pull['head']['sha']
+    if not re.fullmatch(r'[0-9a-f]{40}', sha):
+        raise ValueError('Unexpected head SHA')
+    existing_review = find_existing_review(repository, number, sha, token)
+    files = []
+    for page in range(1, 4):
+        batch = api(repository, f'pulls/{number}/files?per_page=100&page={page}', token)
+        files.extend(batch)
+        if len(batch) < 100:
+            break
+    changed = {entry['filename'] for entry in files}
+    changed.update(entry['previous_filename'] for entry in files
+                   if entry['status'] == 'renamed' and 'previous_filename' in entry)
+    errors, reviewed, omitted, not_inspected = [], [], [], []
+    withdrawn = review_withdrawals(repository, sha, token, files, errors)
+    if withdrawn:
+        reviewed.append(f'{len(withdrawn)} evidence archive(s) withdrawn by their exact trusted-base digest')
+    if pull.get('changed_files', len(files)) > 300:
+        errors.append('This PR exceeds the 300-file automatic review limit; split it for a complete review.')
+    for entry in files:
+        path = entry['filename']
+        if path.startswith('docs/cases/') and not CASE_PAGE.fullmatch(path):
+            errors.append(f'{path}: generated case pages belong in docs/cases/ as Markdown files.')
+        # Removing such a file is a cleanup, not a new commit of it.
+        rule = path_rule(path) if entry['status'] != 'removed' else None
+        if rule:
+            # Named by path only; such files are never fetched.
+            errors.append(f'{path}: {rule}')
+        archive_change = changes_public_archive(entry)
+        if archive_change and not (entry['status'] == 'removed' and path in withdrawn):
+            errors.append(f'{path}: immutable public source archives cannot be changed by a data-admission PR; a separate source-pin review is required.')
+        unknown_locale = (path.startswith('data/locales/')
+                          and path not in (*LOCALE_FILES, SUPPLEMENT_LOCALE)
+                          and path != 'data/locales/README.md')
+        patch = entry.get('patch')
+        if patch:
+            added = '\n'.join(line[1:] for line in patch.splitlines() if line.startswith('+') and not line.startswith('+++'))
+            if private_text(added):
+                errors.append(f'{path}: added text contains a credential-like value or personal path; inspect locally. The value is omitted here.')
+        elif (entry['status'] not in ('removed', 'unchanged') and not rule and not DISCOVERY_BATCH.fullmatch(path)
+              and not LEAD_BATCH.fullmatch(path) and path != LEAD_REGISTRY
+              and not archive_change and not unknown_locale and path not in REVIEW_FILES):
+            # GitHub omits the patch of binary files and very large diffs.
+            omitted.append(path)
+        if unknown_locale:
+            errors.append(f'{path}: locale file is not in the trusted review allowlist; maintainer review is required.')
+    for index, path in enumerate(omitted):
+        try:
+            text = omitted_text_at(repository, path, sha, token) if index < MAX_OMITTED_FILES else None
+        except (OSError, UnicodeError, ValueError):
+            text = None
+        if text is None:
+            not_inspected.append(path)
+        elif private_text(text):
+            errors.append(f'{path}: GitHub omitted this diff, and the file text at this commit contains a credential-like value or personal path; inspect locally. The value is omitted here.')
+    contents = load_review_contents(repository, sha, token, files, changed, errors)
+    reviewed.extend(review_discovery_batches(repository, sha, token, files, errors, pull))
+    reviewed.extend(review_lead_batches(repository, sha, token, files, errors, pull))
+    try:
+        findings, checked = review_data(contents, changed & REVIEW_FILES)
+        errors.extend(findings)
+        reviewed.extend(checked)
+    except InvalidJSON as error:
+        errors.append(str(error))
+    except (ValueError, TypeError, KeyError):
+        errors.append('Required catalog, localization, or source-scope JSON could not be parsed or validated. Check its shape locally.')
+    advisories = review_advisories(contents, changed & REVIEW_FILES)
+    manual = any(path.startswith(('scripts/', '.github/', 'site/')) and path not in REVIEW_FILES for path in changed)
+    if errors:
+        status = '**Changes need attention.**'
+    elif not_inspected:
+        status = f'**No issues found by these automatic checks, but {len(not_inspected)} changed file(s) were not inspected.**'
+    else:
+        status = '**No issues found by these automatic checks.**'
+    commit_line = f'Commit: `{sha[:12]}`.'
+    if dispatched():
+        commit_line += f" Dispatched run of trusted default-branch code at `{os.environ.get('GITHUB_SHA', '')[:12]}`."
+    body = [MARKER, '### Automated catalog review', '', commit_line, '', status, '']
+    body.extend('- ' + safe_text(item) for item in reviewed)
+    if errors:
+        body.extend(['', 'Findings:'])
+        body.extend('- ' + safe_text(item) for item in errors[:30])
+        if len(errors) > 30:
+            body.append(f'- {len(errors) - 30} additional findings; run the local validator for the complete list.')
+    if advisories:
+        body.extend(['', 'Advisory (does not affect this check):'])
+        body.extend('- ' + safe_text(item) for item in advisories[:30])
+        if len(advisories) > 30:
+            body.append(f'- {len(advisories) - 30} additional advisories; run the local validator for the complete list.')
+    if not_inspected:
+        body.extend(['', 'Not inspected automatically: GitHub omitted the diff, and the file could not be retrieved as text within the review limits. A maintainer should check these files:'])
+        body.extend('- ' + safe_text(path) for path in not_inspected[:30])
+        if len(not_inspected) > 30:
+            body.append(f'- {len(not_inspected) - 30} additional files.')
+    if manual:
+        body.extend(['', 'Code, automation, or site changes require a maintainer to review behavior and permissions.'])
+    body.extend(['', 'This is a rule-based review, not a runtime compatibility test or an approval. PR code is never executed by this review job. CI checks and maintainer review remain separate.'])
+    # Ensure an obsolete run does not comment against a newly pushed commit.
+    if api(repository, f'pulls/{number}', token)['head']['sha'] != sha:
+        print('PR head changed; the next run will review the new commit.')
+        if dispatched():
+            # No check is reported for a superseded commit; the dispatcher reviews the new head.
+            sys.exit(1)
+        return
+    if existing_review:
+        api(repository, f"pulls/{number}/reviews/{int(existing_review['id'])}", token,
+            method='PUT', payload={'body': '\n'.join(body)})
+    else:
+        api(repository, f'pulls/{number}/reviews', token, method='POST',
+            payload={'commit_id': sha, 'event': 'COMMENT', 'body': '\n'.join(body)})
+    print(f'Posted a rule-based review: {len(errors)} finding(s), {len(not_inspected)} file(s) not inspected; no PR code executed.')
+    if dispatched():
+        report_check(repository, sha, token, number, errors, not_inspected)
+    if errors:
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

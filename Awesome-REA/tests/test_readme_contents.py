@@ -1,0 +1,330 @@
+"""Keep README Contents counts tied to the sections the catalog actually renders."""
+from copy import deepcopy
+import json
+from pathlib import Path
+import re
+import sys
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'scripts'))
+from build_readme import (FINDER_BLURBS, without_leading_name, BADGES_BEGIN, BADGES_END, BEGIN, CONTENTS_BEGIN, CONTENTS_END, PAPER_FILES, PAPERS_BEGIN, lead_sentence,
+                         plain_text, render_badges, replace_badges, render_catalog, render_contents, render_papers,
+                         rendered_files)
+from build_repository_index import SUMMARY_BEGIN
+
+
+def resource(**changes):
+    record = deepcopy(json.loads((ROOT / 'data/tool-resources.json').read_text(encoding='utf-8'))[0])
+    record.update(id='contents-fixture', category='web-analysis', kind='tool',
+                  relationship='foundation', targets=['website'], url='https://example.com/tool')
+    record.update(changes)
+    return record
+
+
+def paper(**changes):
+    record = deepcopy(json.loads((ROOT / 'data/papers.json').read_text(encoding='utf-8'))[0])
+    record.update(changes)
+    return record
+
+
+class ReadmeContentsTest(unittest.TestCase):
+    def test_badges_keep_overlapping_resource_case_and_paper_counts_separate(self):
+        listed = paper(url='https://example.com/paper')
+        records = [resource(), resource(id='case', kind='case-study'),
+                   resource(id='paper-copy', kind='research', url=listed['url'])]
+        before = deepcopy((records, [listed]))
+        en = render_badges(records, [listed], 'en')
+        self.assertIn('/badge/resources-3-', en)
+        self.assertIn('/badge/cases-1-', en)
+        self.assertIn('/badge/papers-1-', en)
+        self.assertIn('/badge/license-MIT-', en)
+        self.assertNotRegex(en.lower(), r'runtime|reproduced|verified|total-4')
+        zh = render_badges(records, [listed], 'zh')
+        self.assertIn('精选资源: 3', zh)
+        self.assertIn('案例: 1', zh)
+        self.assertIn('论文: 1', zh)
+        self.assertEqual((records, [listed]), before)
+
+    def test_contents_lines_give_each_section_its_count_and_what_it_holds(self):
+        listed = paper(url='https://example.com/paper')
+        records = [resource(), resource(id='second', url='https://example.com/second'),
+                   resource(id='paper-copy', kind='research', url=listed['url'])]
+        for language, blurbs in (('en', 0), ('zh', 1)):
+            with self.subTest(language=language):
+                rendered = render_contents(records, [listed], 40, language)
+                website = FINDER_BLURBS['website'][blurbs]
+                self.assertRegex(rendered, rf'\n  - \[[^\]]+\]\(#website\) \(2\) — {re.escape(website)}\n')
+                self.assertRegex(rendered, rf'\n- \[[^\]]+\]\(#papers\) \(1\) — {re.escape(FINDER_BLURBS["papers"][blurbs])}\n')
+                self.assertRegex(rendered, rf'\n- \[[^\]]+\]\(#[^)]+\) \(40\) — {re.escape(FINDER_BLURBS["index"][blurbs])}\n')
+                self.assertNotIn('awesomerea.org', rendered)
+
+    def test_badges_are_at_most_six_and_link_the_hugging_face_dataset(self):
+        for language in ('en', 'zh'):
+            rendered = render_badges([resource()], [paper()], language)
+            self.assertLessEqual(rendered.count('![') , 6)
+            self.assertNotIn('huggingface', rendered)
+            self.assertIn('https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Freacher-z%2F'
+                          'Awesome-REA%2Fstatus%2Fscan-status.json&label=', rendered)
+            self.assertNotIn('last-commit', rendered)
+
+    def test_badges_have_no_ci_badge_and_the_footer_keeps_the_build_link(self):
+        workflow = 'https://github.com/reacher-z/Awesome-REA/actions/workflows/validate.yml'
+        for language, name, footer in (('en', 'README.md', 'Build status'), ('zh', 'README.zh-CN.md', '构建状态')):
+            with self.subTest(language=language):
+                rendered = render_badges([resource()], [paper()], language)
+                self.assertNotIn('/actions/', rendered)
+                self.assertNotIn('badge.svg', rendered)
+                self.assertEqual(rendered.count('!['), 5)
+                text = (ROOT / name).read_text(encoding='utf-8')
+                self.assertNotRegex(text, r'actions/workflows/[^)\s]*badge\.svg')
+                self.assertIn(f'[{footer}]({workflow})', text.split(BADGES_END, 1)[1])
+
+    def test_badge_generation_preserves_authored_header_and_rejects_ambiguous_markers(self):
+        prefix = '<img src="featured.svg">\n# Collection\n<img src="banner.svg">\n'
+        suffix = '\n**Primary navigation**\n'
+        document = prefix + BADGES_BEGIN + '\nstale\n' + BADGES_END + suffix
+        rendered = render_badges([resource()], [paper()], 'en')
+        expected = prefix + BADGES_BEGIN + '\n' + rendered + BADGES_END + suffix
+        self.assertEqual(replace_badges(document, rendered), expected)
+        self.assertEqual(replace_badges(expected, rendered), expected)
+        for invalid in ('', BADGES_BEGIN, BADGES_END + BADGES_BEGIN,
+                        document + BADGES_BEGIN, document + BADGES_END):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                replace_badges(invalid, rendered)
+
+    def test_counts_follow_rendered_sections(self):
+        listed = paper(url='https://example.com/paper')
+        records = [
+            resource(),
+            resource(id='second-web-tool', url='https://example.com/second'),
+            resource(id='case', kind='case-study', category='reconstruction-cases',
+                     relationship='independent-reconstruction', targets=['game'], url='https://example.com/case',
+                     reconstruction_method='other'),
+            resource(id='paper-copy', kind='research', category='learning', relationship='learning',
+                     url=listed['url']),
+        ]
+        rendered = render_contents(records, [listed], 2864, 'en')
+        self.assertIn('- [Resources](#resources) (3)\n', rendered)
+        self.assertIn('  - [Website](#website) (2) — ', rendered)
+        self.assertIn('  - [Game](#game) (1) — ', rendered)
+        self.assertIn('- [Papers](#papers) (1) — ', rendered)
+        self.assertIn('- [Full Repository Index](#full-repository-index) (2,864) — ', rendered)
+        # Cases are browsed from the link row above Contents; Contents only lists README headings.
+        self.assertNotIn('awesomerea.org', rendered)
+        # A research record listed under Papers is not rendered in Learning, so it is not counted there.
+        self.assertNotIn('#references-and-learning', rendered)
+        self.assertNotIn('#references-and-learning', render_catalog(records, 'en', {listed['url']}))
+        # Sections without entries have no anchor, so Contents must not link to them.
+        self.assertNotIn('#protocol', rendered)
+
+    def test_chinese_contents_use_chinese_labels_and_anchors(self):
+        rendered = render_contents([resource()], [paper()], 10, 'zh')
+        self.assertTrue(rendered.startswith('- [按任务查找](#按任务查找)\n- [使用数据](#使用数据)\n- [资源](#资源) (1)\n  - [网站](#website) (1) — '),
+                        rendered)
+        self.assertIn('\n- [完整仓库索引](#完整仓库索引) (10) — ', rendered)
+        self.assertTrue(rendered.endswith('\n- [关于](#关于)\n- [Star 历史](#star-历史)\n'), rendered)
+        # Neither README has a contributors section, so Contents lists none.
+        self.assertNotIn('贡献者', rendered)
+        self.assertNotIn('Contributors', render_contents([resource()], [paper()], 10, 'en'))
+        self.assertNotIn('awesomerea.org', rendered)
+
+    def test_star_history_is_localized_theme_aware_and_preserved_by_generation(self):
+        rebuilt = rendered_files([resource()], [paper()], 10)
+        chart = 'https://api.star-history.com/svg?repos=reacher-z/Awesome-REA&amp;type=Date'
+        for name, heading, alt in (
+            ('README.md', 'Star History', 'Awesome REA GitHub stars over time'),
+            ('README.zh-CN.md', 'Star 历史', 'Awesome REA 的 GitHub Star 数随时间的变化'),
+        ):
+            with self.subTest(readme=name):
+                text = (ROOT / name).read_text(encoding='utf-8')
+                marker = f'## {heading}\n'
+                self.assertEqual(text.count(marker), 1)
+                section = text.split(marker, 1)[1].split('\n---', 1)[0]
+                self.assertIn('https://www.star-history.com/#reacher-z/Awesome-REA&Date', section)
+                self.assertIn('<a href="https://www.star-history.com/#reacher-z/Awesome-REA&amp;Date">', section)
+                self.assertIn(f'<source media="(prefers-color-scheme: dark)" srcset="{chart}&amp;theme=dark">', section)
+                self.assertIn(f'<source media="(prefers-color-scheme: light)" srcset="{chart}">', section)
+                self.assertIn(f'<img alt="{alt}" src="{chart}" width="100%">', section)
+                self.assertIn(marker + section, rebuilt[name])
+
+    def test_english_lines_do_not_open_with_the_entry_name(self):
+        """awesome-lint's no-repeat-item-in-description rule: the link text already gives the name."""
+        cases = {
+            ('Mesen', 'Mesen is an NES/Famicom emulator with debugging tools.'): 'An NES/Famicom emulator with debugging tools.',
+            ('gore', 'gore recovers a Godot game into a project.'): 'Recovers a Godot game into a project.',
+            ('GameMaker 8.1 Decompiler', 'GameMaker 8.1 Decompiler is the 2011 source of a decompiler.'): 'The 2011 source of a decompiler.',
+            ('RFLink ESP', 'RFLink ESP is ESP32 and ESP8266 firmware.'): 'ESP32 and ESP8266 firmware.',
+            ('Source 2 Decompiler', 'Source 2 Decompiler, s2dc, decompiles Source 2 resource files.'): 'Decompiles Source 2 resource files.',
+            ('Mach-O-Scope', 'Mach-O-Scope 0.2 browses the disassembly of Mach-O bundles.'): 'Browses the disassembly of Mach-O bundles.',
+            ('Thug', 'Thug is a Python low-interaction honeyclient.'): 'A Python low-interaction honeyclient.',
+            # Openings that do not repeat the name, or that cannot drop it cleanly, stay as written.
+            ('Ghidra', 'A software reverse engineering framework.'): 'A software reverse engineering framework.',
+            ('Ghidra', "Ghidra's decompiler runs headless."): "Ghidra's decompiler runs headless.",
+            ('dcc', 'dcc is written for DOS executables.'): 'dcc is written for DOS executables.',
+            ('box', 'boxes and arrows.'): 'boxes and arrows.',
+        }
+        for (name, text), expected in cases.items():
+            with self.subTest(name=name, text=text):
+                self.assertEqual(without_leading_name(name, text), expected)
+        line = render_catalog([resource(name='Thug', description_en='Thug is a Python low-interaction honeyclient that '
+                                        'mimics a web browser.')], 'en')
+        self.assertIn('[**Thug**](https://example.com/tool) - A Python low-interaction honeyclient that mimics a web browser.', line)
+        # Chinese lines keep their wording; only the English README is linted.
+        zh = render_catalog([resource(name='Thug', description_zh='Thug 是一个模拟浏览器的低交互蜜罐客户端。')], 'zh')
+        self.assertIn(' - Thug 是一个模拟浏览器的低交互蜜罐客户端。', zh)
+
+    def test_resource_line_keeps_title_opening_sentence_tags_and_full_entry(self):
+        record = resource(name='Fixture [tool]', name_zh='测试 [工具]',
+                          description_en='Recovers a readable view of the interface, not the original backend. Requires A & B.',
+                          description_zh='恢复已发布界面的可读视图，但并非原始后端实现。需要 A & B。')
+        before = deepcopy(record)
+        for language, title, description, label, prefix in [
+            ('en', r'Fixture \[tool\]', 'Recovers a readable view of the interface, not the original backend.', 'Full entry', ''),
+            ('zh', r'测试 \[工具\]', '恢复已发布界面的可读视图，但并非原始后端实现。', '完整条目', 'zh/'),
+        ]:
+            with self.subTest(language=language):
+                rendered = render_catalog([record], language)
+                tag = '工具' if language == 'zh' else 'Tool'
+                line = (f'- [**{title}**]({record["url"]}) - {description} '
+                        f'<sub>{tag} · [{label}](https://awesomerea.org/{prefix}resources/{record["id"]}/)</sub>')
+                self.assertEqual(rendered.splitlines().count(line), 1, rendered)
+                # The remaining sentences, like requirements and evidence, stay on the entry page.
+                self.assertNotIn('A &amp; B', rendered)
+        self.assertEqual(record, before)
+
+    def test_paper_line_keeps_source_publication_and_full_entry(self):
+        record = paper(id='paper-readme-fixture', targets=['website'], code_url='https://example.com/code')
+        before = deepcopy(record)
+        for language, label, prefix in [('en', 'Full entry', ''), ('zh', '完整条目', 'zh/')]:
+            with self.subTest(language=language):
+                rendered = render_papers([record], language)
+                line = next(line for line in rendered.splitlines() if line.startswith('- [**'))
+                description = plain_text(lead_sentence(record[f'description_{language}'], language))
+                self.assertIn(f']({record["url"]}) - {description} <sub>', line)
+                self.assertIn(f'[PDF]({record["pdf_url"]})', line)
+                self.assertIn('](https://example.com/code)', line)
+                self.assertTrue(line.endswith(f' · [{label}](https://awesomerea.org/{prefix}papers/paper-readme-fixture/)</sub>'), line)
+                self.assertIn(str(record['year']), line)
+                self.assertIn(plain_text(record['venue']), line)
+                self.assertIn(plain_text(record['authors'][0]), line)
+                # Scope and limitations are on the paper's entry page, not in the README.
+                self.assertNotIn(plain_text(record[f'scope_limitations_{language}']), rendered)
+                self.assertNotIn('<details>', rendered)
+        self.assertEqual(record, before)
+
+    def test_contents_is_one_nested_list_that_mirrors_the_headings(self):
+        """awesome-lint's ToC check: after the totals line, one list whose items follow the ## headings in order
+        (Contributing excluded) and whose sub-lists follow each section's ### headings."""
+        for name, language in (('README.md', 'en'), ('README.zh-CN.md', 'zh')):
+            with self.subTest(readme=name):
+                text = (ROOT / name).read_text(encoding='utf-8')
+                contents = text.split(CONTENTS_BEGIN + '\n', 1)[1].split(CONTENTS_END, 1)[0]
+                # One visible list and nothing else; the navigation row links Contributing, which the ToC check excludes.
+                contents = contents.split('\n', 1)[1]
+                self.assertNotIn('<details>', contents)
+                items = contents.rstrip('\n').split('\n')
+                self.assertTrue(all(re.fullmatch(r'(  )?- \[[^\]]+\]\(#[^)]+\)( \([\d,]+\))?( — [^\[\]]+)?', line)
+                                    for line in items), items)
+                body = text.split(CONTENTS_END, 1)[1]
+                expected = []
+                for level, heading in re.findall(r'^(##|###) (.+)$', body, re.MULTILINE):
+                    if heading in ('Contributing', '参与贡献'):
+                        continue
+                    expected.append(('  ' if level == '###' else '') + (heading.split(' · ')[-1] if language == 'zh' else heading))
+                self.assertEqual([re.sub(r'^(\s*)- \[([^\]]+)\].*', r'\1\2', line) for line in items], expected)
+                if language == 'en':
+                    for label, anchor in re.findall(r'\[([^\]]+)\]\(#([^)]+)\)', contents):
+                        self.assertEqual(anchor, re.sub(r'[^\w\- ]', '', label.lower()).replace(' ', '-'))
+
+    def test_contents_counts_equal_the_entries_under_each_heading(self):
+        for name, paper_file in (('README.md', PAPER_FILES['en']), ('README.zh-CN.md', PAPER_FILES['zh'])):
+            with self.subTest(readme=name):
+                text = (ROOT / name).read_text(encoding='utf-8')
+                contents = text.split(CONTENTS_BEGIN + '\n', 1)[1].split(CONTENTS_END, 1)[0]
+                body = text.split(CONTENTS_END, 1)[1]
+                # Each heading's section ends at the next heading of the same or a higher level.
+                headings = list(re.finditer(r'^(##|###) (.+)$', body, re.MULTILINE))
+                counted = 0
+                for position, heading in enumerate(headings):
+                    label = heading[2].split(' · ')[-1] if name.endswith('zh-CN.md') else heading[2]
+                    count = re.search(rf'\[{re.escape(label)}\]\(#[^)]+\) \(([\d,]+)\)', contents)
+                    if count and heading[2] in ('Papers', '论文'):
+                        # Papers counts every paper; the README lists only the newest, and the paper file all of them.
+                        listed = (ROOT / paper_file).read_text(encoding='utf-8')
+                        self.assertEqual(int(count[1].replace(',', '')), len(re.findall(r'^- \[\*\*', listed, re.MULTILINE)))
+                        continue
+                    if not count or heading[2] in ('Full Repository Index', '完整仓库索引'):
+                        continue
+                    end = next((later.start() for later in headings[position + 1:] if len(later[1]) <= len(heading[1])),
+                               len(body))
+                    entries = len(re.findall(r'^- \[\*\*', body[heading.end():end], re.MULTILINE))
+                    if heading[1] == '###' or heading[2] in ('Resources', '资源'):
+                        language = 'zh' if name.endswith('zh-CN.md') else 'en'
+                        paths = [path for path in (ROOT / 'docs/cases').glob('*.md')
+                                 if path.name.endswith('.zh-CN.md' if language == 'zh' else '.md')
+                                 and (language == 'zh' or not path.name.endswith('.zh-CN.md'))]
+                        case_text = '\n'.join(path.read_text(encoding='utf-8') for path in paths)
+                        case_ids = set(re.findall(r'^- .*resources/([a-z0-9-]+)/\)</sub>$', case_text, re.M))
+                        if heading[1] == '###':
+                            anchor = re.search(r'<a id="([^"]+)"></a>\s*$', body[:heading.start()])
+                            if anchor:
+                                section_paths = [path for path in paths if path.name.startswith(anchor[1] + '.')
+                                                 or path.name.startswith(anchor[1] + '-')]
+                                section_text = '\n'.join(path.read_text(encoding='utf-8') for path in section_paths)
+                                case_ids = set(re.findall(r'^- .*resources/([a-z0-9-]+)/\)</sub>$', section_text, re.M))
+                            else:
+                                case_ids = set()
+                        shown = set(re.findall(r'^- .*resources/([a-z0-9-]+)/\)</sub>$', body[heading.end():end], re.M))
+                        entries += len(case_ids - shown)
+                    self.assertEqual(int(count[1].replace(',', '')), entries, heading[2])
+                    counted += 1
+                self.assertGreater(counted, 10)
+
+    def test_explicit_section_anchors_and_the_paper_topic_paragraph_remain(self):
+        for name, label in (('README.md', '**By topic:** '), ('README.zh-CN.md', '**按主题：** ')):
+            with self.subTest(readme=name):
+                text = (ROOT / name).read_text(encoding='utf-8')
+                # Outside links to the old fragments keep working; old paper topic fragments land on the topic's link.
+                for anchor in ('firmware', 'game', 'papers', 'papers-decompilation', 'papers-agent-evaluation'):
+                    self.assertIn(f'<a id="{anchor}"></a>', text)
+                topics = next(line for line in text.splitlines() if line.startswith(label))
+                self.assertIn('[', topics)
+                for anchor in ('papers-decompilation', 'papers-agent-evaluation'):
+                    self.assertRegex(topics, rf'<a id="{anchor}"></a>\[[^\]]+\]\(docs/papers(\.zh-CN)?\.md#{anchor}\)')
+                self.assertNotRegex(text, r'(?m)^- \[[^\]]+\]\(#papers-')
+
+    def test_contents_labels_match_the_headings_they_link(self):
+        for name, language in (('README.md', 'en'), ('README.zh-CN.md', 'zh')):
+            text = (ROOT / name).read_text(encoding='utf-8')
+            contents = text.split(CONTENTS_BEGIN, 1)[1].split(CONTENTS_END, 1)[0]
+            links = re.findall(r'\[([^\]]+)\]\(#([^)]+)\)', contents)
+            self.assertGreater(len(links), 8)
+            for label, anchor in links:
+                with self.subTest(readme=name, anchor=anchor):
+                    explicit = re.search(rf'<a id="{re.escape(anchor)}"></a>\n#+ (.+)', text)
+                    headings = re.findall(r'^#+ (.+)$', text, re.MULTILINE)
+                    heading = explicit[1] if explicit else next(h for h in headings if h.lower().replace(' ', '-') == anchor)
+                    # Chinese catalog headings keep the English section name before " · ".
+                    self.assertEqual(heading.split(' · ')[-1] if language == 'zh' else heading, label)
+
+    def test_each_generated_block_names_its_generator_and_existing_sources(self):
+        blocks = ((BADGES_BEGIN, 'build_readme.py'), (CONTENTS_BEGIN, 'build_readme.py'), (BEGIN, 'build_readme.py'),
+                  (PAPERS_BEGIN, 'build_readme.py'), (SUMMARY_BEGIN, 'build_repository_index.py'))
+        for name in ('README.md', 'README.zh-CN.md'):
+            text = (ROOT / name).read_text(encoding='utf-8')
+            for marker, script in blocks:
+                with self.subTest(readme=name, marker=marker):
+                    note = text.split(marker + '\n', 1)[1].split('\n', 1)[0]
+                    self.assertRegex(note, rf'^<!-- Generated by scripts/{re.escape(script)} from \S.* '
+                                           r'do not edit this block by hand\. -->$')
+                    sources = re.findall(r'(?:data|site)/[\w.-]+(?:\.json|/)', note)
+                    self.assertTrue(sources)
+                    for source in sources:
+                        self.assertTrue((ROOT / source).exists(), source)
+        zh = (ROOT / 'README.zh-CN.md').read_text(encoding='utf-8').split(BEGIN + '\n', 1)[1]
+        self.assertIn('site/translations.zh-CN.json', zh.split('\n', 1)[0])
+
+
+if __name__ == '__main__':
+    unittest.main()
