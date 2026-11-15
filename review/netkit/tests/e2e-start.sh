@@ -244,6 +244,21 @@ if [ "$RC" -eq 0 ]; then ok 'код возврата 0'; else bad "код воз
 if [ "$DUR" -ge 5 ]; then ok "сессия ждала настоящий процесс ($DUR с), а не лончер"; else bad "сессия закрылась через $DUR с — снова следит за лончером"; fi
 if grep -q 'браузер закрыт пользователем' <<<"$OUT"; then ok 'штатное завершение после реального закрытия'; else bad 'нет штатного завершения'; fi
 
+# ------------------------------------------------------------------- сценарий 6
+say '6. -Fast: профиль на локальном диске, после сессии удалён'
+printf '#!/bin/sh\nsleep 2\n' > "$WORK/kit/app/LibreWolf/LibreWolf.exe"
+chmod +x "$WORK/kit/app/LibreWolf/LibreWolf.exe"
+cat > "$WORK/kit/vpn/xray.exe" <<SH
+#!/bin/sh
+cfg="\$(printf '%s' "\$2" | tr -d '\"')"
+exec python3 "$WORK/listen.py" "\$cfg"
+SH
+chmod +x "$WORK/kit/vpn/xray.exe"
+OUT="$(run_start -Fast)"; RC=$?
+if [ "$RC" -eq 0 ]; then ok 'код возврата 0'; else bad "код возврата $RC"; echo "$OUT" | tail -5; fi
+if grep -q 'профиль сессии на локальном диске' <<<"$OUT"; then ok 'профиль вынесен из флешки'; else bad 'профиль остался на флешке'; fi
+if ls "$TMPDIR"/lwusb-profile-* >/dev/null 2>&1; then bad 'временный профиль остался на диске'; else ok 'временный профиль удалён'; fi
+
 say 'итог'
 if [ "$FAILED" -eq 0 ]; then echo 'ВСЁ ХОРОШО: все сценарии прошли'; exit 0; fi
 echo "ПРОВАЛОВ: $FAILED"; exit 1
