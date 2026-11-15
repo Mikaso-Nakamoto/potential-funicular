@@ -1,6 +1,6 @@
 # Agent Skills Vault
 
-Масштабная библиотека переиспользуемых навыков (**271 Agent Skill**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
+Масштабная библиотека переиспользуемых навыков (**272 Agent Skill**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
 
 Собраны топовые мировые решения против шаблонного «пластикового» ИИ-дизайна (**Taste Skill**, **UI/UX Pro Max**, **Impeccable**, **Emil Kowalski Skills**, **Anthropic Frontend Design**, **Claude Design Skill**, **Vercel Web Design Guidelines**), официальный пакет современных веб-стандартов **GoogleChrome Modern Web Guidance** (совместно с Edge, Firefox и MDN), полная коллекция **MengTo/Skills** (все 94 навыка веб-дизайна, 3D и иллюстрации), библиотека **84 файлов `DESIGN.md`** с разобранными дизайн-системами реальных брендов, UX-законы и правила архитектуры сайта, аудит **Lighthouse / Core Web Vitals**, а также паки по геймдеву, Яндекс Играм и прикладной криптографии.
 
@@ -29,6 +29,7 @@
 | **Продумать структуру сайта, навигацию и сценарии** | [`site-architecture`](agent-skills/design-logic/site-architecture/SKILL.md) + [`information-architecture`](agent-skills/design-logic/information-architecture/SKILL.md) + [`numerique-responsable`](agent-skills/design-logic/numerique-responsable/SKILL.md) |
 | **Поднять конверсию лендинга, тарифов и онбординга** | [`cro`](agent-skills/design-logic/cro/SKILL.md) + [`copywriting`](agent-skills/design-logic/copywriting/SKILL.md) + [`onboarding`](agent-skills/design-logic/onboarding/SKILL.md) |
 | **Проверить скорость, доступность и SEO перед сдачей** | [`web-quality-audit`](agent-skills/web-quality/web-quality-audit/SKILL.md) + [`core-web-vitals`](agent-skills/web-quality/core-web-vitals/SKILL.md) |
+| **Проверить безопасность своей программы и задумки, особенно сети** | [`network-security-audit`](agent-skills/security-crypto/network-security-audit/SKILL.md) (чеклист CWE/ASVS + пак из 40+ репозиториев) + [`applied-cryptography-engineering`](agent-skills/security-crypto/applied-cryptography-engineering/SKILL.md) |
 
 ---
 
@@ -50,7 +51,7 @@ agent-skills/
   media/               # Аватары, моушн-ролики и стоковые изображения (7)
   game-development/    # Архитектура браузерных и Three.js игр (21)
   game-combat/         # Боевые анимации и стихийные спецэффекты (6)
-  security-crypto/     # Прикладная криптография, управление ключами и защита (6)
+  security-crypto/     # Прикладная криптография, аудит сетевого кода, управление ключами и защита (7)
   YA_SKILLS/           # Аудит модерации и авто-фиксер для Яндекс Игр (2)
 
 ```
@@ -59,7 +60,7 @@ agent-skills/
 
 ---
 
-## Полный каталог навыков (271)
+## Полный каталог навыков (272)
 
 ### 1. UI, дизайн-системы и борьба со стоковым ИИ ([`agent-skills/ui/`](agent-skills/ui/README.md) — 29)
 
@@ -334,13 +335,14 @@ agent-skills/
 - **[`lightning-energy-skill-vfx`](agent-skills/game-combat/lightning-energy-skill-vfx/SKILL.md)** — Build the effects of a close-combat energy skill as one visual language in Three.js.
 - **[`water-crystal-skill-vfx`](agent-skills/game-combat/water-crystal-skill-vfx/SKILL.md)** — Build the effects of a water and crystal skill as one visual language in Three.js.
 
-### 12. Кибербезопасность и прикладная криптография ([`agent-skills/security-crypto/`](agent-skills/security-crypto/README.md) — 6)
+### 12. Кибербезопасность, аудит сетей и прикладная криптография ([`agent-skills/security-crypto/`](agent-skills/security-crypto/README.md) — 7)
 
 - **[`applied-cryptography-engineering`](agent-skills/security-crypto/applied-cryptography-engineering/SKILL.md)** — Implement robust, industry-standard cryptographic algorithms and protocols.
 - **[`cryptographic-audit-and-fuzzing`](agent-skills/security-crypto/cryptographic-audit-and-fuzzing/SKILL.md)** — Perform automated security audits, fuzz testing, and formal verification of cryptographic code and binary file parsers.
 - **[`cryptographic-file-format-design`](agent-skills/security-crypto/cryptographic-file-format-design/SKILL.md)** — Design and implement secure, tamper-proof custom encrypted file formats and container specifications.
 - **[`secure-application-architecture`](agent-skills/security-crypto/secure-application-architecture/SKILL.md)** — Architect secure desktop, mobile, and web applications for cryptography and cybersecurity.
 - **[`secure-key-derivation-and-management`](agent-skills/security-crypto/secure-key-derivation-and-management/SKILL.md)** — Derive, manage, wrap, store, and zeroize cryptographic keys securely.
+- **[`network-security-audit`](agent-skills/security-crypto/network-security-audit/SKILL.md)** — Audit a program's network behavior and its design idea: inbound/outbound surface, TLS, SSRF, parsing, authz, logging, supply chain, plus the authorization and network-ethics gate before any active test.
 - **[`side-channel-and-anti-tamper-defense`](agent-skills/security-crypto/side-channel-and-anti-tamper-defense/SKILL.md)** — Defend cryptographic software against side-channel attacks, tampering, and reverse engineering.
 
 ### 13. Яндекс Игры (`agent-skills/YA_SKILLS/` — 2)

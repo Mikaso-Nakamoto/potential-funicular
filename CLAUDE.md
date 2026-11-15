@@ -1,6 +1,6 @@
 # Claude Code & AI Agents — Repo Guide
 
-Этот репозиторий содержит единую библиотеку из **271 навыка (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, нативных возможностей современной веб-платформы, логики и архитектуры сайтов, 3D/WebGL сцен, браузерных игр и защищённых приложений.
+Этот репозиторий содержит единую библиотеку из **272 навыка (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, нативных возможностей современной веб-платформы, логики и архитектуры сайтов, 3D/WebGL сцен, браузерных игр и защищённых приложений.
 
 ## Рекомендуемый пайплайн для фронтенда и веб-дизайна
 
@@ -33,6 +33,10 @@
    - Визуальная полировка: `agent-skills/ui/impeccable/SKILL.md` и `agent-skills/ui/audit-ai-design-slop/SKILL.md`
    - Качество в цифрах (Lighthouse / Core Web Vitals): `agent-skills/web-quality/web-quality-audit/SKILL.md`, `agent-skills/web-quality/core-web-vitals/SKILL.md`, `accessibility/SKILL.md`, `seo/SKILL.md`
    - Доступность, UX и производительность React/Next.js: `agent-skills/vercel/web-design-guidelines/SKILL.md` и `agent-skills/vercel/react-best-practices/SKILL.md`
+8. **Безопасность и сети перед релизом:**
+   - Аудит сетевого кода и самой задумки (SSRF, TLS, парсинг, authz, лимиты, логи, supply chain) + ethics/legal-гейт: `agent-skills/security-crypto/network-security-audit/SKILL.md` и его `references/network-checklist.md`
+   - Крипто-примитивы и ключи: `applied-cryptography-engineering/SKILL.md`, `secure-key-derivation-and-management/SKILL.md`
+   - Фаззинг парсеров и аудит форматов: `cryptographic-audit-and-fuzzing/SKILL.md`
 
 ---
 

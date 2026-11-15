@@ -45,3 +45,15 @@
 - Фаззинг бинарных парсеров кастомных форматов с помощью libFuzzer / AFL++ / cargo-fuzz с адресным санитайзером (ASan).
 - Тестовые векторы Known Answer Tests (KAT) и тесты Google Project Wycheproof.
 - Финальный чеклист готовности приложения к безопасному релизу.
+
+### 7. [`network-security-audit/`](network-security-audit/SKILL.md)
+**Аудит программы и задумки, работающей с сетью:**
+- Инвентаризация сети: входящие листенеры, исходящие соединения, протоколы, парсеры, идентичность — до любой оценки.
+- Threat model по границам доверия (STRIDE), а не по файлам; отдельный блок «задумка, а не только код».
+- Статический разбор сетевого кода: TLS и hostname verification, SSRF и DNS rebinding, редиректы, request smuggling, WebSocket Origin, gRPC deadlines, лимиты парсинга, authz на каждый объект, rate limiting, retry-штормы, fail-open конфиги.
+- Динамическая проверка только на своём стенде: ZAP baseline/API, nuclei со своими шаблонами, mitmproxy/tshark, ручная проверка таймаутов и отказов зависимостей.
+- Логи, телеметрия и приватность: что писать, что нельзя, GDPR-минимизация, готовность детекта через Sigma/Suricata/Zeek.
+- Supply chain и секреты: Trivy, Gitleaks, TruffleHog, OSV, lockfile, install-скрипты, base image по дайджесту.
+- Ethics- и legal-гейт до любых активных тестов: RFC 1087, Menlo Report, disclose.io, ACM Code, GDPR Art. 32, §202a StGB, NIS2, CRA; проверка ToS/robots и согласия третьих сторон.
+- Формат отчёта: находка = CWE/ASVS + место + триггер + impact + evidence + фикс + способ проверки; severity по CVSS v4.
+- Реестр источников (`references/source-pack.md`, 40+ репозиториев с звёздами и лицензиями) и построчный чеклист (`references/network-checklist.md`) с привязкой к CWE.
