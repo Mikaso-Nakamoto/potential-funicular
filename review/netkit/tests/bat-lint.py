@@ -20,7 +20,9 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-KIT = os.path.abspath(os.path.join(HERE, '..', 'inbox', 'LibreWolf-USB'))
+KIT = os.path.abspath(os.path.join(HERE, '..', 'kit'))
+if not os.path.isdir(KIT):
+    KIT = os.path.abspath(os.path.join(HERE, '..', 'inbox', 'LibreWolf-USB'))
 BAD = '|&<>^()'
 
 

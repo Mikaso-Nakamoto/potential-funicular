@@ -5,7 +5,8 @@
 param(
     [string]$XrayVersion = '',   # '' = последний релиз; для воспроизводимости можно прибить, напр. 'v25.10.1'
     # Запускать без сверенной контрольной суммы (см. пояснение в конце проверки sha256)
-    [switch]$AllowUnverified
+    [switch]$AllowUnverified,
+    [switch]$Force              # переустановить даже то, что уже лежит (браузер, xray)
 )
 $ErrorActionPreference = 'Stop'
 $App  = $PSScriptRoot
@@ -44,6 +45,10 @@ New-Item -ItemType Directory -Force -Path $Dl, $Vpn | Out-Null
 
 # ---------- 1. LibreWolf ----------
 Write-Host ""
+$haveBrowser = ((-not $Force) -and (Test-Path (Join-Path $App 'LibreWolf\LibreWolf.exe')))
+if ($haveBrowser) {
+    Write-Host "[1/3] LibreWolf уже установлен — скачивание пропущено (переустановка: -Force)" -ForegroundColor Green
+} else {
 Write-Host "[1/3] LibreWolf (portable) — узнаю последнюю версию с GitLab..." -ForegroundColor Cyan
 try {
     $rels = Invoke-RestMethod -Uri 'https://gitlab.com/api/v4/projects/librewolf-community%2Fbrowser%2Fbsys6/releases?per_page=5' -TimeoutSec 40
@@ -137,8 +142,14 @@ Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
 Remove-Item $shaPath -Force -ErrorAction SilentlyContinue
 Write-Host "     LibreWolf установлен в app\LibreWolf\" -ForegroundColor Green
 
+}
+
 # ---------- 2. Xray-core ----------
 Write-Host ""
+$haveXray = ((-not $Force) -and (Test-Path (Join-Path $Vpn 'xray.exe')))
+if ($haveXray) {
+    Write-Host "[2/3] Xray уже на месте — скачивание пропущено (переустановка: -Force)" -ForegroundColor Green
+} else {
 Write-Host "[2/3] Xray-core — узнаю последнюю версию с GitHub..." -ForegroundColor Cyan
 $relUrl = 'https://api.github.com/repos/XTLS/Xray-core/releases/latest'
 if ($XrayVersion) { $relUrl = "https://api.github.com/repos/XTLS/Xray-core/releases/tags/$XrayVersion" }
@@ -186,6 +197,8 @@ if (-not (Test-Path $xrayExe)) { Fail "После распаковки нет vp
 try { $ver = (& $xrayExe version | Select-Object -First 1) } catch { $ver = '(версию показать не удалось)' }
 Remove-Item $xz -Force -ErrorAction SilentlyContinue
 Write-Host "     Xray готов: $ver" -ForegroundColor Green
+
+}
 
 # ---------- 3. конфиг VPN ----------
 Write-Host ""
