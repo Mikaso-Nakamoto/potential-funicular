@@ -36,8 +36,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Invoke-LeakCheck.ps1
 
 - Отчёт: `AUDIT-REPORT.md` (14 находок + F-15, найденная при исправлении; в начале — таблица статуса).
 - Исправленный комплект собран отдельно от git (код автора в репозиторий не кладём):
-  `inbox/dist/LibreWolf-USB-fixed.zip`, md5 `cd598869f2875642385704559d9bd5dd`.
-- Копия для скачивания: https://drive.google.com/file/d/182MKc8bINdMAG5gBcpQG5VIv2Nm7iRUL/view
+  `inbox/dist/LibreWolf-USB-fixed.zip`, md5 `c099eaa3c439cf64d237b2e80ca6e0df`.
+- Копия для скачивания: https://drive.google.com/file/d/1FrHU9b1HllZRSC_jPqERecQuxIKgg4Ar/view
 - Что проверено статически и что требует живой машины — в §«Чего не проверял» отчёта.
 - В комплекте есть `ПРОВЕРКА.bat` → `app/self-check.ps1`: офлайн-прогон конвертера
   и сборки JSON на 6 тестовых ключах (без сети, без Xray) — эту часть выполняет сам пользователь на Windows.
@@ -56,3 +56,19 @@ python3 -m venv /tmp/psvenv
 ```
 
 На исправленном комплекте — 0 находок; на исходном архиве — те самые 6 мест из F-15.
+
+## Прогон под настоящим PowerShell
+
+`pwsh` 7.7 (Linux x64) в песочницу принёс пользователь: релизы GitHub отдают бинарник
+с закрытого хоста. Как только он появился, код проверен исполнением, а не только
+чтением:
+
+- штатный парсер PowerShell — 0 ошибок в 7 файлах;
+- `app/self-check.ps1` — 36/36 проверок;
+- `tests/e2e-update-sub.sh` — 7/7 сценариев (локальный HTTPS + подмена `curl.exe`);
+- `tests/Dump-Config.ps1` против `update-sub.py` — структурно идентичный конфиг,
+  0 расхождений.
+
+Сам прогон нашёл два дефекта, которые статикой не видны: `Generic.List[object]` + `@()`
+роняли `ConvertTo-Nodes` (обновление подписки не работало) и base64-тело подписки
+не разбиралось вне `Get-SubBody`. Оба закрыты — см. F-16 и F-17 в отчёте.
