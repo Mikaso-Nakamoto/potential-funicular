@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-55'
+$Build = 'F-56'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -148,6 +148,7 @@ function Show-Menu {
     Show-Item '6' 'Почистить следы на этом ПК' 'история, кэш миниатюр, временные файлы'
     Show-Item '7' 'Проверить комплект' 'офлайн-проверки конфига, ничего не меняет'
     Show-Item '8' 'Ускорить флешку и проводник' 'замер, где тормозит, и настройки Windows против лагов'
+    Show-Item '9' 'Проверить IP и страну' 'браузер не нужен: что видят сайты через туннель'
     Show-Item '0' 'Выход' ''
 
     Write-Host ''
@@ -271,11 +272,26 @@ function Show-Help([string]$num) {
                 'Команда: powershell -ExecutionPolicy Bypass -File app\speed-up.ps1'
             )
         }
+        '9' {
+            $lines = @(
+                'Пункт 9 — что о вас знают сайты.',
+                '',
+                'Поднимает туннель на отдельном порту (браузер не запускается) и спрашивает',
+                'три сервиса: ipinfo.io, api.myip.com, ipapi.co. Показывает IP, страну, город',
+                'и провайдера. Если сервисы расходятся по стране — так и скажет.',
+                '',
+                'Зачем: когда «VPN включён, а Google показывает не ту страну». Google берёт',
+                'страну не только из IP: ещё из cookie профиля и из DNS-подсказки сервера.',
+                'Проверка в приватном окне (Ctrl+Shift+P) показывает, кто виноват.',
+                '',
+                'Команда: powershell -ExecutionPolicy Bypass -File app\ip-check.ps1'
+            )
+        }
         '0' {
             $lines = @('Пункт 0 — выйти из меню. Сессия браузера при этом не закрывается.')
         }
         default {
-            $lines = @('Такого пункта нет. Введи ?1 … ?8 или ?0.')
+            $lines = @('Такого пункта нет. Введи ?1 … ?9 или ?0.')
         }
     }
     Write-Host ''
@@ -412,11 +428,15 @@ while ($true) {
             [void](Run-PS (Join-Path $App 'speed-up.ps1'))
             Pause-Menu
         }
+        '9' {
+            [void](Run-PS (Join-Path $App 'ip-check.ps1'))
+            Pause-Menu
+        }
         '0' { break }
         '' { continue }
         default {
             Write-Host ''
-            Write-Host '   Такого пункта нет. Есть 1–8 и 0. Справка: ?1 … ?8.' -ForegroundColor Red
+            Write-Host '   Такого пункта нет. Есть 1–9 и 0. Справка: ?1 … ?9.' -ForegroundColor Red
             Start-Sleep -Milliseconds 1200
         }
     }
