@@ -16,18 +16,30 @@ if (-not $env:SystemRoot) {
 
 # ---------------------------------------------------------------- оформление
 $Logo = @(
-    '            /\          ',
-    '           /  \         ',
-    '          /____\        ',
-    '         /|    |\       ',
-    '        / |    | \      ',
-    '       /__|____|__\     ',
-    '          |    |        ',
-    '          |    |        ',
-    '          |    |        ',
-    '     _____|____|_____   ',
-    '    |  |  |    |  |  |  ',
-    '    |__|__|____|__|__|  '
+    '################################',
+    '#::::::::::::::::::::::::::::::#',
+    '#:::::::::::::%%%%&::::::::::::#',
+    '#:::::::::::::%%%%&::::::::::::#',
+    '#:::::::::::::%%%%&::::::::::::#',
+    '#:::::::::::::%%%%&::::::::::::#',
+    '#:::::::::::oooo~oooo::::::::::#',
+    '#:::::::::oo~ooo~ooo~oo::::::::#',
+    '#:%%%%%%%%%%%%%%%%&%%%%%%%%%%%:#',
+    '#:%%%%%%%%%%%%%%%%&%%%%%%%%%%%:#',
+    '#:&&&&&&&&&&&&&&&&&&&&&&&&&&&&:#',
+    '#:::::::::oo::%%%%&::oo::::::::#',
+    '#:::::::::~oo:%%%%&:oo~::::::::#',
+    '#:::::::::o~o:%%%%&:o~o::::::::#',
+    '#:::::::::~oo:%%%%&:oo~::::::::#',
+    '#:::::::::o~o:%%%%&:o~o::::::::#',
+    '#:::::::::~oo:%%%%&:oo~::::::::#',
+    '#:::::::::oo::%%%%&::oo::::::::#',
+    '#:::::::::oo::%%%%&::oo::::::::#',
+    '#:::::::::::::%%%%&::::::::::::#',
+    '#:::::::::::::%%%%&::::::::::::#',
+    '#:::::::::::::%%%%&::::::::::::#',
+    '#::::::::::::::::::::::::::::::#',
+    '################################'
 )
 
 function Get-Info {
@@ -52,25 +64,71 @@ function Get-Info {
     } else {
         $lines += 'Подписка : нет'
     }
+    if (Test-Path (Join-Path $Root 'profile')) { $lines += 'Профиль  : есть (история на флешке)' }
+    else { $lines += 'Профиль  : чистый' }
+    try {
+        $q = Split-Path -Qualifier $Root
+        $d = Get-PSDrive -Name $q.TrimEnd(':') -ErrorAction Stop
+        $free = [math]::Round($d.Free / 1GB, 1)
+        $lines += ('Свободно : ' + $free + ' ГБ')
+    } catch { }
+    $lines += 'Сборка   : F-45'
     return $lines
 }
 
+function Get-ArtColor([char]$c) {
+    switch ($c) {
+        '#' { 'Blue' }
+        ':' { 'DarkCyan' }
+        '%' { 'Yellow' }
+        '&' { 'DarkYellow' }
+        'o' { 'White' }
+        '~' { 'Gray' }
+        default { 'Gray' }
+    }
+}
+
+function Write-ArtRow([string]$row) {
+    $i = 0
+    while ($i -lt $row.Length) {
+        $col = Get-ArtColor $row[$i]
+        $sb = New-Object System.Text.StringBuilder
+        while ($i -lt $row.Length -and (Get-ArtColor $row[$i]) -eq $col) {
+            [void]$sb.Append($row[$i]); $i++
+        }
+        Write-Host $sb.ToString() -ForegroundColor $col -NoNewline
+    }
+    $pad = 34 - $row.Length
+    if ($pad -gt 0) { Write-Host (' ' * $pad) -NoNewline }
+}
+
+function Show-Palette {
+    $colors = @('Black','DarkBlue','DarkGreen','DarkCyan','DarkRed','DarkMagenta','DarkYellow','Gray',
+                'DarkGray','Blue','Green','Cyan','Red','Magenta','Yellow','White')
+    Write-Host '   ' -NoNewline
+    foreach ($c in $colors) {
+        Write-Host '██' -ForegroundColor $c -NoNewline
+    }
+    Write-Host ''
+}
+
 function Show-Screen {
-    Clear-Host
+    if ($env:SystemRoot -or $env:TERM) { Clear-Host }
     $info = Get-Info
     $rows = [Math]::Max($Logo.Count, $info.Count)
     Write-Host ''
     for ($i = 0; $i -lt $rows; $i++) {
-        $left = ''
-        if ($i -lt $Logo.Count) { $left = $Logo[$i] }
-        $right = ''
-        if ($i -lt $info.Count) { $right = $info[$i] }
         Write-Host '   ' -NoNewline
-        Write-Host $left.PadRight(26) -ForegroundColor Cyan -NoNewline
-        if ($i -eq 0) { Write-Host $right -ForegroundColor White }
-        elseif ($i -eq 1) { Write-Host $right -ForegroundColor DarkGray }
-        else { Write-Host $right -ForegroundColor Gray }
+        if ($i -lt $Logo.Count) { Write-ArtRow $Logo[$i] }
+        else { Write-Host (' ' * 34) -NoNewline }
+        if ($i -lt $info.Count) {
+            if ($i -eq 0) { Write-Host $info[$i] -ForegroundColor White }
+            elseif ($i -eq 1) { Write-Host $info[$i] -ForegroundColor DarkGray }
+            else { Write-Host $info[$i] -ForegroundColor Gray }
+        } else { Write-Host '' }
     }
+    Write-Host ''
+    Show-Palette
     Write-Host ''
     Write-Host '   ╔══════════════════════════════════════════════════════╗' -ForegroundColor DarkCyan
     Write-Host '   ║                    В Ы Б О Р                         ║' -ForegroundColor DarkCyan
