@@ -22,7 +22,7 @@ $Esc = [char]27
 
 $ArtCol   = 4     # колонка логотипа (1-based)
 $ArtRow   = 2     # строка логотипа
-$RightCol = 39    # колонка правой панели
+$RightCol = 47    # колонка правой панели
 
 # ---------------------------------------------------------------- VT
 $script:UseAnsi = $true
@@ -77,7 +77,7 @@ function Get-Info {
         $d = Get-PSDrive -Name $q.TrimEnd(':') -ErrorAction Stop
         $lines += ('Свободно : ' + [math]::Round($d.Free / 1GB, 1) + ' ГБ')
     } catch { }
-    $lines += 'Сборка   : F-45'
+    $lines += 'Сборка   : F-49'
     return $lines
 }
 
@@ -93,22 +93,11 @@ function Write-ArtAnsi($grid) {
     [Console]::Out.Write($sb.ToString())
 }
 
-function Write-ArtFallback($grid) {
-    for ($y = 0; $y -lt $ArtH; $y++) {
-        [Console]::SetCursorPosition(($ArtCol - 1), ($ArtRow - 1 + $y))
-        $cur = -1
-        for ($x = 0; $x -lt $ArtW; $x++) {
-            $i = $y * $ArtW + $x
-            $ci = $grid.Co[$i]
-            if ($ci -ne $cur) {
-                $map = @('Black','DarkBlue','DarkGreen','DarkCyan','DarkRed','DarkMagenta','DarkYellow','Gray',
-                         'DarkGray','Blue','Green','Cyan','Red','Magenta','Yellow','White')
-                [Console]::ForegroundColor = [ConsoleColor]$map[$ci]
-                $cur = $ci
-            }
-            [Console]::Out.Write($grid.Ch[$i])
-        }
-        [Console]::ResetColor()
+function Write-ArtFallback($pix) {
+    $rows = Get-ArtText $pix
+    for ($i = 0; $i -lt $rows.Count; $i++) {
+        try { [Console]::SetCursorPosition(($ArtCol - 1), ($ArtRow - 1 + $i)) } catch { }
+        Write-Host $rows[$i] -ForegroundColor Cyan -NoNewline
     }
 }
 
@@ -154,7 +143,7 @@ function Build-Scene($grid, $info) {
     }
 
     # палитра под логотипом
-    $palRow = $ArtRow + $ArtH + 1
+    $palRow = $ArtRow + $LogoH + 1
     [void]$sb.Append("$Esc[" + $palRow + ';' + $ArtCol + 'H')
     for ($c = 0; $c -lt 16; $c++) {
         [void]$sb.Append("$Esc[" + (Get-SgrCode $c) + 'm' + [char]0x2588 + [char]0x2588)
