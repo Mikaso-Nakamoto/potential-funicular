@@ -34,17 +34,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Invoke-LeakCheck.ps1
 
 ## Результат
 
-- Отчёт: `AUDIT-REPORT.md` (F-01…F-19 по первому кругу + F-20…F-32 по второму разбору из 12 пунктов).
+- Отчёт: `AUDIT-REPORT.md` (F-01…F-19 по первому кругу, F-20…F-32 по второму разбору из 12 пунктов, F-33…F-51 по дальнейшим правкам).
 - Исправленный комплект собран отдельно от git (код автора в репозиторий не кладём):
-  `inbox/dist/LibreWolf-USB-fixed.zip`, 75 684 байта, md5 `9d3679ae308b6803e1ac3f2ecb8f479a`.
-- Копия для скачивания: https://drive.google.com/file/d/1y18somReJb98Z70OtKq9ooFbArutYUN0/view
+  `inbox/dist/LibreWolf-USB-fixed.zip`, 78 912 байт, md5 `24bff04a028e9c0dd5a7bc279677be67`.
+- Копия для скачивания: https://drive.google.com/file/d/1QcWewn_v8IAPUIDI470RMlVH6bp_h6eI/view
 - Что проверено статически и что требует живой машины — в §«Чего не проверял» отчёта.
 - В комплекте есть `ПРОВЕРКА.bat` → `app/self-check.ps1`: офлайн-прогон конвертера
-  и сборки JSON на 6 тестовых ключах (без сети, без Xray) — 46 проверок, включая
+  и сборки JSON на 6 тестовых ключах (без сети, без Xray) — 50 проверок, включая
   отбрасывание `security=none` и линтер конфига `Test-ConfigSafe`.
 - Сквозные прогоны исполнением: `tests/e2e-update-sub.sh` (8 сценариев) и
-  `tests/e2e-start.sh` (4 сценария — запуск `start.ps1` с поддельными `xray.exe`,
-  `LibreWolf.exe`, `curl.exe`, `netstat.exe`), `tests/bat-lint.py` (5 файлов `.bat`:
+  `tests/e2e-start.sh` (7 сценариев — запуск `start.ps1` с поддельными `xray.exe`,
+  `LibreWolf.exe`, `curl.exe`, `netstat.exe`), `tests/bat-lint.py` (1 файл `.bat`:
   конвейер и спецсимволы в `echo`, наличие `pause`).
 
 ## Проверка синтаксиса PowerShell без Windows

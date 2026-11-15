@@ -26,6 +26,34 @@ $Curl = Get-SystemExe 'curl.exe'
 $Tar  = Get-SystemExe 'tar.exe'
 . (Join-Path $PSScriptRoot 'ui-bar.ps1')
 
+# PowerShell 5.1 по умолчанию может согласовывать TLS 1.0/1.1 — GitLab и GitHub такой handshake отвергают,
+# а пользователь видит "SSL connection could not be established" при полностью рабочем интернете.
+try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch { }
+
+function Get-Api([string]$url, [string]$who) {
+    try {
+        return Invoke-RestMethod -Uri $url -TimeoutSec 40 -Headers @{ 'User-Agent' = 'LibreWolf-USB' }
+    } catch {
+        $msg = $_.Exception.Message
+        if ($msg -match 'rate limit|403|Forbidden') { Fail "${who}: превышен лимит запросов (403). Подожди час и повтори, либо скачай файл вручную." }
+        if ($msg -match 'SSL|TLS|certificate|Сертификат') { Fail "${who}: ошибка TLS ($msg). Проверь прокси/антивирус с перехватом HTTPS и часы Windows." }
+        if ($msg -match 'resolve|connect|timed out|unreachable|Имя') { Fail "${who} недоступен: нет связи с интернетом ($msg)." }
+        Fail "${who} недоступен: $msg"
+    }
+}
+
+function Expand-Zip([string]$zip, [string]$dst) {
+    New-Item -ItemType Directory -Force -Path $dst | Out-Null
+    if ($Tar) {
+        try {
+            & $Tar -xf "$zip" -C "$dst"
+            if ($LASTEXITCODE -eq 0) { return $true }
+        } catch { }
+    }
+    # tar.exe есть не на каждой Windows (нужна 10 1803+) — Expand-Archive из PS 5.1 работает везде
+    try { Expand-Archive -LiteralPath $zip -DestinationPath $dst -Force -ErrorAction Stop; return $true } catch { return $false }
+}
+
 function Fail([string]$msg) {
     Write-Host ""
     Write-Host "[X] $msg" -ForegroundColor Red
@@ -33,11 +61,32 @@ function Fail([string]$msg) {
     exit 1
 }
 
-function Download([string]$url, [string]$out, [string]$label = 'Загрузка') {
+function Test-ZipMagic([string]$path) {
+    # настоящий zip начинается с "PK"; HTML-заглушка с кодом 200 — нет
+    try {
+        $fs = [IO.File]::OpenRead($path)
+        try {
+            $b = New-Object byte[] 2
+            $n = $fs.Read($b, 0, 2)
+            if ($n -lt 2) { return $false }
+            return ($b[0] -eq 0x50 -and $b[1] -eq 0x4B)
+        } finally { $fs.Dispose() }
+    } catch { return $false }
+}
+
+function Download([string]$url, [string]$out, [string]$label = 'Загрузка', [switch]$Zip) {
     Write-Host "     $url"
-    $code = Invoke-DownloadBar $Curl $url $out $label
-    if ($code -ne 0) { Fail "Не скачалось: $url" }
-    if (-not (Test-Path $out) -or (Get-Item $out).Length -lt 100000) { Fail "Файл пустой/битый: $out" }
+    $r = Invoke-DownloadBar $Curl $url $out $label
+    if (-not $r.Ok -and (Test-Path $out) -and (Get-Item $out).Length -gt 0) {
+        Write-Host "     [..] обрыв — пробую докачать остаток" -ForegroundColor Yellow
+        $r = Invoke-DownloadBar $Curl $url $out $label -Resume
+    }
+    if (-not $r.Ok) { Remove-Item $out -Force -ErrorAction SilentlyContinue; Fail "Не скачалось: $url (код curl $($r.Code), $($r.Size) б из $($r.Total))" }
+    if (-not (Test-Path $out) -or (Get-Item $out).Length -lt 100000) { Remove-Item $out -Force -ErrorAction SilentlyContinue; Fail "Файл пустой/битый: $out" }
+    if ($Zip -and -not (Test-ZipMagic $out)) {
+        Remove-Item $out -Force -ErrorAction SilentlyContinue
+        Fail "Скачался не архив (первые байты не PK): $url — вероятно, вместо файла отдана страница-заглушка или требуется вход. Удали _download\ и повтори."
+    }
 }
 
 Write-Host ""
@@ -51,9 +100,7 @@ if ($haveBrowser) {
     Write-Host "[1/3] LibreWolf уже установлен — скачивание пропущено (переустановка: -Force)" -ForegroundColor Green
 } else {
 Write-Host "[1/3] LibreWolf (portable) — узнаю последнюю версию с GitLab..." -ForegroundColor Cyan
-try {
-    $rels = Invoke-RestMethod -Uri 'https://gitlab.com/api/v4/projects/librewolf-community%2Fbrowser%2Fbsys6/releases?per_page=5' -TimeoutSec 40
-} catch { Fail "GitLab API недоступен: $($_.Exception.Message)" }
+$rels = Get-Api 'https://gitlab.com/api/v4/projects/librewolf-community%2Fbrowser%2Fbsys6/releases?per_page=5' 'GitLab API'
 $rel = @($rels)[0]
 $tag = $rel.tag_name
 Write-Host "     последняя версия: $tag"
@@ -76,8 +123,17 @@ if ((Test-Path $zipPath) -and ((Get-Item $zipPath).Length -gt 20000000)) {
 foreach ($u in $candidates) {
     if ($okDl) { break }
     Write-Host "     пробую скачать..."
-    $dlCode = Invoke-DownloadBar $Curl $u $zipPath 'LibreWolf'
-    if ($dlCode -eq 0 -and (Test-Path $zipPath) -and (Get-Item $zipPath).Length -gt 20000000) { $okDl = $true; $usedUrl = $u; break }
+    $r = Invoke-DownloadBar $Curl $u $zipPath 'LibreWolf'
+    if (-not $r.Ok -and (Test-Path $zipPath) -and (Get-Item $zipPath).Length -gt 1000) {
+        Write-Host "     [..] обрыв на $([math]::Round((Get-Item $zipPath).Length/1MB,1)) МБ — пробую докачать остаток" -ForegroundColor Yellow
+        $r = Invoke-DownloadBar $Curl $u $zipPath 'LibreWolf' -Resume
+    }
+    $gotSize = 0
+    if (Test-Path $zipPath) { $gotSize = (Get-Item $zipPath).Length }
+    if ($r.Ok -and $gotSize -gt 20000000 -and (Test-ZipMagic $zipPath)) { $okDl = $true; $usedUrl = $u; break }
+    if ($gotSize -gt 20000000) {
+        Write-Host "     [!] размер похож на архив, но это не zip (нет PK) — отбрасываю" -ForegroundColor Red
+    }
     Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
 }
 if (-not $okDl) {
@@ -130,8 +186,7 @@ if (-not $shaOk) {
 Write-Host "     распаковка..."
 $stage = Join-Path $Dl 'stage'
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
-& $Tar -xf "$zipPath" -C "$stage"
-if ($LASTEXITCODE -ne 0) { Fail "tar не смог распаковать zip (нужна Windows 10 1803+)." }
+if (-not (Expand-Zip $zipPath $stage)) { Fail "Не удалось распаковать архив LibreWolf (tar и Expand-Archive не сработали)." }
 $exe = Get-ChildItem $stage -Recurse -Filter 'LibreWolf.exe' | Select-Object -First 1
 if (-not $exe) { Fail "В архиве не нашёлся LibreWolf.exe — распакуй вручную и положи папку браузера в app\LibreWolf\" }
 $src = Split-Path $exe.FullName
@@ -154,13 +209,11 @@ if ($haveXray) {
 Write-Host "[2/3] Xray-core — узнаю последнюю версию с GitHub..." -ForegroundColor Cyan
 $relUrl = 'https://api.github.com/repos/XTLS/Xray-core/releases/latest'
 if ($XrayVersion) { $relUrl = "https://api.github.com/repos/XTLS/Xray-core/releases/tags/$XrayVersion" }
-try {
-    $gh = Invoke-RestMethod -Uri $relUrl -TimeoutSec 40
-} catch { Fail "GitHub API недоступен: $($_.Exception.Message)" }
+$gh = Get-Api $relUrl 'GitHub API'
 $asset = @($gh.assets) | Where-Object { $_.name -eq 'Xray-windows-64.zip' } | Select-Object -First 1
 if (-not $asset) { Fail "В последнем релизе Xray ($($gh.tag_name)) нет Xray-windows-64.zip. Возьми файл со старой страницы релизов." }
 $xz = Join-Path $Dl 'Xray-windows-64.zip'
-Download "$($asset.browser_download_url)" $xz
+Download "$($asset.browser_download_url)" $xz 'Xray' -Zip
 
 # целостность: digest из GitHub API, иначе .sha256 рядом с ассетом, иначе громкое предупреждение
 $xzHash = (Get-FileHash $xz -Algorithm SHA256).Hash.ToLower()
@@ -191,8 +244,7 @@ if ($expect) {
 }
 
 Write-Host "     распаковка в vpn\..."
-& $Tar -xf "$xz" -C "$Vpn"
-if ($LASTEXITCODE -ne 0) { Fail "tar не смог распаковать Xray-windows-64.zip." }
+if (-not (Expand-Zip $xz $Vpn)) { Fail "Не удалось распаковать Xray-windows-64.zip." }
 $xrayExe = Join-Path $Vpn 'xray.exe'
 if (-not (Test-Path $xrayExe)) { Fail "После распаковки нет vpn\xray.exe — распакуй архив вручную в папку vpn\" }
 try { $ver = (& $xrayExe version | Select-Object -First 1) } catch { $ver = '(версию показать не удалось)' }

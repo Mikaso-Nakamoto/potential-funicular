@@ -77,7 +77,7 @@ function Clear-BarArea([int]$top, [int]$lines) {
     }
 }
 
-function Invoke-DownloadBar([string]$Curl, [string]$Url, [string]$Out, [string]$Label) {
+function Invoke-DownloadBar([string]$Curl, [string]$Url, [string]$Out, [string]$Label, [switch]$Resume) {
     $total = 0
     # Content-Length: берём последний (после редиректов)
     try {
@@ -89,8 +89,11 @@ function Invoke-DownloadBar([string]$Curl, [string]$Url, [string]$Out, [string]$
         }
     } catch { }
 
-    $argList = @('-L', '--fail', '--proto', '=https', '--tlsv1.2', '--retry', '3',
-                 '--connect-timeout', '20', '-s', '-o', ('"' + $Out + '"'), $Url)
+    $argList = @('-L', '--fail', '--proto', '=https', '--tlsv1.2',
+                 '--retry', '3', '--retry-delay', '2',
+                 '--connect-timeout', '20', '-sS', '-o', ('"' + $Out + '"'))
+    if ($Resume) { $argList += @('-C', '-') }
+    $argList += $Url
 
     $canDraw = $true
     try { $null = [Console]::CursorTop } catch { $canDraw = $false }
@@ -106,6 +109,7 @@ function Invoke-DownloadBar([string]$Curl, [string]$Url, [string]$Out, [string]$
     $speed = 0.0
     $glyph = 0
     $lastDraw = [DateTime]::MinValue
+    $shownTotal = $total
 
     while (-not $proc.HasExited) {
         Start-Sleep -Milliseconds 120
@@ -113,6 +117,8 @@ function Invoke-DownloadBar([string]$Curl, [string]$Url, [string]$Out, [string]$
         if (Test-Path $Out) {
             try { $size = (Get-Item $Out).Length } catch { }
         }
+        # если сервер отдал меньше, чем реально качается — не показываем больше 100%
+        if ($size -gt $shownTotal -and $shownTotal -gt 0) { $shownTotal = $size }
         $now = $sw.Elapsed.TotalSeconds
         if ($now - $lastTime -ge 0.5) {
             $speed = ($size - $lastSize) / ($now - $lastTime)
@@ -120,16 +126,15 @@ function Invoke-DownloadBar([string]$Curl, [string]$Url, [string]$Out, [string]$
             $lastTime = $now
         }
         if ($canDraw -and ((Get-Date) - $lastDraw).TotalMilliseconds -ge 110) {
-            Show-BarFrame $top $glyph $Label $size $total $speed
+            Show-BarFrame $top $glyph $Label $size $shownTotal $speed
             $glyph++
             $lastDraw = Get-Date
             if ($script:NoPos) { $canDraw = $false; Write-Host '' }
         } elseif (-not $canDraw -and ((Get-Date) - $lastDraw).TotalMilliseconds -ge 700) {
-            # без позиционирования — простая строка раз в 0,7 с
             $pct2 = 0
-            if ($total -gt 0) { $pct2 = [int](100 * $size / $total) }
+            if ($shownTotal -gt 0) { $pct2 = [int](100 * $size / $shownTotal); if ($pct2 -gt 100) { $pct2 = 100 } }
             $line = '   ' + $Label + '  ' + $pct2 + '%  ' + (Format-Size $size)
-            if ($total -gt 0) { $line += ' из ' + (Format-Size $total) }
+            if ($shownTotal -gt 0) { $line += ' из ' + (Format-Size $shownTotal) }
             Write-Host $line
             $lastDraw = Get-Date
         }
@@ -137,14 +142,36 @@ function Invoke-DownloadBar([string]$Curl, [string]$Url, [string]$Out, [string]$
 
     $final = 0
     if (Test-Path $Out) { try { $final = (Get-Item $Out).Length } catch { } }
+    $code = $proc.ExitCode
+    # файл может быть полным, даже если curl ругнулся на закрытие соединения
+    $complete = $false
+    if ($total -gt 0 -and $final -ge ($total * 0.995)) { $complete = $true }
+    $ok = ($code -eq 0) -or $complete
+
     if ($canDraw -and -not $script:NoPos) {
-        Show-BarFrame $top $glyph $Label $final $total 0
-        Start-Sleep -Milliseconds 120
+        if ($shownTotal -gt 0) { Show-BarFrame $top $glyph $Label $final $shownTotal 0 }
+        Start-Sleep -Milliseconds 100
         Clear-BarArea $top 3
         try { [Console]::SetCursorPosition(2, $top) } catch { }
-        Write-Host ('   [ok] ' + $Label + '  ' + (Format-Size $final)) -ForegroundColor Green
-    } else {
-        Write-Host ('   [ok] ' + $Label + '  ' + (Format-Size $final)) -ForegroundColor Green
     }
-    return $proc.ExitCode
+    if ($ok) {
+        $tail = ''
+        if ($code -ne 0) { $tail = ' (curl код ' + $code + ', файл полный)' }
+        Write-Host ('   [ok] ' + $Label + '  ' + (Format-Size $final) + $tail) -ForegroundColor Green
+    } else {
+        $why = 'код curl ' + $code
+        switch ($code) {
+            6  { $why = 'не удалось разрешить имя сайта (DNS/провайдер)' }
+            7  { $why = 'нет соединения с сайтом (фаервол/прокси/сеть)' }
+            18 { $why = 'соединение оборвалось на середине' }
+            22 { $why = 'сайт ответил ошибкой вместо файла (404/403/5xx)' }
+            28 { $why = 'таймаут: сервер не отвечает' }
+            33 { $why = 'сервер не поддерживает докачку' }
+            35 { $why = 'не удалось установить TLS (антивирус/прокси/часы)' }
+            56 { $why = 'соединение сброшено (прокси/антивирус)' }
+        }
+        Write-Host ('   [!!] ' + $Label + ': скачалось ' + (Format-Size $final) +
+                    ' из ' + (Format-Size $total) + ' — ' + $why) -ForegroundColor Red
+    }
+    return @{ Code = $code; Size = $final; Total = $total; Ok = $ok }
 }

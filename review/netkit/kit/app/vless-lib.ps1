@@ -315,7 +315,18 @@ function Get-SubBody([string]$Url, [string]$Hwid, [string]$Ua, [int]$ProxyPort =
         Remove-Item $cfgPath -Force -ErrorAction SilentlyContinue
     }
     if ($rc -ne 0 -or [string]::IsNullOrWhiteSpace($body)) {
-        if (-not $script:LastSubError) { $script:LastSubError = "curl код $rc" }
+        if (-not $script:LastSubError) {
+            $why = "curl код $rc"
+            switch ($rc) {
+                6  { $why = 'нет DNS: имя сервера подписки не разрешается' }
+                7  { $why = 'нет соединения с сервером подписки' }
+                22 { $why = 'сервер подписки ответил ошибкой (403/404/5xx) — проверь токен и x-hwid' }
+                28 { $why = 'таймаут: сервер подписки не отвечает' }
+                35 { $why = 'ошибка TLS (антивирус/прокси/часы Windows)' }
+                56 { $why = 'соединение сброшено (прокси/антивирус)' }
+            }
+            $script:LastSubError = $why
+        }
         return ''
     }
 
