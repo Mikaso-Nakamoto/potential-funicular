@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-53'
+$Build = 'F-54'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -147,6 +147,7 @@ function Show-Menu {
     Show-Item '5' 'Собрать архив для переноса' 'один zip из этого комплекта (можно без секретов)'
     Show-Item '6' 'Почистить следы на этом ПК' 'история, кэш миниатюр, временные файлы'
     Show-Item '7' 'Проверить комплект' 'офлайн-проверки конфига, ничего не меняет'
+    Show-Item '8' 'Ускорить флешку и проводник' 'замер, где тормозит, и настройки Windows против лагов'
     Show-Item '0' 'Выход' ''
 
     Write-Host ''
@@ -249,11 +250,27 @@ function Show-Help([string]$num) {
                 'Команда: powershell -ExecutionPolicy Bypass -File app\self-check.ps1'
             )
         }
+        '8' {
+            $lines = @(
+                'Пункт 8 — почему проводник тормозит и как это уменьшить.',
+                '',
+                '1) Считает файлы и время обхода по папкам комплекта: корень флешки,',
+                '   app\LibreWolf (сам браузер), profile (история и кэш). Проводник делает',
+                '   ту же работу при входе в папку, поэтому сразу видно виновника.',
+                '2) Меряет скорость мелких операций записи — главный тормоз дешёвых флешек.',
+                '3) По согласию меняет настройки проводника: значки вместо эскизов, без',
+                '   подсказок-задержек, без недавних документов, не индексировать флешку.',
+                '',
+                'Ничего не удаляет. Откат указан в конце вывода.',
+                '',
+                'Команда: powershell -ExecutionPolicy Bypass -File app\speed-up.ps1'
+            )
+        }
         '0' {
             $lines = @('Пункт 0 — выйти из меню. Сессия браузера при этом не закрывается.')
         }
         default {
-            $lines = @('Такого пункта нет. Введи ?1 … ?7 или ?0.')
+            $lines = @('Такого пункта нет. Введи ?1 … ?8 или ?0.')
         }
     }
     Write-Host ''
@@ -348,7 +365,7 @@ while ($true) {
     $choice = (Read-Host).Trim()
 
     if ($choice -match '^\?') {
-        Show-Help ($choice.Substring(1).Trim())
+        Show-Help ($choice.TrimStart('?').Trim())
         continue
     }
 
@@ -383,11 +400,15 @@ while ($true) {
             [void](Run-PS (Join-Path $App 'self-check.ps1'))
             Pause-Menu
         }
+        '8' {
+            [void](Run-PS (Join-Path $App 'speed-up.ps1'))
+            Pause-Menu
+        }
         '0' { break }
         '' { continue }
         default {
             Write-Host ''
-            Write-Host '   Такого пункта нет. Есть 1–7 и 0. Справка: ?1 … ?7.' -ForegroundColor Red
+            Write-Host '   Такого пункта нет. Есть 1–8 и 0. Справка: ?1 … ?8.' -ForegroundColor Red
             Start-Sleep -Milliseconds 1200
         }
     }
