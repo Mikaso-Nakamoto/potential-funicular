@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-54'
+$Build = 'F-55'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -181,8 +181,13 @@ function Show-Help([string]$num) {
                 'Введи номер — вся сессия пойдёт через один сервер, выходной IP перестанет',
                 'меняться. Если номер не вводить, будет как в пункте 1.',
                 '',
-                'Так же можно добавить -IgnorePolicies (если на ПК стоят политики Mozilla)',
-                'и -Debug (подробный вывод для разбора проблем).',
+                'Дополнительно можно добавить:',
+                '  -IgnorePolicies — запуститься, даже если в реестре заданы политики Firefox.',
+                '      Без флага скрипт откажется: политика может подсунуть свой прокси или',
+                '      расширение, и браузер пойдёт мимо туннеля. Нужен только на своём ПК.',
+                '  -Debug — подробный вывод, если что-то не работает.',
+                'Оба флага обычно не нужны: Enter — и запуск пойдёт как в пункте 1, но через',
+                'выбранный сервер.',
                 '',
                 'Команда: powershell -ExecutionPolicy Bypass -File app\start.ps1 -Server N'
             )
@@ -339,7 +344,10 @@ function Ask-Server {
         Start-Sleep -Milliseconds 700
     }
 
-    Write-Host '   Доп. параметры: -IgnorePolicies, -Debug (Enter — нет):' -ForegroundColor Gray
+    Write-Host ''
+    Write-Host '   Дополнительно (обычно не нужно — просто Enter):' -ForegroundColor Gray
+    Write-Host '     -IgnorePolicies  запуститься, даже если на ПК заданы политики Firefox' -ForegroundColor DarkGray
+    Write-Host '     -Debug           подробный вывод для разбора проблем' -ForegroundColor DarkGray
     Write-Host '   > ' -ForegroundColor Green -NoNewline
     $extra = (Read-Host).Trim()
     if ($extra -ne '') { $args2 += ($extra -split '\s+') }
