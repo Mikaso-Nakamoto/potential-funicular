@@ -36,8 +36,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Invoke-LeakCheck.ps1
 
 - Отчёт: `AUDIT-REPORT.md` (14 находок + F-15, найденная при исправлении; в начале — таблица статуса).
 - Исправленный комплект собран отдельно от git (код автора в репозиторий не кладём):
-  `inbox/dist/LibreWolf-USB-fixed.zip`, md5 `c099eaa3c439cf64d237b2e80ca6e0df`.
-- Копия для скачивания: https://drive.google.com/file/d/1FrHU9b1HllZRSC_jPqERecQuxIKgg4Ar/view
+  `inbox/dist/LibreWolf-USB-fixed.zip`, md5 `620740266c79a322f059ed2866d7a9bf`.
+- Копия для скачивания: https://drive.google.com/file/d/1DtiE88OAxjUGCBY8Ta2th_SOpSm-zQKm/view
 - Что проверено статически и что требует живой машины — в §«Чего не проверял» отчёта.
 - В комплекте есть `ПРОВЕРКА.bat` → `app/self-check.ps1`: офлайн-прогон конвертера
   и сборки JSON на 6 тестовых ключах (без сети, без Xray) — эту часть выполняет сам пользователь на Windows.
@@ -72,3 +72,10 @@ python3 -m venv /tmp/psvenv
 Сам прогон нашёл два дефекта, которые статикой не видны: `Generic.List[object]` + `@()`
 роняли `ConvertTo-Nodes` (обновление подписки не работало) и base64-тело подписки
 не разбиралось вне `Get-SubBody`. Оба закрыты — см. F-16 и F-17 в отчёте.
+
+## Сборка архива
+
+`tests/build-zip.py` — единственный правильный способ собрать zip для Windows:
+`zip` из Linux не ставит флаг «имена в UTF-8», и кириллические `.bat` распаковываются
+как `РџРѕРґРіРѕС‚РѕРІРєР°…`. Скрипт проверяет флаг 0x800 у каждого не-ASCII имени
+и падает, если его нет (см. F-18).
