@@ -127,9 +127,9 @@ say '7. незашифрованный узел в подписке не поп�
 cp "$HERE/fixtures/sub-body-none.txt" "$WORK/srv/subnone.txt"
 sub "https://127.0.0.1:$PORT/subnone.txt"
 OUT="$(run_update)"; echo "$OUT" | tail -2
-if grep -q 'Готово: 7 сервер' <<<"$OUT" && ! grep -q 'plain.example.com' "$WORK/kit/vpn/config.json"; then
-  ok 'security=none отброшен, остальные 7 серверов на месте'
-else bad 'незашифрованный узел попал в конфиг'; fi
+if grep -q 'Готово: 7 сервер' <<<"$OUT" && ! grep -q 'plain.example.com' "$WORK/kit/vpn/config.json" && ! grep -q '"0.0.0.0"' "$WORK/kit/vpn/config.json"; then
+  ok 'security=none и заглушка 0.0.0.0 отброшены, остальные 7 серверов на месте'
+else bad 'плохой узел попал в конфиг'; fi
 
 say '8. сверка с Python-версией на одних данных'
 "$PWSH" -NoProfile -File "$HERE/Dump-Config.ps1" -Body "$HERE/fixtures/sub-body.txt" -Out "$WORK/ps.json" >/dev/null 2>&1
