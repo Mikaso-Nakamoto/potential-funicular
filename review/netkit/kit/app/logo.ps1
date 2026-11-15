@@ -107,8 +107,8 @@ function Get-CrossFrame([double]$phase) {
     $pix = New-Pix
     Initialize-Field $pix
 
-    $bx0 = 15; $bx1 = 24      # балка
-    $ry0 = 14; $ry1 = 23      # перекладина
+    $bx0 = 17; $bx1 = 22      # балка
+    $ry0 = 15; $ry1 = 20      # перекладина
 
     # балка и перекладина
     Fill-RoundRect $pix $bx0 4 $bx1 45 3 $script:CH.GD
@@ -123,29 +123,29 @@ function Get-CrossFrame([double]$phase) {
 
     # накидка на перекладине (провисает)
     $lift = [int][math]::Round(1.5 * [math]::Sin($phase))
-    Fill-RoundRect $pix 8 (10 + $lift) 31 (17 + $lift) 3 $script:CH.SH
-    Fill-Rect $pix 8 (17 + $lift) 31 (18 + $lift) $script:CH.SH
+    Fill-RoundRect $pix 10 (9 + $lift) 29 (14 + $lift) 3 $script:CH.SH
+    Fill-Rect $pix 10 (14 + $lift) 29 (15 + $lift) $script:CH.SH
 
     # свисающие концы: качаются вразнобой
     $dxL = [int][math]::Round(2.0 * [math]::Sin($phase))
     $dxR = [int][math]::Round(2.0 * [math]::Sin($phase + 1.3))
-    $lenL = 34 + [int][math]::Round(2.0 * [math]::Sin($phase + 2.1))
-    $lenR = 34 + [int][math]::Round(2.0 * [math]::Sin($phase + 3.0))
+    $lenL = 33 + [int][math]::Round(2.0 * [math]::Sin($phase + 2.1))
+    $lenR = 33 + [int][math]::Round(2.0 * [math]::Sin($phase + 3.0))
 
-    for ($y = 18; $y -le $lenL; $y++) {
-        $w = 5 - [int][math]::Floor(($y - 18) / 7)
+    for ($y = 15; $y -le $lenL; $y++) {
+        $w = 4 - [int][math]::Floor(($y - 15) / 8)
         if ($w -lt 2) { $w = 2 }
-        Fill-Rect $pix (6 + $dxL) $y (6 + $dxL + $w) $y $script:CH.SH
+        Fill-Rect $pix (9 + $dxL) $y (9 + $dxL + $w) $y $script:CH.SH
     }
-    for ($y = 18; $y -le $lenR; $y++) {
-        $w = 5 - [int][math]::Floor(($y - 18) / 7)
+    for ($y = 15; $y -le $lenR; $y++) {
+        $w = 4 - [int][math]::Floor(($y - 15) / 8)
         if ($w -lt 2) { $w = 2 }
-        Fill-Rect $pix (29 + $dxR) $y (29 + $dxR + $w) $y $script:CH.SH
+        Fill-Rect $pix (27 + $dxR) $y (27 + $dxR + $w) $y $script:CH.SH
     }
     # складки
-    for ($y = 20; $y -le 32; $y += 4) {
-        Set-Px $pix (7 + $dxL) $y $script:CH.FL
-        Set-Px $pix (30 + $dxR) $y $script:CH.FL
+    for ($y = 18; $y -le 31; $y += 4) {
+        Set-Px $pix (10 + $dxL) $y $script:CH.FL
+        Set-Px $pix (28 + $dxR) $y $script:CH.FL
     }
     return $pix
 }

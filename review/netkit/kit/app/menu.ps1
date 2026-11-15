@@ -278,7 +278,8 @@ function Read-Choice($initialGrid, $info) {
 function Run-PS([string]$Script, [string[]]$ScriptArgs = @()) {
     $a = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $Script) + $ScriptArgs
     Write-Host ''
-    & $psExe @a
+    # Out-Host: вывод идёт на экран, а функция возвращает только код
+    & $psExe @a | Out-Host
     $code = $LASTEXITCODE
     Write-Host ''
     Write-Host ('   [код возврата: ' + $code + ']') -ForegroundColor DarkGray
