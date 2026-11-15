@@ -16,7 +16,7 @@ $LogsDir = Join-Path $Vpn  'logs'
 $Profile = Join-Path $Root 'profile'
 $script:Removed = 0
 $script:Skipped = 0
-$Marker  = 'librewolf|xray|LibreWolf-USB'
+$Marker  = 'librewolf|xray|LibreWolf-USB|lwusb'
 
 function Rot13([string]$t) {
     $sb = New-Object System.Text.StringBuilder
@@ -186,6 +186,58 @@ if (Test-Path $h) {
 $null = & ipconfig.exe /flushdns 2>$null
 Write-Host "[9] Кэш DNS: сброшен (если хватило прав)" -ForegroundColor Green
 
+# --- 10. кэш миниатюр и значков проводника: там остаются превью файлов с флешки ---
+$m = 0
+$thumbDir = Join-Path $env:LOCALAPPDATA 'Microsoft\Windows\Explorer'
+if (Test-Path $thumbDir) {
+    foreach ($f in @(Get-ChildItem $thumbDir -File -ErrorAction SilentlyContinue |
+                     Where-Object { $_.Name -match '^(thumbcache|iconcache)_' })) {
+        try { Remove-Item $f.FullName -Force -ErrorAction Stop; $m++; $script:Removed++ } catch { $script:Skipped++ }
+    }
+}
+Write-Host ("[10] Кэш миниатюр/значков: удалено — {0} (0 при наличии файлов = их держит проводник)" -f $m) -ForegroundColor Green
+
+# --- 11. «Недавние файлы»: ярлыки, ведущие на нашу флешку ---
+$m = 0
+$usbRoot = $Root.TrimEnd('\')
+$recentDir = Join-Path $env:APPDATA 'Microsoft\Windows\Recent'
+if (Test-Path $recentDir) {
+    $sh = $null
+    try { $sh = New-Object -ComObject WScript.Shell } catch {}
+    foreach ($lnk in @(Get-ChildItem $recentDir -Filter '*.lnk' -File -ErrorAction SilentlyContinue)) {
+        $target = ''
+        if ($sh) { try { $target = $sh.CreateShortcut($lnk.FullName).TargetPath } catch { $target = '' } }
+        if ($target -and $target.StartsWith($usbRoot, [StringComparison]::OrdinalIgnoreCase)) {
+            Remove-Item $lnk.FullName -Force -ErrorAction SilentlyContinue
+            if (-not (Test-Path $lnk.FullName)) { $m++; $script:Removed++ }
+        }
+    }
+}
+Write-Host ("[11] Недавние файлы с флешки: удалено ярлыков — {0}" -f $m) -ForegroundColor Green
+
+# --- 12. Список «недавних документов» в реестре: записи, где встречается путь флешки ---
+$m = 0
+$rdBase = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs'
+try {
+    foreach ($k in @(Get-ChildItem $rdBase -Recurse -ErrorAction SilentlyContinue)) {
+        $key = Get-Item $k.PSPath -ErrorAction SilentlyContinue
+        if (-not $key) { continue }
+        foreach ($name in @($key.GetValueNames())) {
+            if ($name -eq 'MRUListEx') { continue }
+            $val = $null
+            try { $val = $key.GetValue($name, $null, 'DoNotExpandEnvironmentNames') } catch {}
+            if ($val -is [byte[]]) {
+                $txt = [Text.Encoding]::Unicode.GetString($val)
+                if ($txt.IndexOf($usbRoot, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                    Remove-ItemProperty -Path $k.PSPath -Name $name -ErrorAction SilentlyContinue
+                    $m++; $script:Removed++
+                }
+            }
+        }
+    }
+} catch {}
+Write-Host ("[12] Список недавних документов (реестр): удалено записей — {0}" -f $m) -ForegroundColor Green
+
 Write-Host ""
 Write-Host "=== Итог: удалено объектов — $script:Removed, пропущено (нет прав) — $script:Skipped ===" -ForegroundColor Cyan
 Write-Host ""
@@ -198,6 +250,9 @@ Write-Host "   4104 — ПОЛНЫЙ ТЕКСТ запущенного скри�
 Write-Host " - Prefetch для CMD.EXE и POWERSHELL.EXE: видно, что с флешки что-то запускали."
 Write-Host " - На машине с включённым аудитом содержимое start.ps1 остаётся в журнале, и убрать"
 Write-Host "   это без прав администратора нельзя. Комплект этого и не обещает."
+Write-Host " - Кэш файлов в ОПЕРАТИВНОЙ памяти (из-за него второй запуск быстрее):"
+Write-Host "   командой его не вычистить без администратора и сторонних утилит. Он живёт только до"
+Write-Host "   выключения ПК, на диск не пишется, после перезагрузки его нет."
 Write-Host " - БЕЗ -Deep: Prefetch LIBREWOLF*/XRAY* мог остаться — запусти чистку от администратора:"
 Write-Host '     powershell -ExecutionPolicy Bypass -File "<буква флешки>:\LibreWolf-USB\app\clean-traces.ps1" -Deep'
 if (-not $Scrub) {
