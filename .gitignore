@@ -31,3 +31,7 @@ review/netkit/inbox/*
 !review/netkit/inbox/.gitkeep
 review/netkit/evidence/*
 !review/netkit/evidence/.gitkeep
+
+# артефакты и бинарники не держим в git
+google_drive/*.tar.gz
+google_drive/LibreWolf-USB-fixed.zip

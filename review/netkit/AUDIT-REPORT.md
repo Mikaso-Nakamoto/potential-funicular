@@ -291,6 +291,11 @@ loopback с `udp=false`, `loglevel=none`, линтер `Test-ConfigSafe` (и н�
 нетронутым), `vless-to-config.ps1` с дубликатом и битой ссылкой, **узел
 `security=none` в конфиг не попадает**.
 
+**4b. Фикс F-33** проверен тем же `tests/e2e-update-sub.sh` (8/8) и отдельным
+прогоном против локального HTTPS-сервера: тело 1096 байт, 7 узлов, при 404 —
+пустое тело и понятная причина (`curl код 22`), временных файлов `%TEMP%\lwusb-*.curl`
+после вызова не остаётся.
+
 **4a. Сквозные сценарии запуска** `tests/e2e-start.sh` (новые): поддельные
 `xray.exe` (слушатель на порту из конфига), `LibreWolf.exe`, `curl.exe` и
 `netstat.exe`, поэтому `start.ps1` исполняется целиком — **4 из 4**:
@@ -341,6 +346,7 @@ SHA-256, привязка секретов к домашнему ПК) по ук
 | F-30 | Medium | `Fail()` вызывал `exit` → `finally` не срабатывал → осиротевший `xray.exe` | `Fail` бросает исключение, вся работа в `try/finally`: гашение xray, снятие правил брандмауэра, удаление сессионного конфига; при старте гасятся остатки прошлой сессии |
 | F-31 | High | kill-switch ловил только «xray жив» и «IP тот же» | в watchdog добавлен `Get-BrowserLeak`: соединения процессов нашего браузера не на loopback = прерывание сессии (с запасным путём через `netstat -ano`) |
 | F-32 | Low | `user.js`: `network.trr.mode=0` не запрещает DoH; нет `security.enterprise_roots.enabled`; баннер обещал «весь трафик» | `trr.mode=5`, `enterprise_roots.enabled=false`, `network.predictor.*=false`; баннер и README говорят «трафик браузера» |
+| F-33 | High | закрытие F-27 сломало скачивание подписки: `Get-SubBody` отдавал конфиг `curl` через stdin (`-K -`), а Windows PowerShell 5.1 портит stdin нативной программы — `curl: (error) <stdin>:1 config file option ... is unknown`, `option -K: found an unknown config option`. Поймано пользователем на живой машине (скриншот `ПОДГОТОВКА-ДОМА.bat`) | конфиг пишется в одноразовый файл `%TEMP%\lwusb-<guid>.curl`, передаётся как `-K <path>` и удаляется в `finally`; в командной строке по-прежнему только путь, токен и `x-hwid` не светятся. Причина сбоя печатается (`curl код 22` и т. п.) |
 
 ### Что из 12 пунктов не закрыто кодом
 
