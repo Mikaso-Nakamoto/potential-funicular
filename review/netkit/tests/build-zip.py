@@ -17,7 +17,9 @@ import sys
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-KIT = os.path.join(HERE, '..', 'inbox', 'LibreWolf-USB')
+KIT = os.path.join(HERE, '..', 'kit')
+if not os.path.isdir(KIT):
+    KIT = os.path.join(HERE, '..', 'inbox', 'LibreWolf-USB')
 OUT = os.path.join(HERE, '..', 'inbox', 'dist', 'LibreWolf-USB-fixed.zip')
 
 SKIP_DIRS = {'__pycache__'}

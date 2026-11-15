@@ -18,7 +18,7 @@
 set -u
 PWSH="${PWSH:-pwsh}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
-KIT="$(cd "$HERE/../inbox/LibreWolf-USB" && pwd)"
+KIT="$(cd "$HERE/../kit" && pwd)"
 WORK="$(mktemp -d)"
 FAILED=0
 

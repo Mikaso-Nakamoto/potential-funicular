@@ -1,0 +1,117 @@
+{
+  "log": {
+    "loglevel": "none"
+  },
+  "inbounds": [
+    {
+      "tag": "socks-in",
+      "listen": "127.0.0.1",
+      "port": 10808,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": false
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy-1",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "server1.example.com",
+            "port": 443,
+            "users": [
+              {
+                "id": "11111111-1111-1111-1111-111111111111",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "fingerprint": "chrome",
+          "serverName": "www.example.com",
+          "publicKey": "PUBLICKEY_EXAMPLE",
+          "shortId": "ab12"
+        }
+      }
+    },
+    {
+      "tag": "proxy-2",
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "server2.example.com",
+            "port": 443,
+            "users": [
+              {
+                "id": "11111111-1111-1111-1111-111111111111",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "wsSettings": {
+          "path": "/ws",
+          "headers": {
+            "Host": "cdn.example.com"
+          }
+        },
+        "tlsSettings": {
+          "serverName": "server2.example.com",
+          "fingerprint": "chrome"
+        }
+      }
+    }
+  ],
+  "observatory": {
+    "subjectSelector": [
+      "proxy-"
+    ],
+    "probeURL": "https://www.gstatic.com/generate_204",
+    "probeInterval": "3m",
+    "enableConcurrency": true
+  },
+  "routing": {
+    "domainStrategy": "AsIs",
+    "balancers": [
+      {
+        "tag": "all-proxies",
+        "selector": [
+          "proxy-"
+        ],
+        "strategy": {
+          "type": "leastPing"
+        }
+      }
+    ],
+    "rules": [
+      {
+        "type": "field",
+        "network": "tcp,udp",
+        "balancerTag": "all-proxies"
+      }
+    ]
+  }
+}
