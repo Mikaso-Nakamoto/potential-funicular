@@ -211,6 +211,39 @@ else
 fi
 kill "$FOREIGN" 2>/dev/null
 
+# ------------------------------------------------------------------- сценарий 5
+say '5. лончер LibreWolf.exe: настоящий процесс переживает лончер, сессия не должна закрываться'
+# Реальный баг с продакшена: librewolf.exe в корне — лончер, он запускает
+# настоящий процесс и сразу завершается. Если следить за PID от Start-Process,
+# скрипт решает «браузер закрыт», гасит xray, а браузер открывается позже без VPN.
+python3 - "$WORK" <<'PYEOF'
+import os, sys
+w = sys.argv[1]
+core = os.path.join(w, 'kit/app/LibreWolf/core')
+os.makedirs(core, exist_ok=True)
+real = os.path.join(core, 'lw-real.exe')
+with open(real, 'w') as f:
+    f.write('#!/bin/sh\nsleep 6\n')
+os.chmod(real, 0o755)
+launcher = os.path.join(w, 'kit/app/LibreWolf/LibreWolf.exe')
+with open(launcher, 'w') as f:
+    f.write('#!/bin/sh\n"$(dirname "$0")/core/lw-real.exe" &\nsleep 0.2\nexit 0\n')
+os.chmod(launcher, 0o755)
+PYEOF
+cat > "$WORK/kit/vpn/xray.exe" <<SH
+#!/bin/sh
+cfg="\$(printf '%s' "\$2" | tr -d '\"')"
+exec python3 "$WORK/listen.py" "\$cfg"
+SH
+chmod +x "$WORK/kit/vpn/xray.exe"
+T0="$(date +%s)"
+OUT="$(run_start)"; RC=$?
+T1="$(date +%s)"
+DUR=$((T1 - T0))
+if [ "$RC" -eq 0 ]; then ok 'код возврата 0'; else bad "код возврата $RC"; echo "$OUT" | tail -6; fi
+if [ "$DUR" -ge 5 ]; then ok "сессия ждала настоящий процесс ($DUR с), а не лончер"; else bad "сессия закрылась через $DUR с — снова следит за лончером"; fi
+if grep -q 'браузер закрыт пользователем' <<<"$OUT"; then ok 'штатное завершение после реального закрытия'; else bad 'нет штатного завершения'; fi
+
 say 'итог'
 if [ "$FAILED" -eq 0 ]; then echo 'ВСЁ ХОРОШО: все сценарии прошли'; exit 0; fi
 echo "ПРОВАЛОВ: $FAILED"; exit 1
