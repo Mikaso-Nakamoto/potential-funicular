@@ -1,0 +1,597 @@
+/* Repository-browser logic in site/app.js, run offline against a DOM stub built from site/index.html. */
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
+const root = path.resolve(__dirname, '..');
+const clone = value => typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+const html = fs.readFileSync(path.join(root, 'site/index.html'), 'utf8');
+const script = fs.readFileSync(path.join(root, 'site/app.js'), 'utf8');
+const camel = name => name.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+
+class Element {
+  constructor(owner, tag = 'div') {
+    this.owner = owner; this.tag = tag; this.children = []; this.dataset = {}; this.attrs = {}; this.handlers = {};
+    this.value = ''; this.className = ''; this.textContent = ''; this.hidden = false; this.open = false;
+    const classes = new Set(); this.classes = classes;
+    this.classList = {toggle(name, force) { if (force ?? !classes.has(name)) classes.add(name); else classes.delete(name); }, add: name => classes.add(name), remove: name => classes.delete(name)};
+  }
+  append(...nodes) { for (const node of nodes) this.children.push(...(node.tag === 'fragment' ? node.children : [node])); }
+  prepend(...nodes) { this.children.unshift(...nodes); }
+  replaceChildren(...nodes) { this.children = []; this.append(...nodes); }
+  setAttribute(key, value) { this.attrs[key] = String(value); }
+  getAttribute(key) { return this.attrs[key] ?? null; }
+  addEventListener(event, callback) { this.handlers[event] = callback; }
+  emit(event, value) { if (value !== undefined) this.value = value; this.handlers[event]?.({target: this}); }
+  get options() { return this.children; }
+  focus() { this.owner.activeElement = this; }
+  scrollIntoView() {}
+  // Cards only look up their own details element.
+  querySelector(selector) {
+    const match = {'details': node => node.tag === 'details', 'details[open]': node => node.tag === 'details' && node.open,
+      '.source-record-details': node => hasClass(node, 'source-record-details'),
+      '.source-record-details[open]': node => hasClass(node, 'source-record-details') && node.open,
+      '.source-scan-evidence': node => hasClass(node, 'source-scan-evidence'),
+      '.source-scan-evidence[open]': node => hasClass(node, 'source-scan-evidence') && node.open}[selector];
+    assert(match, 'Unexpected card selector ' + selector);
+    return descendants(this).find(match) || null;
+  }
+}
+const descendants = node => node.children.flatMap(child => [child, ...descendants(child)]);
+const hasClass = (node, name) => node.className.split(/\s+/).includes(name);
+const byClass = (node, name) => descendants(node).filter(child => hasClass(child, name));
+
+/* Each element with an id or data attribute in the homepage markup (plus optional extra markup) becomes a stub
+   node, so querySelectorAll returns what the real page provides instead of an empty list. */
+function setup(query = '', {catalog, browser, extraMarkup = '', turkishLocale = false} = {}) {
+  const document = {baseURI: 'https://awesomerea.org/', documentElement: {dataset: {}}, title: '', listeners: {}};
+  const make = tag => new Element(document, tag);
+  document.activeElement = make('body'); document.activeElement.tagName = 'BODY';
+  const marked = [...(html + extraMarkup).matchAll(/<([a-z][a-z0-9]*)\b([^>]*)>/gi)].filter(([, , attributes]) => /\s(?:id|data-[\w-]+)=/.test(attributes)).map(([, tag, attributes]) => {
+    const node = make(tag.toLowerCase());
+    for (const [, name, value = ''] of attributes.matchAll(/([\w:-]+)(?:="([^"]*)")?/g)) {
+      node.attrs[name] = value;
+      if (name.startsWith('data-')) node.dataset[camel(name.slice(5))] = value;
+      else if (name === 'id') node.id = value; else if (name === 'class') node.className = value; else if (name === 'hidden') node.hidden = true;
+    }
+    return node;
+  });
+  const ids = new Map(marked.filter(node => node.id).map(node => [node.id, node]));
+  const roots = () => [...ids.values()];
+  document.querySelector = selector => {
+    if (selector.startsWith('meta[')) return null;
+    if (selector.startsWith('#')) { if (!ids.has(selector.slice(1))) ids.set(selector.slice(1), make('div')); return ids.get(selector.slice(1)); }
+    return document.querySelectorAll(selector)[0] || null;
+  };
+  document.querySelectorAll = selector => {
+    const attribute = selector.match(/^\[data-([\w-]+)(?:="([^"]*)")?\]$/);
+    if (attribute) return marked.filter(node => attribute[2] === undefined ? camel(attribute[1]) in node.dataset : node.dataset[camel(attribute[1])] === attribute[2]);
+    const className = selector.match(/^\.([\w-]+)$/);
+    assert(className, 'Unexpected document selector ' + selector);
+    return roots().flatMap(node => byClass(node, className[1]));
+  };
+  document.createElement = make; document.createElementNS = (_, tag) => make(tag);
+  document.createDocumentFragment = () => make('fragment');
+  document.addEventListener = (event, callback) => { document.listeners[event] = callback; };
+
+  const location = new URL('https://awesomerea.org/' + query);
+  location.assign = next => { location.lastNavigation = String(next); };
+  const responses = {catalog, browser};
+  const context = {document, location, URL, URLSearchParams, console, window: {addEventListener() {}},
+    history: {replaceState(_, __, next) { location.href = String(next); location.search = new URL(next).search; }, pushState(_, __, next) { location.href = String(next); }},
+    fetch: async url => {
+      const body = responses[/^\/catalog(-index)?\.json$/.test(new URL(url).pathname) ? 'catalog' : 'browser'];
+      return body === undefined ? {ok: false, status: 503} : {ok: true, json: async () => clone(body)};
+    }};
+  vm.createContext(context);
+  // Make locale-dependent lowercasing observably Turkish without depending on the host's installed locales.
+  if (turkishLocale) vm.runInContext('String.prototype.toLocaleLowerCase = function () { return String(this).replace(/\u0130/g, "i").replace(/I/g, "\u0131").toLowerCase(); };', context);
+  vm.runInContext(script.replace('applyLanguage(); load();', '') + '\nglobalThis.audit = {state,sourceState,load,loadSources,filtered,sourceFiltered,applyLanguage,setIndexMode,sourceBrowserPayload,sourceRelatedEntries};', context);
+  const element = id => document.querySelector('#' + id);
+  return {api: context.audit, document, location, responses, element, marked};
+}
+
+function curatedRecord(index, changes = {}) {
+  return {id: 'curated-' + index, name: 'Curated ' + index, name_zh: '精选 ' + index, url: `https://github.com/curated/tool-${index}`,
+    evidence_url: `https://github.com/curated/tool-${index}#readme`, description_en: 'Curated fixture ' + index, description_zh: '精选测试 ' + index,
+    category: 'dynamic-analysis', group: 'tools', kind: 'tool', relationship: 'foundation', targets: ['app'],
+    requirements: ['Requirement ' + index], requirements_zh: ['条件 ' + index], verified_at: '2026-01-02T03:04:05Z', ...changes};
+}
+function repository(full_name, changes = {}) {
+  return {id: full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-'), full_name, url: 'https://github.com/' + full_name,
+    readme_url: `https://github.com/${full_name}#readme`, description_en: '', description_zh: '', topics: [], targets: ['app'],
+    stars: 0, pushed_at: '', scan_status: 'readme-scanned', ...changes};
+}
+const catalogOf = (resources, changes = {}) => ({resources, topic_labels: {}, meta: {repository_url: 'https://github.com/reacher-z/Awesome-REA', source_index: {resource_count: 1}}, ...changes});
+function browserOf(resources, excluded = 0) {
+  return {meta: {schema_version: 1, status: 'complete', full_export: 'source-index.json', full_export_sha256: 'a'.repeat(64),
+    completed_at: '2026-10-16T01:02:03Z', scope: {scanned_count: resources.length + excluded, excluded_count: excluded, browse_count: resources.length}}, resources};
+}
+// Start like the page does, then wait for the repository payload, whether or not the view requested it.
+async function loaded(query, options) {
+  const app = setup(query, options);
+  app.api.applyLanguage(); await app.api.load(); await app.api.loadSources();
+  while (app.api.sourceState.loading) await new Promise(resolve => setImmediate(resolve));
+  return app;
+}
+const names = records => Array.from(records, record => record.full_name);
+// A title's text, including the last character that shares a no-wrap span with the external-link icon.
+const textOf = part => (part.textContent || '') + part.children.map(textOf).join('');
+const shownNames = app => app.element('source-results').children.map(card => textOf(byClass(card, 'source-title-link')[0]));
+const urlParam = (app, key) => new URL(app.location.href).searchParams.get(key);
+
+(async () => {
+  // The integrity guard rejects every malformed payload, and loadSources then shows the error state.
+  const valid = browserOf([repository('valid/one'), repository('valid/two')], 1);
+  const curated = catalogOf([curatedRecord(1)]);
+  {
+    const compatibilityCatalog = catalogOf([
+      curatedRecord(1, {description_zh: '剪映／CapCut'}),
+      curatedRecord(2, {name: 'Istanbul analyzer'}),
+    ]);
+    const compatibilityRepositories = browserOf([
+      repository('video/editor', {description_zh: '剪映／CapCut'}),
+      repository('example/Istanbul'),
+    ]);
+    const query = '剪映/CapCut';
+    const app = await loaded('?q=' + encodeURIComponent(query) + '&sourceq=' + encodeURIComponent(query),
+      {catalog: compatibilityCatalog, browser: compatibilityRepositories, turkishLocale: true});
+    assert.deepEqual(Array.from(app.api.filtered(), record => record.id), ['curated-1']);
+    assert.deepEqual(names(app.api.sourceFiltered()), ['video/editor']);
+    assert.equal(urlParam(app, 'q'), query, 'matching normalization must not rewrite homepage URL state');
+    assert.equal(urlParam(app, 'sourceq'), query, 'matching normalization must not rewrite repository URL state');
+    app.api.state.q = 'istanbul'; app.api.sourceState.q = 'istanbul';
+    assert.deepEqual(Array.from(app.api.filtered(), record => record.id), ['curated-2']);
+    assert.deepEqual(names(app.api.sourceFiltered()), ['example/Istanbul']);
+  }
+  // Evidence-class filtering uses the curated C0–C3 value and the Unknown state separately.
+  {
+    const classified = catalogOf([
+      curatedRecord(1, {evidence_class: 0, evidence_status: 'observed'}),
+      curatedRecord(2, {evidence_class: 2, evidence_status: 'observed'}),
+      curatedRecord(3, {evidence_class: null, evidence_status: 'unknown'}),
+    ]);
+    const app = await loaded('?class=0', {catalog: classified, browser: valid});
+    assert.deepEqual(Array.from(app.api.filtered(), record => record.id), ['curated-1']);
+    app.api.state.class = '2';
+    assert.deepEqual(Array.from(app.api.filtered(), record => record.id), ['curated-2']);
+    app.api.state.class = 'unknown';
+    assert.deepEqual(Array.from(app.api.filtered(), record => record.id), ['curated-3']);
+    app.api.state.class = 'all';
+    assert.deepEqual(Array.from(app.api.filtered(), record => record.id), ['curated-1', 'curated-2', 'curated-3']);
+  }
+  // The compact repository introduction does not wait for a network response, and follows the real view.
+  for (const query of ['?view=source-index', '?view=repositories']) {
+    const app = setup(query, {catalog: curated, browser: valid});
+    assert.equal(app.document.documentElement.dataset.indexMode, 'source-index');
+    await app.api.load();
+    app.api.setIndexMode('curated');
+    assert.equal(app.document.documentElement.dataset.indexMode, 'curated');
+    app.api.setIndexMode('source-index');
+    assert.equal(app.document.documentElement.dataset.indexMode, 'source-index');
+  }
+  for (const query of ['', '?view=curated', '?view=unknown']) {
+    assert.equal(setup(query).document.documentElement.dataset.indexMode, 'curated');
+  }
+  const unavailable = setup('?view=source-index', {catalog: catalogOf([], {meta: {source_index: {resource_count: 0}}})});
+  await unavailable.api.load();
+  assert.equal(unavailable.document.documentElement.dataset.indexMode, 'curated');
+  const failedCatalog = setup('?view=source-index');
+  await failedCatalog.api.load();
+  assert.equal(failedCatalog.document.documentElement.dataset.indexMode, 'curated');
+  const mutate = change => { const payload = clone(valid); change(payload); return payload; };
+  {
+    const app = setup('', {catalog: curated, browser: valid});
+    const accepted = clone(valid);
+    assert.strictEqual(app.api.sourceBrowserPayload(accepted), accepted);
+    const unsupported = /Unsupported repository browser data/, counts = /Repository browser counts disagree/, invalid = /Invalid repository browser record/;
+    const malformed = [
+      ['schema version', p => { p.meta.schema_version = 2; }, unsupported], ['missing meta', p => { delete p.meta; }, unsupported],
+      ['status', p => { p.meta.status = 'failed'; }, unsupported], ['resources object', p => { p.resources = {}; }, unsupported],
+      ['export name', p => { p.meta.full_export = 'source-browser.json'; }, unsupported],
+      ['short SHA-256', p => { p.meta.full_export_sha256 = 'a'.repeat(63); }, unsupported],
+      ['uppercase SHA-256', p => { p.meta.full_export_sha256 = 'A'.repeat(64); }, unsupported],
+      ['numeric SHA-256', p => { p.meta.full_export_sha256 = 1; }, unsupported],
+      ['missing scope', p => { delete p.meta.scope; }, counts], ['sum', p => { p.meta.scope.scanned_count = 4; }, counts],
+      ['browse count', p => { p.meta.scope.browse_count = 3; p.meta.scope.scanned_count = 4; }, counts],
+      ['negative count', p => { p.meta.scope.excluded_count = -1; p.meta.scope.scanned_count = 1; }, counts],
+      ['fractional count', p => { p.meta.scope.excluded_count = 0.5; p.meta.scope.scanned_count = 2.5; }, counts],
+      ['string count', p => { p.meta.scope.excluded_count = '1'; }, counts],
+      ['duplicate ID', p => { p.resources[1].id = p.resources[0].id; }, invalid], ['empty ID', p => { p.resources[0].id = ''; }, invalid],
+      ['numeric ID', p => { p.resources[0].id = 7; }, invalid], ['null record', p => { p.resources[0] = null; }, invalid],
+      ['empty name', p => { p.resources[0].full_name = ''; }, invalid],
+      ['failed scan', p => { p.resources[0].scan_status = 'readme-failed'; }, invalid],
+      ['excluded row', p => { p.resources[0].scope_status = 'excluded'; }, invalid],
+    ];
+    for (const [name, change, message] of malformed) assert.throws(() => app.api.sourceBrowserPayload(mutate(change)), message, name);
+    for (const lang of ['en', 'zh']) {
+      for (const [name, browser] of [...malformed.map(([name, change]) => [name, mutate(change)]), ['HTTP 503', undefined]]) {
+        const failed = setup(`?lang=${lang}`, {catalog: curated, browser});
+        await failed.api.load();
+        failed.element('source-more-row').hidden = false; failed.element('source-empty').hidden = false;
+        await failed.api.loadSources();
+        assert.equal(failed.api.sourceState.error, true, name);
+        assert.equal(failed.api.sourceState.loaded, false, name);
+        assert.equal(failed.api.sourceState.loading, false, name);
+        assert.equal(failed.element('source-error').hidden, false, name);
+        assert.equal(failed.element('source-status').textContent, lang === 'zh' ? '项目仓库暂时未能加载。' : 'Repositories couldn’t load.', name);
+        assert.equal(failed.element('source-results').getAttribute('aria-busy'), 'false', name);
+        assert.equal(failed.element('source-empty').hidden, true, name);
+        assert.equal(failed.element('source-more-row').hidden, true, name);
+        assert.deepEqual(failed.element('source-results').children, [], name);
+      }
+    }
+    // Retrying after the data is fixed clears the error and renders the repositories.
+    const retried = setup('?view=source-index', {catalog: curated, browser: mutate(p => { p.meta.status = 'failed'; })});
+    await retried.api.load(); await new Promise(resolve => setImmediate(resolve));
+    assert.equal(retried.api.sourceState.error, true);
+    retried.responses.browser = valid;
+    await retried.element('source-retry').handlers.click();
+    assert.equal(retried.api.sourceState.error, false);
+    assert.equal(retried.element('source-error').hidden, true);
+    assert.deepEqual(shownNames(retried), ['valid/one', 'valid/two']);
+    assert.equal(retried.element('source-status').textContent, '2 repositories');
+    retried.api.state.lang = 'zh'; retried.api.applyLanguage();
+    assert.equal(retried.element('source-status').textContent, '2 个仓库');
+    retried.api.state.lang = 'en'; retried.api.applyLanguage();
+    assert.match(retried.element('source-snapshot').textContent, /Scanned 3 repositories; 1 outside this collection’s scope or no longer available upstream are omitted/);
+  }
+
+  // Related entries keep only exact detail or listing links for paper and curated slugs, once each.
+  {
+    const app = setup('', {catalog: curated, browser: valid});
+    const paper = {kind: 'paper', id: 'paper-fixture', title_en: 'Paper', title_zh: '论文', href_en: '/papers/paper-fixture/', href_zh: '/zh/papers/paper-fixture/'};
+    const resource = {kind: 'curated', id: 'tool-fixture', title_en: 'Tool', title_zh: '工具', href_en: '/resources/#tool-fixture', href_zh: '/zh/resources/#tool-fixture'};
+    const accepted = [paper, {...paper, id: 'paper-listing', href_en: '/papers/#paper-listing', href_zh: '/zh/papers/#paper-listing'},
+      resource, {...resource, id: 'tool-detail', href_en: '/resources/tool-detail/', href_zh: '/zh/resources/tool-detail/'}];
+    const rejected = [
+      null, 'paper-fixture', {...paper, kind: 'tool'}, {...paper, kind: undefined}, {...paper, kind: 'Paper'},
+      {...resource, id: 'Tool-Fixture'}, {...resource, id: 'tool--fixture'}, {...resource, id: '-tool'}, {...resource, id: 'tool_fixture'}, {...resource, id: 7},
+      {...paper, id: 'fixture', href_en: '/papers/#fixture', href_zh: '/zh/papers/#fixture'},
+      {...resource, href_en: 'https://awesomerea.org/resources/#tool-fixture'}, {...resource, href_en: '/resources#tool-fixture'},
+      {...resource, href_en: '/resources/#tool-fixture?x=1'}, {...resource, href_zh: '/zh/resources/#other'}, {...resource, href_zh: '/resources/#tool-fixture'},
+      {...resource, href_en: '/papers/#tool-fixture', href_zh: '/zh/papers/#tool-fixture'},
+      {...resource, href_zh: '/zh/resources/tool-fixture/'}, {...paper, href_en: '/papers/paper-fixture'},
+      {...resource, title_en: '  '}, {...resource, title_zh: ''}, {...paper, title_zh: undefined}, {...paper, title_en: 5},
+    ];
+    // Copy results into this realm: entries returned from the page's VM have its Array prototype.
+    const related = value => [...app.api.sourceRelatedEntries({related_entries: value})];
+    assert.deepEqual(related([...accepted, ...rejected]), accepted);
+    for (const entry of rejected) assert.deepEqual(related([entry]), [], JSON.stringify(entry));
+    const duplicates = [paper, {...paper, href_en: '/papers/#paper-fixture', href_zh: '/zh/papers/#paper-fixture', title_en: 'Again'}, resource, resource];
+    assert.deepEqual(related(duplicates), [paper, resource]);
+    for (const value of [undefined, null, 'paper-fixture', {0: paper}]) assert.deepEqual(related(value), []);
+
+    // Accepted entries render grouped localized links and their titles become searchable.
+    for (const lang of ['en', 'zh']) {
+      const related = await loaded(`?view=source-index&lang=${lang}`, {catalog: curated,
+        browser: browserOf([repository('related/repo', {related_entries: [...accepted, {...resource, kind: 'tool'}]}), repository('plain/repo')])});
+      const card = related.element('source-results').children.find(node => node.dataset.recordId === 'related-repo');
+      const [groups] = byClass(card, 'source-related');
+      assert.deepEqual(groups.children.map(group => byClass(group, 'source-related-label')[0].textContent), lang === 'zh' ? ['相关研究', '精选资料'] : ['Related research', 'Curated details']);
+      assert.deepEqual(byClass(card, 'source-related-link').slice(0, 4).map(link => [link.textContent, link.href]),
+        accepted.map(entry => [entry[`title_${lang}`], entry[`href_${lang}`]]));
+      assert.equal(byClass(card, 'source-related-link').length, 4, 'Each complete related-entry link appears once, in native details for both layouts');
+      assert.equal(byClass(card.querySelector('.source-record-details'), 'source-related-link').length, 4);
+      related.api.sourceState.q = lang === 'zh' ? '论文' : 'paper';
+      assert.deepEqual(names(related.api.sourceFiltered()), ['related/repo']);
+    }
+  }
+
+  // Curated cards render their localized fields, links and review details.
+  for (const lang of ['en', 'zh']) {
+    const app = await loaded(`?lang=${lang}`, {catalog: catalogOf([curatedRecord(1, {kind: 'case-study', category: 'reconstruction-cases', relationship: 'official-case-study'})]), browser: valid});
+    const [card] = app.element('resource-grid').children;
+    const [title] = byClass(card, 'card-title-link');
+    assert.equal(title.textContent, lang === 'zh' ? '精选 1' : 'Curated 1');
+    assert.deepEqual([title.href, title.target, title.rel], ['https://github.com/curated/tool-1', '_blank', 'noopener']);
+    assert.equal(byClass(card, 'resource-kind')[0].textContent, lang === 'zh' ? '案例' : 'Case study');
+    assert.equal(byClass(card, 'card-description')[0].textContent, lang === 'zh' ? '精选测试 1' : 'Curated fixture 1');
+    assert.equal(byClass(card, 'card-meta')[0].children[0].className, 'card-targets');
+    assert.equal(byClass(card, 'card-targets')[0].textContent, lang === 'zh' ? '应用' : 'App');
+    assert.equal(byClass(byClass(card, 'card-meta')[0], 'resource-evidence-link').length, 0);
+    const evidence = byClass(card.querySelector('details'), 'resource-evidence-link')[0];
+    assert.deepEqual([evidence.target, evidence.rel], ['_blank', 'noopener']);
+    assert.deepEqual([evidence.textContent, evidence.href], [lang === 'zh' ? '一手来源 ↗' : 'Primary source ↗', 'https://github.com/curated/tool-1#readme']);
+    assert.equal(byClass(card, 'resource-entry-link')[0].href, `${lang === 'zh' ? '/zh' : ''}/resources/curated-1/`);
+    const details = card.querySelector('details');
+    assert.deepEqual(descendants(details).filter(node => node.tag === 'li').map(node => node.textContent), [lang === 'zh' ? '条件 1' : 'Requirement 1']);
+    const context = byClass(details, 'resource-detail-meta')[0].children;
+    assert.deepEqual(context.slice(0, 3).map(node => node.textContent), lang === 'zh' ? ['REA · 官方案例', '来源已复核', '复核于 2026-01-02'] : ['REA · CASE STUDY', 'Source-reviewed', 'Reviewed 2026-01-02']);
+    assert.equal(context[2].dateTime, '2026-01-02T03:04:05Z');
+    assert.equal(app.element('results-status').textContent, lang === 'zh' ? '1 项资源' : '1 resource');
+  }
+
+  // Full topics and capture evidence survive both layouts and independent disclosure states.
+  for (const layout of ['compact', 'cards']) {
+    const original = repository('re/evidence', {topics: ['one','two','three','four','five','six'], stars: 1234,
+      readme_sha256: 'a'.repeat(64), readme_git_sha: 'b'.repeat(40), readme_bytes: 54321,
+      pushed_at: '2026-01-01T01:02:03Z', observed_at: '2026-01-02T01:02:03Z', metadata_observed_at: '2026-01-03T01:02:03Z'});
+    const app = await loaded(`?view=source-index&layout=${layout}`, {catalog: curated, browser: browserOf([original])});
+    let card = app.element('source-results').children[0];
+    assert.equal(byClass(card, 'source-topic-chip').length, original.topics.length);
+    const details = card.querySelector('.source-record-details');
+    assert.equal(byClass(details, 'source-topic-chip').length, original.topics.length);
+    const allText = descendants(card).map(node => node.textContent);
+    for (const value of [original.readme_sha256, original.readme_git_sha, '2026-01-01 01:02:03 UTC', '2026-01-02 01:02:03 UTC', '2026-01-03 01:02:03 UTC']) assert(allText.includes(value));
+    assert(!allText.includes('Check the upstream README for prerequisites.'), 'Shared prerequisites advice is outside individual cards');
+    details.open = true; card.querySelector('.source-scan-evidence').open = true;
+    app.api.state.lang = 'zh'; app.api.applyLanguage();
+    card = app.element('source-results').children[0];
+    assert.equal(card.querySelector('.source-record-details').open, true);
+    assert.equal(card.querySelector('.source-scan-evidence').open, true);
+    assert.equal(byClass(card, 'source-topic-chip').length, original.topics.length);
+    card.querySelector('.source-record-details').open = false;
+    app.api.state.lang = 'en'; app.api.applyLanguage();
+    card = app.element('source-results').children[0];
+    assert.equal(card.querySelector('.source-record-details').open, false, 'A closed outer disclosure must not reopen just because its child is open');
+    assert.equal(card.querySelector('.source-scan-evidence').open, true);
+    app.element('source-clear').handlers.click();
+    assert.equal(app.element('source-topic-match').hidden, true);
+  }
+
+  // Repository sorts on a fixture with ties: both star orders keep unknown counts last and break ties by name.
+  // Pushed and name also break ties by name; relevance without a
+  // query ranks curated GitHub repositories, then reverse-engineering topics or descriptions, then stars.
+  const sortRows = [
+    repository('plain/popular', {stars: 500, pushed_at: '2026-03-01T00:00:00Z'}),
+    repository('re/ghidra-scripts', {stars: 50, topics: ['ghidra'], pushed_at: '2026-05-01T00:00:00Z'}),
+    repository('curated/tool-1', {stars: 1, pushed_at: '2026-03-01T00:00:00Z'}),
+    repository('re/described', {stars: 50, description_en: 'A binary-analysis helper.', pushed_at: '2026-04-01T00:00:00Z'}),
+    repository('plain/unknown', {stars: null, topics: ['plugin']}),
+    repository('Curated/Tool-2', {url: 'https://github.com/curated/tool-2.git', stars: 3, pushed_at: '2026-03-01T00:00:00Z'}),
+    repository('plain/zero', {stars: 0, description_en: 'Mentions Ghidra in passing.', pushed_at: '2026-02-01T00:00:00Z'}),
+    repository('plain/aliased', {stars: 0, topics: ['ghidra'], pushed_at: '2026-02-01T00:00:00Z'}),
+  ];
+  const sortCatalog = catalogOf([curatedRecord(1), curatedRecord(2), curatedRecord(3, {url: 'https://gitlab.com/curated/tool-3'})]);
+  {
+    const app = await loaded('?view=source-index', {catalog: sortCatalog, browser: browserOf(sortRows)});
+    const order = sort => { app.api.sourceState.sort = sort; return names(app.api.sourceFiltered()); };
+    assert.deepEqual(order('stars'), ['plain/popular', 're/described', 're/ghidra-scripts', 'Curated/Tool-2', 'curated/tool-1', 'plain/aliased', 'plain/zero', 'plain/unknown']);
+    assert.deepEqual(order('stars-asc'), ['plain/aliased', 'plain/zero', 'curated/tool-1', 'Curated/Tool-2', 're/described', 're/ghidra-scripts', 'plain/popular', 'plain/unknown']);
+    assert.deepEqual(order('pushed'), ['re/ghidra-scripts', 're/described', 'curated/tool-1', 'Curated/Tool-2', 'plain/popular', 'plain/aliased', 'plain/zero', 'plain/unknown']);
+    assert.deepEqual(order('name'), ['curated/tool-1', 'Curated/Tool-2', 'plain/aliased', 'plain/popular', 'plain/unknown', 'plain/zero', 're/described', 're/ghidra-scripts']);
+    assert.deepEqual(order('relevance'), ['Curated/Tool-2', 'curated/tool-1', 're/described', 're/ghidra-scripts', 'plain/aliased', 'plain/zero', 'plain/popular', 'plain/unknown']);
+    // With a query, names score 4 and topics 2; equal scores keep the payload order.
+    app.api.sourceState.q = 'ghidra';
+    assert.deepEqual(order('relevance'), ['re/ghidra-scripts', 'plain/aliased', 'plain/zero']);
+    app.api.sourceState.q = '';
+    const sort = app.element('source-sort');
+    app.api.sourceState.visible = 48; sort.emit('change', 'stars');
+    assert.equal(app.api.sourceState.visible, 24);
+    assert.equal(urlParam(app, 'sort'), 'stars');
+    assert.deepEqual(shownNames(app), order('stars'));
+    assert.equal(app.element('source-clear').hidden, false);
+    app.element('source-clear').handlers.click();
+    assert.equal(urlParam(app, 'sort'), null);
+    assert.equal(sort.value, 'relevance');
+  }
+  for (const [requested, expected] of [['updated', 'pushed'], ['pushed', 'pushed'], ['stars', 'stars'], ['stars-asc', 'stars-asc'], ['name', 'name'], ['random', 'relevance']]) {
+    const app = setup(`?view=curated&sort=${requested}`, {catalog: sortCatalog, browser: browserOf(sortRows)});
+    assert.equal(app.api.sourceState.sort, expected);
+    assert.equal(app.element('source-sort').value, expected);
+  }
+  // A shared low-star link combines with search/topics and survives language and collection-mode changes.
+  for (const lang of ['en', 'zh']) {
+    const app = await loaded(`?view=source-index&sort=stars-asc&sourceq=ghidra&topic=ghidra&lang=${lang}`,
+      {catalog: sortCatalog, browser: browserOf(sortRows)});
+    app.api.applyLanguage();
+    const expected = ['plain/aliased', 're/ghidra-scripts'];
+    assert.deepEqual(shownNames(app), expected);
+    assert.equal(app.element('source-sort').value, 'stars-asc');
+    assert.equal(app.marked.find(node => node.dataset.i18n === 'sourceSortStarsAsc').innerHTML,
+      lang === 'zh' ? '星标最少' : 'Fewest stars');
+    app.api.state.lang = lang === 'zh' ? 'en' : 'zh'; app.api.applyLanguage();
+    assert.deepEqual(shownNames(app), expected);
+    assert.equal(urlParam(app, 'sort'), 'stars-asc');
+    app.element('mode-curated').handlers.click(); app.element('mode-sources').handlers.click();
+    assert.deepEqual(shownNames(app), expected);
+    assert.equal(app.element('source-sort').value, 'stars-asc');
+    app.element('source-clear').handlers.click();
+    assert.equal(urlParam(app, 'sort'), null);
+    assert.equal(app.element('source-sort').value, 'relevance');
+  }
+  {
+    // The legacy sort=updated link opens the pushed order.
+    const app = await loaded('?view=source-index&sort=updated', {catalog: sortCatalog, browser: browserOf(sortRows)});
+    assert.deepEqual(shownNames(app), ['re/ghidra-scripts', 're/described', 'curated/tool-1', 'Curated/Tool-2', 'plain/popular', 'plain/aliased', 'plain/zero', 'plain/unknown']);
+    assert.equal(urlParam(app, 'sort'), 'pushed');
+  }
+
+  // Typed topics accept the canonical ID or a displayed "label · id" in either language.
+  const labels = {'reverse-engineering': {en: 'Reverse engineering', zh: '逆向工程'}, 'ghidra': {en: 'Ghidra', zh: 'Ghidra'}};
+  const topicRows = [repository('re/general', {topics: ['reverse-engineering', 'ghidra-plugin']}), repository('re/ghidra', {topics: ['ghidra', 'reverse-engineering']}),
+    repository('re/plugin', {topics: ['ghidra-plugin']}), repository('other/web', {topics: ['web']})];
+  for (const lang of ['en', 'zh']) {
+    const app = await loaded(`?view=source-index&lang=${lang}`, {catalog: catalogOf([curatedRecord(1)], {topic_labels: labels}), browser: browserOf(topicRows)});
+    const input = app.element('source-topic');
+    for (const typed of ['reverse-engineering', 'Reverse engineering · reverse-engineering', '逆向工程 · reverse-engineering', '  REVERSE ENGINEERING · Reverse-Engineering ']) {
+      app.api.sourceState.visible = 48; input.emit('input', typed);
+      assert.equal(app.api.sourceState.topic, 'reverse-engineering', typed);
+      assert.equal(app.api.sourceState.visible, 24);
+      assert.equal(urlParam(app, 'topic'), 'reverse-engineering');
+      assert.deepEqual(shownNames(app), ['re/general', 're/ghidra']);
+      assert.equal(app.element('source-topic-match').hidden, false);
+      assert.equal(app.element('source-topic-match').textContent, lang === 'zh' ? '按完整主题精确匹配。' : 'Matches this topic exactly.');
+    }
+    // A known ID matches exactly; other text matches topic IDs and labels by substring.
+    input.emit('input', 'ghidra');
+    assert.deepEqual(shownNames(app), ['re/ghidra']);
+    assert.equal(app.element('source-topic-options').children[0].value, 'Ghidra · ghidra', 'The exact topic leads the suggestions');
+    input.emit('input', 'ghidra-');
+    assert.equal(app.api.sourceState.topic, 'ghidra-');
+    assert.deepEqual(shownNames(app), ['re/general', 're/plugin']);
+    assert.equal(app.element('source-topic-match').textContent, lang === 'zh' ? '匹配包含这些文字的主题。' : 'Matches topics containing this text.');
+    input.emit('input', lang === 'zh' ? '逆向' : 'engineering');
+    assert.deepEqual(shownNames(app), ['re/general', 're/ghidra']);
+    // A restored topic is shown with its localized label; unlabeled topics keep their ID.
+    for (const [topic, display] of [['reverse-engineering', `${labels['reverse-engineering'][lang]} · reverse-engineering`], ['web', 'web']]) {
+      const restored = await loaded(`?view=source-index&lang=${lang}&topic=${topic}`, {catalog: catalogOf([curatedRecord(1)], {topic_labels: labels}), browser: browserOf(topicRows)});
+      assert.equal(restored.element('source-topic').value, display);
+    }
+  }
+
+  // Target buttons and Type/Category options count what they would show given the other filters and the query.
+  for (const lang of ['en', 'zh']) {
+    const rows = [
+      curatedRecord(1, {kind: 'case-study', category: 'reconstruction-cases', targets: ['game', 'website']}),
+      curatedRecord(2, {kind: 'case-study', category: 'reconstruction-cases', targets: ['app']}),
+      curatedRecord(3, {kind: 'tool', category: 'dotnet', targets: ['app'], name: 'Decompiler fixture'}),
+      curatedRecord(4, {kind: 'tool', category: 'dynamic-analysis', targets: ['binary'], name: 'Decompiler tracer'}),
+      curatedRecord(5, {kind: 'integration', category: 'agent-mcp', targets: ['binary', 'protocol']}),
+    ];
+    // build_site.py supplies category labels in the catalog; the option text pairs each label with its count.
+    const category_labels = {'reconstruction-cases': ['Reconstruction cases', '重建案例'], dotnet: ['.NET', '.NET'],
+                             'dynamic-analysis': ['Dynamic analysis', '动态分析'], 'agent-mcp': ['MCP servers', 'MCP 服务']};
+    const app = await loaded(`?lang=${lang}&kind=case-study&category=dotnet`, {catalog: catalogOf(rows, {category_labels})});
+    const counts = () => Object.fromEntries(app.marked.filter(node => 'targetCount' in node.dataset).map(node => [node.dataset.targetCount, node.textContent]));
+    const disabledTargets = () => app.marked.filter(node => 'target' in node.dataset && node.disabled).map(node => node.dataset.target);
+    const options = id => app.element(id).children.map(option => [option.value, option.textContent, Boolean(option.disabled)]);
+    const n = (text, count) => lang === 'zh' ? `${text}（${count}）` : `${text} (${count})`;
+    // A shared URL with no results keeps both of its selected values enabled.
+    assert.equal(app.api.filtered().length, 0);
+    assert.deepEqual(counts(), {all: '0', website: '0', game: '0', app: '0', binary: '0', firmware: '0', protocol: '0'});
+    assert.deepEqual(disabledTargets(), ['website', 'game', 'app', 'binary', 'firmware', 'protocol']);
+    const category = Object.fromEntries(options('category-select').map(([value, text, disabled]) => [value, [text, disabled]]));
+    assert.deepEqual(category.dotnet, [n('.NET', 0), false]);
+    assert.equal(category['reconstruction-cases'][1], false);
+    assert.equal(category['agent-mcp'][1], true, 'no case study is an MCP server');
+    assert.deepEqual(options('kind-select').find(([value]) => value === 'tool'), ['tool', n(lang === 'zh' ? '工具' : 'Tool', 1), false]);
+    assert.deepEqual(options('kind-select').find(([value]) => value === 'case-study'), ['case-study', n(lang === 'zh' ? '案例' : 'Case study', 0), false]);
+    // Clearing the category recounts targets and types; the Type menu ignores its own selection.
+    app.element('category-select').emit('change', 'all');
+    assert.deepEqual(counts(), {all: '2', website: '1', game: '1', app: '1', binary: '0', firmware: '0', protocol: '0'});
+    assert.deepEqual(disabledTargets(), ['binary', 'firmware', 'protocol']);
+    assert.deepEqual(options('kind-select').map(([, text]) => text)[0], n(lang === 'zh' ? '所有类型' : 'All types', 5));
+    assert.deepEqual(options('category-select')[0].slice(1), [n(lang === 'zh' ? '所有类别' : 'All categories', 2), false]);
+    // Typing recounts without moving focus; the results status stays the only live region.
+    app.element('kind-select').emit('change', 'all');
+    const search = app.element('search-input'); search.focus();
+    search.emit('input', 'decompiler');
+    assert.equal(app.document.activeElement, search);
+    assert.deepEqual(counts(), {all: '2', website: '0', game: '0', app: '1', binary: '1', firmware: '0', protocol: '0'});
+    assert.deepEqual(options('kind-select').find(([value]) => value === 'tool').slice(1), [n(lang === 'zh' ? '工具' : 'Tool', 2), false]);
+    assert.deepEqual(options('kind-select').find(([value]) => value === 'case-study').slice(1), [n(lang === 'zh' ? '案例' : 'Case study', 0), true]);
+    // The counts add no live region: only the page's status lines (results, repositories, Get data, exports, shortlist, Show More, copied links) are announced.
+    assert.deepEqual(app.marked.filter(node => node.attrs['aria-live']).map(node => node.id).sort(), ['copy-link-status', 'data-clone-status', 'data-copy-status', 'export-matches-status', 'more-status', 'results-status', 'shortlist-dialog-status', 'shortlist-status', 'source-export-matches-status', 'source-more-status', 'source-status']);
+    assert(app.element('kind-select').children.every(option => !option.attrs['aria-live']));
+  }
+
+  // Show More adds 15 curated or 24 repository records and hides its row when none remain.
+  for (const lang of ['en', 'zh']) {
+    const app = await loaded(`?lang=${lang}`, {catalog: catalogOf(Array.from({length: 40}, (_, index) => curatedRecord(index))),
+      browser: browserOf(Array.from({length: 60}, (_, index) => repository(`many/repo-${String(index).padStart(2, '0')}`, {stars: 100 - index})))});
+    const curatedShown = () => [app.element('resource-grid').children.length, app.element('load-more-row').hidden, app.element('remaining-count').textContent, app.element('shown-count').textContent];
+    assert.deepEqual(curatedShown(), [15, false, '+15', lang === 'zh' ? '已显示 15 / 40 项' : '15 of 40 resources shown']);
+    app.element('load-more').handlers.click();
+    assert.deepEqual(curatedShown(), [30, false, '+10', lang === 'zh' ? '已显示 30 / 40 项' : '30 of 40 resources shown']);
+    assert.equal(app.document.activeElement, byClass(app.element('resource-grid').children[15], 'card-title-link')[0]);
+    app.element('load-more').handlers.click();
+    assert.deepEqual(curatedShown(), [40, true, '+0', lang === 'zh' ? '已显示 40 / 40 项' : '40 of 40 resources shown']);
+    app.api.setIndexMode('source-index');
+    const sourceShown = () => [app.element('source-results').children.length, app.element('source-more-row').hidden, app.element('source-more-count').textContent, app.element('source-shown').textContent];
+    assert.deepEqual(sourceShown(), [24, false, '+24', lang === 'zh' ? '已显示 24 / 60 个仓库' : '24 of 60 repositories shown']);
+    app.element('source-more').handlers.click();
+    assert.deepEqual(sourceShown(), [48, false, '+12', lang === 'zh' ? '已显示 48 / 60 个仓库' : '48 of 60 repositories shown']);
+    assert.equal(app.document.activeElement, byClass(app.element('source-results').children[24], 'source-title-link')[0]);
+    app.element('source-more').handlers.click();
+    assert.deepEqual(sourceShown(), [60, true, '+0', lang === 'zh' ? '已显示 60 / 60 个仓库' : '60 of 60 repositories shown']);
+    // Any new filter starts again from the first page.
+    app.element('source-search').emit('input', 'repo');
+    assert.deepEqual(sourceShown(), [24, false, '+24', lang === 'zh' ? '已显示 24 / 60 个仓库' : '24 of 60 repositories shown']);
+  }
+
+  // Show More appends the next batch to the cards already shown; the result equals a full rebuild at the same depth.
+  {
+    const kinds = ['documentation', 'tool', 'case-study', 'integration', 'project'];
+    const app = await loaded('', {catalog: catalogOf(Array.from({length: 50}, (_, index) => curatedRecord(index, {kind: kinds[index % kinds.length]}))),
+      browser: browserOf(Array.from({length: 90}, (_, index) => repository(`order/repo-${index}`, {stars: (index * 37) % 11})))});
+    const ids = container => app.element(container).children.map(card => card.dataset.recordId);
+    for (const [container, more, page, total] of [['resource-grid', 'load-more', 15, 50], ['source-results', 'source-more', 24, 90]]) {
+      if (container === 'source-results') app.api.setIndexMode('source-index');
+      const kept = app.element(container).children.slice();
+      for (let shown = page; shown < total; shown += page) {
+        app.element(more).handlers.click();
+        assert.deepEqual(app.element(container).children.slice(0, kept.length), kept, `${more} keeps the cards already shown`);
+        kept.splice(0, kept.length, ...app.element(container).children);
+      }
+      const appended = ids(container);
+      assert.equal(appended.length, total);
+      app.api.applyLanguage();
+      assert.deepEqual(ids(container), appended, `${more} shows the same records in the same order as a full render`);
+    }
+  }
+
+  {
+    // With exactly one more page left, the row hides as soon as the last record is shown.
+    const app = await loaded('', {catalog: catalogOf(Array.from({length: 30}, (_, index) => curatedRecord(index))),
+      browser: browserOf(Array.from({length: 48}, (_, index) => repository(`even/repo-${index}`)))});
+    app.element('load-more').handlers.click();
+    assert.deepEqual([app.element('resource-grid').children.length, app.element('load-more-row').hidden], [30, true]);
+    app.api.setIndexMode('source-index'); app.element('source-more').handlers.click();
+    assert.deepEqual([app.element('source-results').children.length, app.element('source-more-row').hidden], [48, true]);
+  }
+
+  // Remaining curated controls: menus, group links, the empty-state reset, mode buttons and the "/" shortcut.
+  {
+    const rows = [curatedRecord(1), curatedRecord(2, {kind: 'case-study', category: 'reconstruction-cases', group: 'rea'}), curatedRecord(3, {group: 'learn', kind: 'documentation'})];
+    const extraMarkup = '<button data-group="all"></button><button data-group="rea"></button><span data-count="all"></span><span data-count="rea"></span>';
+    const app = await loaded('?lang=zh&group=unknown', {catalog: catalogOf(rows), browser: valid, extraMarkup});
+    assert.equal(app.api.state.group, 'all');
+    assert.deepEqual(app.marked.filter(node => 'count' in node.dataset).map(node => node.textContent), [3, 1]);
+    const localized = app.marked.filter(node => node.dataset.localePath === 'about' || node.dataset.localeFragment === 'game').map(node => node.href);
+    // The directory's About link, a subject link and the collection note under the curated filters.
+    assert.deepEqual(localized, ['/zh/about/', '/zh/resources/#game', '/zh/about/']);
+    assert(app.marked.filter(node => 'i18nPlaceholder' in node.dataset).every(node => node.placeholder && node.placeholder !== node.dataset.i18nPlaceholder));
+    assert(app.marked.filter(node => 'i18nAria' in node.dataset).every(node => /[一-鿿]/.test(node.attrs['aria-label'])));
+    const group = app.marked.find(node => node.dataset.group === 'rea');
+    app.api.state.visible = 30; group.handlers.click();
+    assert.deepEqual([app.api.state.group, app.api.state.visible, urlParam(app, 'group'), group.attrs['aria-pressed'], group.classes.has('active')], ['rea', 15, 'rea', 'true', true]);
+    assert.deepEqual(app.api.filtered().map(record => record.id), ['curated-2']);
+    app.element('kind-select').emit('change', 'tool');
+    assert.equal(urlParam(app, 'kind'), 'tool');
+    assert.equal(app.element('results-status').textContent, '0 项匹配资源 · 目录共 3 项');
+    assert.equal(app.element('empty-state').hidden, false);
+    app.element('empty-reset').handlers.click();
+    assert.deepEqual([app.api.state.group, app.api.state.kind, app.element('empty-state').hidden, urlParam(app, 'group'), urlParam(app, 'kind')], ['all', 'all', true, null, null]);
+    assert.equal(app.document.activeElement, app.element('search-input'));
+    app.element('category-select').emit('change', 'reconstruction-cases');
+    assert.deepEqual([urlParam(app, 'category'), app.api.filtered().length, app.element('clear-filters').hidden], ['reconstruction-cases', 1, false]);
+    const keydown = (key, changes = {}) => { let prevented = false; app.document.listeners.keydown({key, ctrlKey: false, metaKey: false, altKey: false, preventDefault: () => { prevented = true; }, ...changes}); return prevented; };
+    app.document.activeElement = Object.assign(app.document.createElement('body'), {tagName: 'BODY'});
+    assert.equal(keydown('/'), true);
+    assert.equal(app.document.activeElement, app.element('search-input'));
+    for (const [key, changes] of [['/', {ctrlKey: true}], ['k', {}]]) {
+      app.document.activeElement = Object.assign(app.document.createElement('body'), {tagName: 'BODY'});
+      assert.equal(keydown(key, changes), false);
+    }
+    app.document.activeElement = Object.assign(app.document.createElement('input'), {tagName: 'INPUT'});
+    assert.equal(keydown('/'), false, 'Typing a slash into a field is left alone');
+    app.element('mode-sources').handlers.click();
+    assert.deepEqual([app.api.sourceState.mode, app.element('source-view').hidden, app.element('curated-view').hidden, urlParam(app, 'view')], ['source-index', false, true, 'source-index']);
+    app.document.activeElement = Object.assign(app.document.createElement('body'), {tagName: 'BODY'});
+    keydown('/');
+    assert.equal(app.document.activeElement, app.element('source-search'));
+    app.element('mode-curated').handlers.click();
+    assert.deepEqual([app.api.sourceState.mode, app.element('mode-curated').attrs['aria-pressed'], urlParam(app, 'view')], ['curated', 'true', null], 'The default curated view stays out of the URL');
+  }
+  // Phones fold Type and Category behind “More filters”: the toggle counts active selects and opens when the page starts filtered.
+  {
+    const rows = [curatedRecord(1), curatedRecord(2, {kind: 'case-study', category: 'reconstruction-cases'})];
+    const plain = await loaded('?lang=en', {catalog: catalogOf(rows), browser: valid});
+    const [toggle, panel, count] = ['more-filters', 'curated-selectors', 'more-filters-count'].map(plain.element);
+    assert.deepEqual([toggle.attrs['aria-expanded'], toggle.attrs['aria-controls'], panel.classes.has('is-open'), count.hidden], ['false', 'curated-selectors', false, true]);
+    toggle.handlers.click();
+    assert.deepEqual([toggle.attrs['aria-expanded'], panel.classes.has('is-open')], ['true', true]);
+    plain.element('kind-select').emit('change', 'tool');
+    assert.deepEqual([count.textContent, count.hidden], ['1', false]);
+    toggle.handlers.click();
+    assert.deepEqual([toggle.attrs['aria-expanded'], panel.classes.has('is-open'), count.hidden, urlParam(plain, 'kind')], ['false', false, false, 'tool']);
+    plain.element('clear-filters').handlers.click();
+    assert.deepEqual([count.hidden, toggle.attrs['aria-expanded']], [true, 'false']);
+    const filtered = await loaded('?lang=zh&kind=case-study&category=reconstruction-cases', {catalog: catalogOf(rows), browser: valid});
+    assert.deepEqual(['more-filters', 'curated-selectors', 'more-filters-count'].map(filtered.element).map((node, index) => [node.attrs['aria-expanded'], node.classes.has('is-open'), node.textContent][index]), ['true', true, '2']);
+  }
+
+  process.stdout.write('Repository browser logic passed\n');
+})().catch(error => { console.error(error); process.exitCode = 1; });

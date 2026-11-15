@@ -1,0 +1,48 @@
+# 文档索引
+
+[English](README.md) · [合集首页](../README.zh-CN.md)
+
+维护指南描述当前流程。调研笔记是带日期的存档快照，保留当时的证据与判断；其中的数量和计划不是当前目录统计。当前数量请看 [README 目录](../README.zh-CN.md#目录)中的计数，或运行 `python3 scripts/catalog.py`。
+
+## 参与贡献与目录数据
+
+| 文档 | 语言 | 状态 | 内容 |
+| --- | --- | --- | --- |
+| Agent 投稿与 PR 指南：[中文](agent-contributing.zh-CN.md)、[英文](agent-contributing.md) | 中英 | 当前 | Agent 指令、提交入口、证据、校验和 PR 流程 |
+| [中文贡献指南](../CONTRIBUTING.zh-CN.md) | 中文 | 当前（摘要） | 推荐资源与论文、字段选择、检查命令和术语对照 |
+| [贡献指南](../CONTRIBUTING.md) | 英文 | 当前（以此为准） | 完整的贡献、字段、论文、检查与审核规则 |
+| 第一个资源完整示例：[中文](first-resource.zh-CN.md)、[英文](first-resource.md) | 中英 | 当前 | 以一条已有记录说明需编辑与重新生成的文件、检查命令和 pull request |
+| [安全策略](../SECURITY.md#中文摘要) | 英文，附中文摘要 | 当前 | 私下报告安全问题 |
+| 论文更新指南：[中文](paper-updates.zh-CN.md)、[英文](paper-updates.md) | 中英 | 当前 | 预印本被接收或发表后原地更新记录，附完整示例 |
+| [目录格式](../data/README.md) | 英文 | 当前 | 精选、论文、对标、扫描与案例覆盖数据 |
+| 证据档位：[中文](evidence-classes.zh-CN.md)、[英文](evidence-classes.md) | 中英 | 当前 | 精选条目的 C0–C3、扫描仓库的 C1–C3，以及信号、Class 0 复核与局限 |
+| 研究产物与许可证据：[中文](artifact-evidence.zh-CN.md)、[英文](artifact-evidence.md) | 中英 | 当前 | 不可用、受限或仅有演示的研究产物、版本差异与许可冲突的措辞 |
+| [仓库简介本地化](../data/locales/README.md) | 英文 | 当前 | 自动扫描仓库的中英文简介 |
+| 仓库索引转精选复核工作表：[中文](promotion-worksheet.zh-CN.md)、[英文](promotion-worksheet.md) | 中英 | 当前 | 把已扫描仓库追溯为精选记录或暂缓，附完整示例 |
+
+## 维护指南
+
+| 文档 | 语言 | 状态 | 内容 |
+| --- | --- | --- | --- |
+| [仓库自动化](automation.md) | 英文 | 当前 | Pull request 规则审核与 CI |
+| [网站维护](website.md) | 英文 | 当前 | 网站构建、预览与托管 |
+| [搜索发现](search-discovery.md) | 英文 | 当前 | 搜索与问答引擎的收录、提交和衡量限制 |
+| [社区推广](community-outreach.md) | 英文 | 当前，平台规则复核于 2026-10-20 | 向 Hacker News、Reddit 等公开社区发帖前的检查清单 |
+| [人工发现观察](discovery/README.md) | 英文 | 当前 | 版本化检索问题与人工观察模板 |
+| [扫描方法](source-scan.md) | 英文 | 当前 | 自动仓库索引的采集方法 |
+| 论文列表：[中文](papers.zh-CN.md)、[英文](papers.md) | 中英 | 自动生成 | 按主题列出全部论文，从新到旧，行格式与 README 相同 |
+| 案例合集覆盖记录：[中文](case-coverage.zh-CN.md)、[英文](case-coverage.md) | 中英 | 自动生成 | 固定版本上游案例合集的清点记录 |
+| 仓库扫描索引：[中文](repositories/README.zh-CN.md)、[英文](repositories/README.md) | 中英 | 自动生成 | 按分类浏览仓库索引 |
+| [合集路线图](roadmap.md) | 英文 | 当前 | 收录优先级 |
+
+## 首发调研快照
+
+以下笔记只有中文版，记录 2026-10-15 至 2026-10-16 合集首发时的调研。目录格式说明引用其中的对标研究，笔记也保留了证据链接，因此作为存档公开保留；其中的数字不再按当前目录更新。
+
+| 文档 | 语言 | 状态 | 内容 |
+| --- | --- | --- | --- |
+| [REA 生态研究与首发内容建议](rea-ecosystem.zh-CN.md) | 中文 | 快照，采集于 2026-10-15 | 首轮复查的 25 条 REA 相关记录、相近目录与教程规划 |
+| [REA 周边工具：按任务选型](tool-landscape.zh-CN.md) | 中文 | 快照，首轮核验于 2026-10-15 | 首轮 47 条工具记录及首发补充 8 条的选型说明 |
+| [对标与首月计划](benchmark-research.zh-CN.md) | 中文 | 快照，观察于 2026-10-16（UTC） | 19 个仓库的对标、首发计划与 Star 目标 |
+
+对标研究对应 [benchmarks.json](../data/benchmarks.json)：2026-10-16T00:47:46Z 至 00:47:48Z 期间通过 GitHub REST API 对 19 个仓库（2 个指定锚点和 17 个对标仓库）做的一次观察。这些仓库是为覆盖高关注参考和直接近邻而有意挑选的，不是随机样本，因此不支持因果比较或增长估计。其中的 Star 目标和 30 天计划是首发时的规划存档，不是增长预测，也不是当前计划；当前优先事项见合集路线图（英文）。

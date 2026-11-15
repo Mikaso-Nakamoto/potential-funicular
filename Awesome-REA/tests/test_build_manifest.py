@@ -1,0 +1,174 @@
+"""Regression checks for CDN-only transformations in deployment verification."""
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from build_manifest import collect_manifest, html_digest, normalized_html_bytes, without_star_counts
+
+
+def protected(address, key=108):
+    encoded = bytes([key] + [byte ^ key for byte in address.encode()]).hex()
+    return '<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="' + encoded + '">[email&#160;protected]</a>'
+
+
+class CDNNormalizationTests(unittest.TestCase):
+    decoder = '<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>'
+
+    def test_public_email_and_decoder_preserve_expected_text(self):
+        for key in (0, 108, 255):
+            self.assertEqual(normalized_html_bytes(('<p>Contact: ' + protected('contact@example.org', key) + '</p>' + self.decoder + '\n').encode()), b'<p>Contact: contact@example.org</p>\n')
+
+    def test_attribute_names_in_any_case_are_still_reversed(self):
+        anchor = protected('contact@example.org').replace('data-cfemail', 'DATA-CFEMAIL')
+        decoder = self.decoder.replace('data-cfasync', 'Data-CfAsync')
+        self.assertEqual(normalized_html_bytes(('<p>' + anchor + '</p>' + decoder).encode()), b'<p>contact@example.org</p>')
+
+    def test_dotted_names_that_cloudflare_obfuscates_are_restored(self):
+        # A Homebrew formula name in a requirement: Cloudflare rewrites it, though it is no address.
+        self.assertEqual(normalized_html_bytes(('<li>Homebrew ' + protected('openssl@1.1') + ' paths</li>' + self.decoder).encode()),
+                         b'<li>Homebrew openssl@1.1 paths</li>')
+        for undotted in ('Pass@1', 'permuter@home', 'a@b.'):
+            with self.subTest(text=undotted):
+                anchor = protected(undotted)
+                self.assertEqual(normalized_html_bytes(anchor.encode()), anchor.encode())
+
+    def test_star_counts_stay_out_of_the_page_hashes(self):
+        page = '<a><span class="star-count" data-stars="reacher-z/Awesome-REA">{}</span></a>'
+        for count in ('44', '75', '1.0k', '1.2k'):
+            with self.subTest(count=count):
+                self.assertEqual(normalized_html_bytes(page.format(count).encode()), page.format('').encode())
+        for other in ('<span class="star-count">44</span>', '<span class="x" data-stars="a/b">forty</span>', '<p data-stars="a/b">44</p>'):
+            with self.subTest(other=other):
+                self.assertEqual(normalized_html_bytes(other.encode()), other.encode())
+
+    def test_star_counts_are_blanked_only_in_page_markup(self):
+        span = '<span class="star-count" data-stars="a/b">{}</span>'
+        for wrapper in ('<!-- {} -->', '<!-- {}', '<script>const a = \'{}\';</script>', '<SCRIPT type="module">{}</SCRIPT>', '<style>/* {} */</style>',
+                        '<textarea>{}</textarea>', '<title>{}</title>', '<noscript>{}</noscript>'):
+            page = wrapper.format(span.format(44)).encode()
+            self.assertEqual(without_star_counts(page), page, wrapper)
+        for before in ('<!-- x -->', '<script>const a = 1;</script>', '<style>a{}</style>', '<title>x</title>'):
+            page = f'{before}<a>{span.format(44)}</a>'.encode()
+            self.assertEqual(without_star_counts(page), f'{before}<a>{span.format("")}</a>'.encode(), before)
+
+    def test_a_metadata_refresh_changes_a_resource_page_hash_only_through_its_lasting_facts(self):
+        import build_entry_pages
+
+        def row(page_language, **facts):
+            facts = {'stars': 44, 'committed_at': '2026-11-01T00:00:00Z', 'language': 'C', 'license': 'MIT',
+                     'observed_at': '2026-11-08T04:40:00Z', **facts}
+            with mock.patch.object(build_entry_pages, 'repository_facts', return_value=facts):
+                return f'<main><h1>x</h1>{build_entry_pages._repository_row({}, page_language)}<p>y</p></main>'.encode()
+
+        for language in ('en', 'zh'):
+            with self.subTest(language=language):
+                base = html_digest(row(language))
+                self.assertEqual(html_digest(row(language, stars=1032, observed_at='2026-11-09T04:41:00Z')), base)
+                self.assertEqual(html_digest(row(language, stars=12)), base)
+                for lasting in ({'committed_at': '2026-11-09T00:00:00Z'}, {'language': 'Rust'}, {'license': 'GPL-3.0'},
+                                {'archived': True}):
+                    self.assertNotEqual(html_digest(row(language, **lasting)), base, lasting)
+                self.assertIn(b'2026-11-08', row(language))
+
+    def test_builds_differing_only_in_star_counts_have_one_manifest(self):
+        manifests = []
+        for count in ('44', '75'):
+            with tempfile.TemporaryDirectory() as directory:
+                site = Path(directory)
+                (site / 'sitemap.xml').write_text('<urlset/>', encoding='utf-8')
+                (site / 'index.html').write_text(f'<span class="ann-count" data-stars="a/b">{count}</span>', encoding='utf-8')
+                manifests.append(collect_manifest(site))
+        self.assertEqual(manifests[0], manifests[1])
+
+    def test_email_content_stays_hash_sensitive(self):
+        self.assertNotEqual(html_digest(b'<p>contact@example.org</p>'), html_digest(('<p>' + protected('different@example.org') + '</p>').encode()))
+
+    def test_email_looking_literals_preserve_script_and_raw_text(self):
+        anchor = protected('contact@example.org')
+        contexts = {
+            'script': '<script>const source = ' + repr(anchor) + ';</script>',
+            'style': '<style>p::after{content:' + repr(anchor) + '}</style>',
+            'comment': '<!-- ' + anchor + ' -->',
+            'textarea': '<textarea>' + anchor + '</textarea>',
+            'title': '<title>' + anchor + '</title>',
+            'xmp': '<xmp>' + anchor + '</xmp>',
+            'iframe': '<iframe>' + anchor + '</iframe>',
+            'noembed': '<noembed>' + anchor + '</noembed>',
+            'noframes': '<noframes>' + anchor + '</noframes>',
+            'noscript': '<noscript>' + anchor + '</noscript>',
+        }
+        for context, document in contexts.items():
+            with self.subTest(context=context):
+                self.assertEqual(normalized_html_bytes(document.encode()), document.encode())
+
+    def test_visible_email_does_not_normalize_identical_script_literal(self):
+        anchor = protected('contact@example.org')
+        script = '<script>const source = ' + repr(anchor) + ';</script>'
+        document = '<div><p>' + anchor + '</p></div>' + script + self.decoder
+        expected = '<div><p>contact@example.org</p></div>' + script
+        self.assertEqual(normalized_html_bytes(document.encode()), expected.encode())
+        changed_script = script.replace(anchor, 'contact@example.org')
+        self.assertNotEqual(html_digest(script.encode()), html_digest(changed_script.encode()))
+
+    def test_nonvoid_self_closing_spellings_remain_raw(self):
+        anchor = protected('contact@example.org')
+        for tag in ('script', 'style', 'textarea', 'title', 'xmp', 'iframe', 'noscript'):
+            document = '<' + tag + '/>' + anchor + '</' + tag + '>'
+            with self.subTest(tag=tag):
+                self.assertEqual(normalized_html_bytes(document.encode()), document.encode())
+        document = '<plaintext>text</plaintext>' + anchor + self.decoder
+        self.assertEqual(normalized_html_bytes(document.encode()), document.encode())
+
+    def test_self_closing_spelling_does_not_end_nonvoid_raw_element(self):
+        anchor = protected('contact@example.org')
+        for tag in ('script', 'style', 'textarea', 'title', 'xmp', 'iframe',
+                    'noembed', 'noframes', 'noscript'):
+            document = '<' + tag + '/>' + anchor + '</' + tag + '>'
+            with self.subTest(tag=tag):
+                self.assertEqual(normalized_html_bytes(document.encode()), document.encode())
+
+    def test_decoder_and_beacon_literals_are_not_suppressed(self):
+        beacon = '<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon="{}"></script>'
+        for label, snippet in (('decoder', self.decoder), ('beacon', beacon)):
+            contexts = {
+                'comment': '<!-- ' + snippet + ' -->',
+                'script': '<script>const source = ' + repr(snippet) + ';</script>',
+                'style': '<style>p::after{content:' + repr(snippet) + '}</style>',
+                'textarea': '<textarea>' + snippet + '</textarea>',
+                'title': '<title>' + snippet + '</title>',
+                'xmp': '<xmp>' + snippet + '</xmp>',
+                'iframe': '<iframe>' + snippet + '</iframe>',
+                'noembed': '<noembed>' + snippet + '</noembed>',
+                'noframes': '<noframes>' + snippet + '</noframes>',
+                'noscript': '<noscript>' + snippet + '</noscript>',
+            }
+            for context, document in contexts.items():
+                with self.subTest(snippet=label, context=context):
+                    self.assertEqual(normalized_html_bytes(document.encode()), document.encode())
+
+    def test_unexpected_email_markup_is_preserved(self):
+        anchor = protected('contact@example.org')
+        cases = [anchor.replace('class=', 'onclick="run()" class='), anchor.replace('class=', 'class="other" class='), anchor.replace('/cdn-cgi/', 'https://example.org/cdn-cgi/'), anchor.replace('[email&#160;protected]', 'changed'), anchor.replace('data-cfemail="', 'data-cfemail="z'), protected('<script>@example.org'), protected('private\n@example.org')]
+        for case in cases:
+            with self.subTest(case=case):
+                self.assertEqual(normalized_html_bytes(case.encode()), case.encode())
+
+    def test_unexpected_decoder_scripts_are_preserved(self):
+        cases = [self.decoder.replace('</script>', 'run()</script>'), self.decoder.replace('src=', 'type="module" src='), self.decoder.replace('src=', 'src="/unexpected.js" src='), self.decoder.replace('/cdn-cgi/', 'https://example.org/cdn-cgi/'), self.decoder.replace('email-decode.min.js', 'other.js')]
+        for case in cases:
+            with self.subTest(case=case):
+                self.assertEqual(normalized_html_bytes(case.encode()), case.encode())
+
+    def test_analytics_and_structured_data(self):
+        beacon = '<script type="module" defer src="https://static.cloudflareinsights.com/beacon.min.js/abc" data-cf-beacon="{}"></script>'
+        structured = '<script type="application/ld+json">{"name":"Awesome REA"}</script>'
+        self.assertEqual(normalized_html_bytes((structured + beacon).encode()), structured.encode())
+        for changed in (beacon.replace('module', 'application/ld+json'), beacon.replace('</script>', 'alert(1)</script>'), beacon.replace('type=', 'onclick="run()" type=')):
+            self.assertEqual(normalized_html_bytes(changed.encode()), changed.encode())
+
+
+if __name__ == '__main__':
+    unittest.main()

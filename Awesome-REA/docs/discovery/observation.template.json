@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "is_template": true,
+  "query_set": {
+    "id": "awesomerea-discovery",
+    "version": "1.0.0",
+    "query_id": null
+  },
+  "query": null,
+  "language": null,
+  "observed_at": null,
+  "surface": null,
+  "provider": null,
+  "provider_version": null,
+  "search_provider": null,
+  "search_ran": null,
+  "inspection_limit": null,
+  "outcome": null,
+  "public_source_urls": [],
+  "target_page_urls": [],
+  "attribution_note": null,
+  "notes": null
+}

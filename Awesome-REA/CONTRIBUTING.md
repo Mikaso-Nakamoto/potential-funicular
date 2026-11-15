@@ -1,0 +1,171 @@
+# Contributing to Awesome Reverse Engineering Anything
+
+For coding agents: start with [AGENTS.md](AGENTS.md) and the [agent submission and PR guide](docs/agent-contributing.md). The [public contribution page](https://awesomerea.org/contribute/) routes each suggestion to the right GitHub form.
+
+[简体中文快速入门](CONTRIBUTING.zh-CN.md)
+
+Help keep this collection useful, well organized, and current. Contributions can add a project, tool, case study, integration, related collection, or reference; correct an entry; or improve its category and description.
+
+## Suggest a resource
+
+Use the resource issue template or submit a pull request with:
+
+- **Name and original URL** — prefer the project maintainer's repository or website.
+- **Resource type** — project, tool, integration, case study, collection, documentation, learning resource, or research.
+- **Target area** — Website, Game, App, Binary, Firmware, or Protocol; multiple areas are allowed.
+- **Short description** — explain what the resource provides in your own words.
+- **Relevant conditions** — include platform, license, release, or external-tool requirements when they affect the description.
+- **Existing entry** — search the collection and open issues and pull requests first; the resource form asks you to confirm this. If the resource is already listed, give its catalog ID, the last part of its `/resources/<id>/` page address, and describe the update instead of requesting a second entry.
+- **Your connection** — say whether you maintain or contribute to the resource, have another connection, have none, or prefer not to say. This is separate from the resource's relationship to REA, implies no endorsement, official status or runtime verification, and needs no real name, employer or account details.
+
+Check the existing collection before adding a duplicate. A resource does not need a minimum number of Stars. Prefer original, maintained projects over copied forks. Claims about REA integration should be supported by the project's own documentation.
+
+For a first pull request, the [worked example](docs/first-resource.md) follows one existing record through every file you edit and regenerate.
+
+Use Protocol when primary evidence describes communication-format analysis, traffic dissection, message exchanges or protocol-state inference, including hardware buses. Generic network access, API usage or an MCP interface alone does not qualify. Binary-encoded messages do not imply executable Binary analysis. Preserve existing targets when adding another reviewed task area; do not retag historical scan records automatically.
+
+## Update the catalog
+
+Curated records live in `data/rea-resources.json` and `data/tool-resources.json`. Keep the English and Chinese descriptions concise. Use `kind` for the resource type and `targets` for its application areas; these are different dimensions. The website's translated names and requirements are in `site/translations.zh-CN.json`.
+
+Record a primary source and review date. `source-reviewed` means documentation was checked; it does not claim that the project was installed, audited, or reproduced. The larger `data/source-index.json` is an automated repository index and retains its separate provenance. To curate a repository found there, fill in the [review worksheet](docs/promotion-worksheet.md); the scan record itself is never upgraded.
+
+Runtime and reproduction results are currently out of scope for catalog records: every curated record uses `verification: source-reviewed`, every paper keeps `runtime_tested: false`, and there is no separate format for submitting test runs. You may describe what you ran in an issue to help reviewers check a claim, but it is not published as verification. After editing records, regenerate and validate:
+
+```sh
+python3 scripts/build_readme.py
+python3 scripts/build_repository_index.py
+python3 scripts/validate.py
+python3 scripts/build_site.py
+node --check site/app.js
+```
+
+Each README entry is one line: the linked name, the first sentence of its description, its tags and a “Full entry” link to the website page that keeps the full description, requirements and evidence. Write that first sentence so it summarizes the entry on its own. When the English sentence opens with the entry's name, the line drops the name and the word that joins it (“Mesen is an NES emulator …” becomes “An NES emulator …”), because the name is already the link and awesome-lint rejects a description that repeats it; the entry page keeps the sentence as written. Each section lists its 10 newest case studies and links to the generated case indexes, [docs/cases.md](docs/cases.md) and [docs/cases.zh-CN.md](docs/cases.zh-CN.md), which link to section pages in `docs/cases/`. Papers use the same one-line format, but each README lists only the 10 most recent, newest first by year and recorded publication date, with one link per topic into the full paper lists, [docs/papers.md](docs/papers.md) and [docs/papers.zh-CN.md](docs/papers.zh-CN.md). `build_readme.py` writes both case indexes, their section pages and both paper lists. GitHub stops rendering a README after 500 KiB (512,000 bytes), so `build_readme.py` reports the sizes of both READMEs, both indexes, both paper lists and the largest case section page. It and `validate.py` warn when a README passes 420,000 bytes; generated case pages must stay within that budget.
+
+Run every test with one command from the repository root. It needs Node.js for the browser tests and makes no network requests. A single module also runs from the root, for example `python3 -m unittest tests.test_protocol_target`.
+
+```sh
+python3 -m unittest discover -s tests -v
+```
+
+The required `validate` check runs no step itself. It is the aggregate of the parallel jobs in the `Catalog checks` workflow and succeeds only when the four `unit` shards, `production` and `browser` all succeed; a failed, skipped or cancelled job fails it. When `validate` fails, open the failed job in the check list:
+
+- `unit (0)`, `unit (1)`, `unit (2)` and `unit (3)` each byte-compile every script and test, then run their share of the tests that the test command discovers. [tests/unit_shards.py](tests/unit_shards.py) keeps each test class in one shard and checks that the shards together equal the whole discovery; `CI_TEST_SHARD=0 CI_TEST_SHARDS=3 python3 tests/unit_shards.py` runs the first shard locally. A syntax error fails every shard; a failing test appears in one of them.
+- `production` runs the production build. That build repeats catalog validation, including the check that the README sections, paper lists, repository directory and case-coverage summaries match their generators, then the JavaScript syntax check, the site build and both site validators, without fetching the asset origin.
+- `browser` runs the [browser smoke test](docs/website.md#browser-smoke-test), which rebuilds the site and loads it in headless Chrome.
+
+These commands are the equivalent sequential run. Locally, the smoke test skips with a message when Chrome or its pinned driver is missing.
+
+```sh
+python3 -m compileall -q scripts tests
+python3 -m unittest discover -s tests -v
+python3 scripts/build_production.py
+npm ci --prefix tests/browser --ignore-scripts
+node tests/browser/smoke.cjs
+```
+
+Use `python3 scripts/check_links.py` for live source checks. Rate limits and temporary network failures are reported separately from confirmed missing links. Report a dead or outdated entry with the [outdated-resource form](https://github.com/reacher-z/Awesome-REA/issues/new?template=broken-resource.yml), giving the affected IDs, observed status, check date and primary evidence. HTTP 403 or 429 responses, login pages, timeouts and redirects alone do not establish a removal or move; see [triaging source-link results](docs/automation.md#triage-source-link-results).
+
+### Choose kind, relationship, category and targets
+
+Choose these fields independently; apart from the [reconstruction pairing](#reconstruction-cases), one does not determine the others:
+
+- `kind`: what is being shared, such as a tool, integration or case study?
+- `relationship`: what connection to REA, an independent agent workflow, or a foundation tool does the evidence establish?
+- `category`: which task or tool family fits the resource?
+- `targets`: what subjects does it help analyze or reconstruct?
+- `class`: for a data point only, which one class does the original thing it reproduces belong to?
+
+A record is a data point when its main output reproduces one named real thing, as the [Data records](data/README.md#data-records) section of the format guide defines. Give it exactly one `class`: `software`, `game`, `apps`, `website`, `science` or `hardware`. Tools that work on any target take no class. Protocol is a tag from `targets`, and a protocol record takes the class of the thing the protocol belongs to.
+
+Use the current values in the [catalog format guide](data/README.md). These existing records show how the choices fit together; their linked evidence is documentation, not a claim that the tools were run:
+
+- **Independent reconstruction:** [`kef-lsx-volume-case`](data/tool-resources.json) uses `kind: case-study`, `relationship: independent-reconstruction`, `category: reconstruction-cases`, and `targets: [app]`. Its [source](https://github.com/roberdorfer/kef-lsx-volume/blob/6fbd7f76c63bf6d7da0979db4a1b312a064e0b4b/README.md) describes an app using LAN control; network access alone does not make the target `protocol` or establish a REA connection.
+- **Foundation tool:** [`ghidra`](data/tool-resources.json) uses `kind: tool`, `relationship: foundation`, `category: native-analysis`, and `targets: [binary, game, firmware]`. The [source](https://github.com/NationalSecurityAgency/ghidra/blob/864999d7ca67cd3f533be600860f102e54370661/README.md) supports the catalog's foundation-tool classification; no REA connection is implied. One tool-family category can serve several target domains.
+- **Integration:** [`playwright-mcp`](data/tool-resources.json) uses `kind: integration`, `relationship: independent-agent-integration`, `category: agent-mcp`, and `targets: [website]`. The [source](https://github.com/microsoft/playwright-mcp/blob/ea00e62b711700733a9eff05b149b48cd3eb1b48/README.md) describes an MCP interface; that alone does not establish official REA integration or protocol reverse engineering.
+- **Protocol analysis:** [`netzob`](data/tool-resources.json) uses `kind: tool`, `relationship: foundation`, `category: protocol-analysis`, and `targets: [protocol]`. Its [source](https://github.com/netzob/netzob/blob/088fe769e98e0bfbd3ed99e66b3982446bf8d197/README.rst) describes analysis of communication formats and state, rather than merely using a network connection.
+
+Choose multiple targets when the evidence supports each area. Category describes the task or tool family; targets describe its application areas. Keep existing reviewed targets rather than automatically reclassifying historical records. Game and Binary often overlap, so decide each from the evidence. A general binary-analysis tool gets Game only when its own documentation, or that of the engine it is built on, names game-specific use such as console CPUs, ROM or console executable formats, or game engines; being able to open any executable, games included, is not enough. Tag game reconstructions such as decompilations, static recompilations and ports as Game, and leave Binary to the recompiler, lifter or decompiler records they build on. Add Binary to a game case only when its evidence reports the executable analysis itself, such as disassembly, recovered functions or tool output, as a result.
+
+Paper ordering is separate from resource classification. In [papers.json](data/papers.json), `paper-pix2code` has `targets: [app, website]`; its first target selects the App reconstruction section. The [README builder](scripts/build_readme.py) uses `targets[0]` for ordinary papers and handles its agent-evaluation papers separately; the paper directory imports the same topic map. Do not sort paper targets or apply that ordering rule to resource categories.
+
+## Suggest a research paper
+
+Use the [paper submission form](https://github.com/reacher-z/Awesome-REA/issues/new?template=paper.yml). Include the canonical paper page or DOI, its publication status and the reverse-engineering task it studies. The form asks separately for publication and full-text links, for each date with its source, and for author-provided code, data or benchmark links with their availability: public, announced, hosted demo only, access-restricted or unavailable. A publisher's publication date, an arXiv version date and a conference event date are different facts. Answer "unknown" for anything you could not confirm; a suggestion is not a source review. An accessible paper does not imply that its benchmark or evaluation service is public.
+
+Bibliographic records live in `data/papers.json`, separately from the tool catalog and automated scan index. For a pull request, use the paper field table in the [catalog format guide](data/README.md), follow an existing record, and preserve the original title and full author names. Supply English and Chinese titles, summaries, relevance and limitations; distinguish preprints, conference acceptance, published proceedings and journal articles. Journal articles use `journal-article` and export as BibTeX `@article`; the journal title belongs in `venue`. Record only the verified date precision: never invent a publication day or conference date. Keep `runtime_tested` false unless the catalog schema and independent reproduction evidence are explicitly extended. Run `python3 scripts/validate_papers.py`, regenerate both READMEs and both paper lists with `python3 scripts/build_readme.py`, then run `python3 scripts/build_production.py`. When a listed preprint is accepted or published, update its record in place as the [paper update guide](docs/paper-updates.md) describes.
+
+Use a verified paper DOI or arXiv identifier whenever available. Never substitute a software or dataset DOI for a paper identifier. A published conference or workshop paper without either may use a reviewed publisher identity. Supported profiles pair a canonical USENIX Security presentation page with `/system/files/secYY-presenter.pdf`; USENIX Security 2024 instead uses `/system/files/usenixsecurity24-presenter.pdf`. A WOOT presentation page pairs with `/system/files/conference/wootYY/wootYY-paper-presenter.pdf`. WOOT 19 instead uses `/system/files/woot19-paper_presenter.pdf`; suffixed copies such as `woot19-paper_presenter_0.pdf` are not covered. The series, year and presenter must match, and both exact URLs must appear in `evidence_urls`. Other publisher profiles require a separate validator review. Preprints and accepted-but-unpublished papers still require a paper identifier. URL matching records an auditable source-review contract; reviewers must verify the actual publication, authors, date and PDF.
+
+## Reconstruction cases
+
+Use the [reconstruction-case form](https://github.com/reacher-z/Awesome-REA/issues/new?template=case-study.yml) in English or Simplified Chinese. Separate the original inputs, reconstructed output and evidence; partial or untested cases can be suggested. Title a case `<lead>: <what was reconstructed or found>`, leading with the project name as published and naming the game, app or device in the summary, as in `SpeedBreaker: statically recompiling Need for Speed: Most Wanted for Xbox 360`; the `name` row of the [catalog format guide](data/README.md) covers leads that contain a colon and works without a project name.
+
+Cases may use REA, other agents, or independent reverse-engineering tools. Use `independent-reconstruction` for a documented reconstruction project with no established REA connection, and `reconstruction-cases` as its category; validation rejects either value without the other. The `targets` describe the actual Website, Game, App, Binary, Firmware or Protocol domain. A case listed under Game should also set `reconstruction_method` from the [documented methods](data/README.md), using `other` when its evidence does not establish one; without it the case is listed under “Other reconstruction methods” and validation only warns. Identify author-reported results, incomplete behavior, platform limits and required original assets, and optionally label each `requirements` item with `requirement_facets` from the [catalog format guide](data/README.md); pages then list prerequisites first. Keep a pinned public source where possible; never include proprietary target binaries or private captures.
+
+The [case coverage ledger](data/case-coverage.json) tracks entries of pinned upstream case collections separately from catalog records; the [catalog format guide](data/README.md) describes it. After changing one of its entries, run `python3 scripts/build_case_coverage.py` to regenerate the [coverage summaries](docs/case-coverage.md), then `python3 scripts/validate.py`.
+
+## Badge for listed projects
+
+A listed project may link back to Awesome REA with the badge below. It is optional: adding it is never a condition of listing and does not affect review. The badge identifies a catalog listing; it does not certify software completeness or runtime verification. You may instead link to your specific entry at `https://awesomerea.org/resources/<id>/` (Chinese: `/zh/resources/<id>/`), or a paper entry at `/papers/<id>/`.
+
+```markdown
+[![Featured by Awesome REA](https://awesomerea.org/badges/featured-by-awesome-rea-inline.svg)](https://github.com/reacher-z/Awesome-REA)
+```
+
+The badge is a static 184 × 20 SVG served from the collection website, a copy of [assets/featured-by-awesome-rea-inline.svg](assets/featured-by-awesome-rea-inline.svg).
+
+## Review and publication
+
+Pull requests receive a [rule-based review](docs/automation.md) from trusted base-branch code. It checks catalog structure, duplicates, source fields, and common privacy mistakes without executing contributor code. A privacy check, [privacy_guard.py](scripts/privacy_guard.py), runs in the unit tests and the production build: it fails when a tracked file or the built site names or links people the maintainer has asked to keep out of the collection. It stores only salted digests of those names, so a failure reports a file and line, never the text; remove the match rather than quoting it in an issue or pull request. Maintainers review resource relevance and factual claims. Passing automation does not automatically approve or merge a contribution. The only exception is the scheduled [discovery ingest](docs/automation.md#automated-discovery-ingest), which merges its own pull requests that add unreviewed scan records to [data/discoveries/](data/discoveries/README.md) and nothing else.
+
+The protected `main` branch requires the `validate` and `review` checks before merging, including for administrators. After changes reach `main`, the publication workflows of `Awesome-REA/awesomerea.org` and `Awesome-REA/awesome-rea.com` build that commit and publish it with GitHub Pages. See the [website maintenance guide](docs/website.md).
+
+Because `review` runs the validators from `main`, not from your branch, a pull request that adds a field, a vocabulary value such as a category or relationship, a publisher profile or another validation rule together with data that uses it fails `review` until the validator change is on `main`, even when `validate`, which runs your branch's code, passes. Open the code change first, and the data that depends on it in a second pull request after the first merges. For example, [#212](https://github.com/reacher-z/Awesome-REA/pull/212) added the WOOT 19 publisher profile and [#215](https://github.com/reacher-z/Awesome-REA/pull/215) then added the paper that uses it; [#228](https://github.com/reacher-z/Awesome-REA/pull/228) introduced the optional paper `citation` field before [#234](https://github.com/reacher-z/Awesome-REA/pull/234) filled it in.
+
+Snapshot releases are tagged `vMAJOR.MINOR.PATCH` on `main` and attach the data snapshot to the GitHub release. Before tagging, a maintainer sets `version` in [CITATION.cff](CITATION.cff) to the tag without its `v`, and `date-released` to the UTC date the release is published, in the release commit itself. `validate.py` checks that both fields are present together, that `version` is a semantic version and that `date-released` is not in the future. Add a DOI or other identifier only after one has been minted.
+
+Do not include credentials, private account details, personal filesystem paths, proprietary binaries, or raw private captures in the public repository. Original contributions use the repository's MIT license; linked resources retain their own licenses. The [artifact and license evidence guide](docs/artifact-evidence.md) shows how records describe unavailable or gated artifacts, demos and conflicting license signals.
+
+Issues and pull requests are public. Remove tokens, cookies, account identifiers, local filesystem paths and private captures from anything you paste into them, including logs and screenshots. Report security problems, such as a workflow weakness, an exposed credential or a listed resource that appears compromised, privately under the [security policy](SECURITY.md).
+
+### Update a pull request
+
+`main` merges only branches that are up to date with it, and most catalog pull requests change the same generated files and append to the same JSON arrays, so another merge can leave your branch behind or conflicting. Update it locally by rebasing on `main`:
+
+```sh
+git fetch origin
+git rebase origin/main
+```
+
+Resolve each conflicting file by kind, data first:
+
+- **Generated files:** the `BEGIN GENERATED …` and `BEGIN REPOSITORY INDEX SUMMARY` blocks in `README.md` and `README.zh-CN.md`, the paper lists `docs/papers.md` and `docs/papers.zh-CN.md`, the case indexes `docs/cases.md` and `docs/cases.zh-CN.md` and every section page in `docs/cases/`, every page in `docs/repositories/`, and `docs/case-coverage.md` and `docs/case-coverage.zh-CN.md`. Take `main`'s copy and rebuild it once the data conflicts are resolved. Do not merge or edit these files by hand; the first line inside each README block and generated list names its generator and source files. If your branch also changes hand-written README text outside the blocks, reapply that edit.
+- **Data files:** `data/*.json` and `site/translations.zh-CN.json`. Keep both sides: the records `main` added or changed and the ones your branch adds or changes. New records go at the end of each array, so such a conflict usually holds both sides' new records; keep `main`'s first, then yours. Each ID appears once: the validators reject a duplicate record ID, and a repeated key in `site/translations.zh-CN.json` silently replaces the earlier one. In `data/case-coverage.json`, keep both sides' entry edits, then recompute `counts` from the merged entries, since `validate.py` reports `derived counts differ` until they match:
+
+  ```sh
+  python3 - <<'EOF'
+  import json, sys
+  sys.path.insert(0, 'scripts')
+  from case_coverage import coverage_counts, read_case_coverage
+  document = read_case_coverage()
+  document['counts'] = coverage_counts(document['entries'])
+  with open('data/case-coverage.json', 'w', encoding='utf-8') as stream:
+      stream.write(json.dumps(document, ensure_ascii=False, indent=2) + '\n')
+  EOF
+  ```
+
+- **JSON format:** keep two-space indentation, non-ASCII text written as is rather than as `\u` escapes, the existing key order and a trailing newline. This is the output of `json.dumps(value, ensure_ascii=False, indent=2)` plus `'\n'`, so a script that rewrites a file this way leaves unrelated lines unchanged.
+- **ID lists in tests,** such as the set of papers with citation metadata in `tests/test_paper_citations.py`: keep the union of both sides.
+
+Then rebuild the generated files, stage the result and continue; repeat for each commit that stops with a conflict:
+
+```sh
+python3 scripts/build_readme.py
+python3 scripts/build_repository_index.py
+python3 scripts/build_case_coverage.py
+git add -u
+git rebase --continue
+```
+
+When the rebase finishes, rerun the checks under [Update the catalog](#update-the-catalog) and push with `git push --force-with-lease`, which refuses to overwrite commits pushed to the branch since your last fetch.

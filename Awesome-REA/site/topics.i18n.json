@@ -1,0 +1,2114 @@
+{
+  "reverse-engineering": {
+    "en": "Reverse engineering",
+    "zh": "逆向工程"
+  },
+  "binary-analysis": {
+    "en": "Binary analysis",
+    "zh": "二进制分析"
+  },
+  "decompiler": {
+    "en": "Decompiler",
+    "zh": "反编译器"
+  },
+  "malware-analysis": {
+    "en": "Malware analysis",
+    "zh": "恶意软件分析"
+  },
+  "disassembler": {
+    "en": "Disassembler",
+    "zh": "反汇编器"
+  },
+  "decompilation": {
+    "en": "Decompilation",
+    "zh": "反编译"
+  },
+  "deobfuscation": {
+    "en": "Deobfuscation",
+    "zh": "去混淆"
+  },
+  "static-analysis": {
+    "en": "Static analysis",
+    "zh": "静态分析"
+  },
+  "firmware-analysis": {
+    "en": "Firmware analysis",
+    "zh": "固件分析"
+  },
+  "protocol-analysis": {
+    "en": "Protocol analysis",
+    "zh": "协议分析"
+  },
+  "cybersecurity": {
+    "en": "Cybersecurity",
+    "zh": "网络安全"
+  },
+  "mobile-security": {
+    "en": "Mobile security",
+    "zh": "移动安全"
+  },
+  "apk-analysis": {
+    "en": "APK analysis",
+    "zh": "APK 分析"
+  },
+  "android-security": {
+    "en": "Android security",
+    "zh": "Android 安全"
+  },
+  "security-tools": {
+    "en": "Security tools",
+    "zh": "安全工具"
+  },
+  "android-reverse-engineering": {
+    "en": "Android reverse engineering",
+    "zh": "Android 逆向工程"
+  },
+  "penetration-testing": {
+    "en": "Penetration testing",
+    "zh": "渗透测试"
+  },
+  "reverse-engineering-tools": {
+    "en": "Reverse engineering tools",
+    "zh": "逆向工程工具"
+  },
+  "dynamic-analysis": {
+    "en": "Dynamic analysis",
+    "zh": "动态分析"
+  },
+  "security-research": {
+    "en": "Security research",
+    "zh": "安全研究"
+  },
+  "obfuscation": {
+    "en": "Obfuscation",
+    "zh": "代码混淆"
+  },
+  "ai-agents": {
+    "en": "AI agents",
+    "zh": "AI 智能体"
+  },
+  "mcp-server": {
+    "en": "MCP server",
+    "zh": "MCP 服务"
+  },
+  "binary-diffing": {
+    "en": "Binary diffing",
+    "zh": "二进制差异分析"
+  },
+  "bytecode": {
+    "en": "Bytecode",
+    "zh": "字节码"
+  },
+  "cli": {
+    "en": "CLI",
+    "zh": "命令行工具"
+  },
+  "emulator": {
+    "en": "Emulator",
+    "zh": "模拟器"
+  },
+  "game": {
+    "en": "Game",
+    "zh": "游戏"
+  },
+  "games": {
+    "en": "Games",
+    "zh": "游戏"
+  },
+  "assembly": {
+    "en": "Assembly",
+    "zh": "汇编"
+  },
+  "automation": {
+    "en": "Automation",
+    "zh": "自动化"
+  },
+  "awesome-list": {
+    "en": "Awesome list",
+    "zh": "精选资源列表"
+  },
+  "binary": {
+    "en": "Binary",
+    "zh": "二进制"
+  },
+  "firmware": {
+    "en": "Firmware",
+    "zh": "固件"
+  },
+  "firmware-tools": {
+    "en": "Firmware tools",
+    "zh": "固件工具"
+  },
+  "vulnerability-research": {
+    "en": "Vulnerability research",
+    "zh": "漏洞研究"
+  },
+  "debugger": {
+    "en": "Debugger",
+    "zh": "调试器"
+  },
+  "malware-research": {
+    "en": "Malware research",
+    "zh": "恶意软件研究"
+  },
+  "debugging": {
+    "en": "Debugging",
+    "zh": "调试"
+  },
+  "modding": {
+    "en": "Modding",
+    "zh": "模组制作"
+  },
+  "analysis": {
+    "en": "Analysis",
+    "zh": "分析"
+  },
+  "ghidra-extension": {
+    "en": "Ghidra extension",
+    "zh": "Ghidra 扩展"
+  },
+  "ai-agent": {
+    "en": "AI agent",
+    "zh": "AI 智能体"
+  },
+  "iot": {
+    "en": "IoT",
+    "zh": "物联网"
+  },
+  "cryptography": {
+    "en": "Cryptography",
+    "zh": "密码学"
+  },
+  "forensics": {
+    "en": "Forensics",
+    "zh": "取证"
+  },
+  "network-analysis": {
+    "en": "Network analysis",
+    "zh": "网络分析"
+  },
+  "program-analysis": {
+    "en": "Program analysis",
+    "zh": "程序分析"
+  },
+  "plugin": {
+    "en": "Plugin",
+    "zh": "插件"
+  },
+  "network-security": {
+    "en": "Network security",
+    "zh": "网络安全"
+  },
+  "developer-tools": {
+    "en": "Developer tools",
+    "zh": "开发者工具"
+  },
+  "model-context-protocol": {
+    "en": "Model Context Protocol",
+    "zh": "模型上下文协议"
+  },
+  "ios-security": {
+    "en": "iOS security",
+    "zh": "iOS 安全"
+  },
+  "hooking": {
+    "en": "Hooking",
+    "zh": "钩子技术"
+  },
+  "game-reversing": {
+    "en": "Game reversing",
+    "zh": "游戏逆向"
+  },
+  "trainer": {
+    "en": "Trainer",
+    "zh": "修改器"
+  },
+  "symbolic-execution": {
+    "en": "Symbolic execution",
+    "zh": "符号执行"
+  },
+  "vulnerability-scanner": {
+    "en": "Vulnerability scanner",
+    "zh": "漏洞扫描器"
+  },
+  "agent-skills": {
+    "en": "Agent skills",
+    "zh": "智能体技能"
+  },
+  "fuzzing": {
+    "en": "Fuzzing",
+    "zh": "模糊测试"
+  },
+  "exploit-development": {
+    "en": "Exploit development",
+    "zh": "漏洞利用开发"
+  },
+  "instrumentation": {
+    "en": "Instrumentation",
+    "zh": "插桩"
+  },
+  "security-audit": {
+    "en": "Security audit",
+    "zh": "安全审计"
+  },
+  "unpacking": {
+    "en": "Unpacking",
+    "zh": "脱壳"
+  },
+  "compiler": {
+    "en": "Compiler",
+    "zh": "编译器"
+  },
+  "threat-intelligence": {
+    "en": "Threat intelligence",
+    "zh": "威胁情报"
+  },
+  "tools": {
+    "en": "Tools",
+    "zh": "工具"
+  },
+  "packet-analysis": {
+    "en": "Packet analysis",
+    "zh": "数据包分析"
+  },
+  "embedded": {
+    "en": "Embedded",
+    "zh": "嵌入式"
+  },
+  "bug-bounty": {
+    "en": "Bug bounty",
+    "zh": "漏洞赏金"
+  },
+  "research": {
+    "en": "Research",
+    "zh": "研究"
+  },
+  "framework": {
+    "en": "Framework",
+    "zh": "框架"
+  },
+  "mobile": {
+    "en": "Mobile",
+    "zh": "移动端"
+  },
+  "iot-security": {
+    "en": "IoT security",
+    "zh": "物联网安全"
+  },
+  "game-decompilation": {
+    "en": "Game decompilation",
+    "zh": "游戏反编译"
+  },
+  "artificial-intelligence": {
+    "en": "Artificial intelligence",
+    "zh": "人工智能"
+  },
+  "machine-learning": {
+    "en": "Machine learning",
+    "zh": "机器学习"
+  },
+  "deep-learning": {
+    "en": "Deep learning",
+    "zh": "深度学习"
+  },
+  "llm": {
+    "en": "LLM",
+    "zh": "大语言模型"
+  },
+  "llms": {
+    "en": "LLMs",
+    "zh": "大语言模型"
+  },
+  "ai": {
+    "en": "AI",
+    "zh": "人工智能"
+  },
+  "agent": {
+    "en": "Agent",
+    "zh": "智能体"
+  },
+  "agents": {
+    "en": "Agents",
+    "zh": "智能体"
+  },
+  "mcp-servers": {
+    "en": "MCP servers",
+    "zh": "MCP 服务"
+  },
+  "mcp-tools": {
+    "en": "MCP tools",
+    "zh": "MCP 工具"
+  },
+  "mcp": {
+    "en": "MCP",
+    "zh": "MCP"
+  },
+  "browser": {
+    "en": "Browser",
+    "zh": "浏览器"
+  },
+  "web": {
+    "en": "Web",
+    "zh": "网站"
+  },
+  "website": {
+    "en": "Website",
+    "zh": "网站"
+  },
+  "web-security": {
+    "en": "Web security",
+    "zh": "网站安全"
+  },
+  "web-scraping": {
+    "en": "Web scraping",
+    "zh": "网页抓取"
+  },
+  "scraping": {
+    "en": "Scraping",
+    "zh": "数据抓取"
+  },
+  "network": {
+    "en": "Network",
+    "zh": "网络"
+  },
+  "networking": {
+    "en": "Networking",
+    "zh": "网络通信"
+  },
+  "protocol": {
+    "en": "Protocol",
+    "zh": "协议"
+  },
+  "protocols": {
+    "en": "Protocols",
+    "zh": "协议"
+  },
+  "packet-capture": {
+    "en": "Packet capture",
+    "zh": "抓包"
+  },
+  "packet-sniffer": {
+    "en": "Packet sniffer",
+    "zh": "数据包嗅探器"
+  },
+  "traffic-analysis": {
+    "en": "Traffic analysis",
+    "zh": "流量分析"
+  },
+  "proxy": {
+    "en": "Proxy",
+    "zh": "代理"
+  },
+  "http-proxy": {
+    "en": "HTTP proxy",
+    "zh": "HTTP 代理"
+  },
+  "security": {
+    "en": "Security",
+    "zh": "安全"
+  },
+  "hacking": {
+    "en": "Hacking",
+    "zh": "黑客技术"
+  },
+  "pentesting": {
+    "en": "Pentesting",
+    "zh": "渗透测试"
+  },
+  "ctf": {
+    "en": "CTF",
+    "zh": "CTF 竞赛"
+  },
+  "ctf-tools": {
+    "en": "CTF tools",
+    "zh": "CTF 工具"
+  },
+  "ctf-writeups": {
+    "en": "CTF write-ups",
+    "zh": "CTF 题解"
+  },
+  "ctf-challenges": {
+    "en": "CTF challenges",
+    "zh": "CTF 题目"
+  },
+  "cheatsheet": {
+    "en": "Cheat sheet",
+    "zh": "速查表"
+  },
+  "cheat-sheet": {
+    "en": "Cheat sheet",
+    "zh": "速查表"
+  },
+  "awesome": {
+    "en": "Awesome",
+    "zh": "精选资源"
+  },
+  "awesome-lists": {
+    "en": "Awesome lists",
+    "zh": "精选资源列表"
+  },
+  "list": {
+    "en": "List",
+    "zh": "列表"
+  },
+  "collection": {
+    "en": "Collection",
+    "zh": "资源合集"
+  },
+  "resources": {
+    "en": "Resources",
+    "zh": "资源"
+  },
+  "learning": {
+    "en": "Learning",
+    "zh": "学习资源"
+  },
+  "tutorial": {
+    "en": "Tutorial",
+    "zh": "教程"
+  },
+  "tutorials": {
+    "en": "Tutorials",
+    "zh": "教程"
+  },
+  "book": {
+    "en": "Book",
+    "zh": "书籍"
+  },
+  "books": {
+    "en": "Books",
+    "zh": "书籍"
+  },
+  "documentation": {
+    "en": "Documentation",
+    "zh": "文档"
+  },
+  "education": {
+    "en": "Education",
+    "zh": "教育"
+  },
+  "reversing": {
+    "en": "Reversing",
+    "zh": "逆向分析"
+  },
+  "reverse": {
+    "en": "Reverse",
+    "zh": "逆向"
+  },
+  "reverseengineering": {
+    "en": "Reverse engineering",
+    "zh": "逆向工程"
+  },
+  "re": {
+    "en": "RE",
+    "zh": "逆向工程"
+  },
+  "reverse-engineer": {
+    "en": "Reverse engineer",
+    "zh": "逆向分析"
+  },
+  "binary-rewriting": {
+    "en": "Binary rewriting",
+    "zh": "二进制重写"
+  },
+  "binary-exploitation": {
+    "en": "Binary exploitation",
+    "zh": "二进制漏洞利用"
+  },
+  "binary-instrumentation": {
+    "en": "Binary instrumentation",
+    "zh": "二进制插桩"
+  },
+  "binary-parser": {
+    "en": "Binary parser",
+    "zh": "二进制解析器"
+  },
+  "binary-format": {
+    "en": "Binary format",
+    "zh": "二进制格式"
+  },
+  "binary-diff": {
+    "en": "Binary diff",
+    "zh": "二进制差异"
+  },
+  "hex-editor": {
+    "en": "Hex editor",
+    "zh": "十六进制编辑器"
+  },
+  "hex": {
+    "en": "Hex",
+    "zh": "十六进制"
+  },
+  "disassembly": {
+    "en": "Disassembly",
+    "zh": "反汇编"
+  },
+  "decompile": {
+    "en": "Decompile",
+    "zh": "反编译"
+  },
+  "deobfuscator": {
+    "en": "Deobfuscator",
+    "zh": "去混淆工具"
+  },
+  "obfuscator": {
+    "en": "Obfuscator",
+    "zh": "混淆器"
+  },
+  "code-analysis": {
+    "en": "Code analysis",
+    "zh": "代码分析"
+  },
+  "code-generation": {
+    "en": "Code generation",
+    "zh": "代码生成"
+  },
+  "source-code": {
+    "en": "Source code",
+    "zh": "源代码"
+  },
+  "source-code-analysis": {
+    "en": "Source code analysis",
+    "zh": "源代码分析"
+  },
+  "source-code-recovery": {
+    "en": "Source code recovery",
+    "zh": "源码恢复"
+  },
+  "control-flow": {
+    "en": "Control flow",
+    "zh": "控制流"
+  },
+  "control-flow-graph": {
+    "en": "Control flow graph",
+    "zh": "控制流图"
+  },
+  "control-flow-flattening": {
+    "en": "Control flow flattening",
+    "zh": "控制流平坦化"
+  },
+  "data-flow-analysis": {
+    "en": "Data flow analysis",
+    "zh": "数据流分析"
+  },
+  "taint-analysis": {
+    "en": "Taint analysis",
+    "zh": "污点分析"
+  },
+  "abstract-interpretation": {
+    "en": "Abstract interpretation",
+    "zh": "抽象解释"
+  },
+  "emulation": {
+    "en": "Emulation",
+    "zh": "模拟执行"
+  },
+  "virtualization": {
+    "en": "Virtualization",
+    "zh": "虚拟化"
+  },
+  "virtual-machine": {
+    "en": "Virtual machine",
+    "zh": "虚拟机"
+  },
+  "virtual-machines": {
+    "en": "Virtual machines",
+    "zh": "虚拟机"
+  },
+  "symbolic-analysis": {
+    "en": "Symbolic analysis",
+    "zh": "符号分析"
+  },
+  "concolic-execution": {
+    "en": "Concolic execution",
+    "zh": "混合符号执行"
+  },
+  "memory": {
+    "en": "Memory",
+    "zh": "内存"
+  },
+  "memory-analysis": {
+    "en": "Memory analysis",
+    "zh": "内存分析"
+  },
+  "memory-forensics": {
+    "en": "Memory forensics",
+    "zh": "内存取证"
+  },
+  "memory-scanner": {
+    "en": "Memory scanner",
+    "zh": "内存扫描器"
+  },
+  "memory-editing": {
+    "en": "Memory editing",
+    "zh": "内存编辑"
+  },
+  "memory-dump": {
+    "en": "Memory dump",
+    "zh": "内存转储"
+  },
+  "dump": {
+    "en": "Dump",
+    "zh": "转储"
+  },
+  "dumper": {
+    "en": "Dumper",
+    "zh": "转储工具"
+  },
+  "patching": {
+    "en": "Patching",
+    "zh": "补丁修改"
+  },
+  "patch": {
+    "en": "Patch",
+    "zh": "补丁"
+  },
+  "malware": {
+    "en": "Malware",
+    "zh": "恶意软件"
+  },
+  "ransomware": {
+    "en": "Ransomware",
+    "zh": "勒索软件"
+  },
+  "rootkit": {
+    "en": "Rootkit",
+    "zh": "根套件"
+  },
+  "antivirus": {
+    "en": "Antivirus",
+    "zh": "反病毒"
+  },
+  "anti-debugging": {
+    "en": "Anti-debugging",
+    "zh": "反调试"
+  },
+  "anti-analysis": {
+    "en": "Anti-analysis",
+    "zh": "反分析"
+  },
+  "anti-cheat": {
+    "en": "Anti-cheat",
+    "zh": "反作弊"
+  },
+  "anticheat": {
+    "en": "Anti-cheat",
+    "zh": "反作弊"
+  },
+  "sandbox": {
+    "en": "Sandbox",
+    "zh": "沙箱"
+  },
+  "sandboxing": {
+    "en": "Sandboxing",
+    "zh": "沙箱隔离"
+  },
+  "vulnerability": {
+    "en": "Vulnerability",
+    "zh": "漏洞"
+  },
+  "vulnerabilities": {
+    "en": "Vulnerabilities",
+    "zh": "漏洞"
+  },
+  "vulnerability-detection": {
+    "en": "Vulnerability detection",
+    "zh": "漏洞检测"
+  },
+  "vulnerability-analysis": {
+    "en": "Vulnerability analysis",
+    "zh": "漏洞分析"
+  },
+  "exploit": {
+    "en": "Exploit",
+    "zh": "漏洞利用"
+  },
+  "exploits": {
+    "en": "Exploits",
+    "zh": "漏洞利用"
+  },
+  "exploitation": {
+    "en": "Exploitation",
+    "zh": "漏洞利用"
+  },
+  "pwn": {
+    "en": "Pwn",
+    "zh": "二进制漏洞利用"
+  },
+  "shellcode": {
+    "en": "Shellcode",
+    "zh": "载荷代码"
+  },
+  "payload": {
+    "en": "Payload",
+    "zh": "载荷"
+  },
+  "red-team": {
+    "en": "Red team",
+    "zh": "红队"
+  },
+  "redteam": {
+    "en": "Red team",
+    "zh": "红队"
+  },
+  "red-teaming": {
+    "en": "Red teaming",
+    "zh": "红队测试"
+  },
+  "blueteam": {
+    "en": "Blue team",
+    "zh": "蓝队"
+  },
+  "blue-team": {
+    "en": "Blue team",
+    "zh": "蓝队"
+  },
+  "digital-forensics": {
+    "en": "Digital forensics",
+    "zh": "数字取证"
+  },
+  "incident-response": {
+    "en": "Incident response",
+    "zh": "事件响应"
+  },
+  "threat-hunting": {
+    "en": "Threat hunting",
+    "zh": "威胁狩猎"
+  },
+  "osint": {
+    "en": "OSINT",
+    "zh": "开源情报"
+  },
+  "privacy": {
+    "en": "Privacy",
+    "zh": "隐私"
+  },
+  "reconnaissance": {
+    "en": "Reconnaissance",
+    "zh": "侦察"
+  },
+  "recon": {
+    "en": "Recon",
+    "zh": "侦察"
+  },
+  "encryption": {
+    "en": "Encryption",
+    "zh": "加密"
+  },
+  "decryption": {
+    "en": "Decryption",
+    "zh": "解密"
+  },
+  "crypto": {
+    "en": "Crypto",
+    "zh": "密码学"
+  },
+  "cryptanalysis": {
+    "en": "Cryptanalysis",
+    "zh": "密码分析"
+  },
+  "password": {
+    "en": "Password",
+    "zh": "密码"
+  },
+  "password-cracking": {
+    "en": "Password cracking",
+    "zh": "密码破解"
+  },
+  "api": {
+    "en": "API",
+    "zh": "API"
+  },
+  "api-security": {
+    "en": "API security",
+    "zh": "API 安全"
+  },
+  "api-reverse-engineering": {
+    "en": "API reverse engineering",
+    "zh": "API 逆向工程"
+  },
+  "websocket": {
+    "en": "WebSocket",
+    "zh": "WebSocket"
+  },
+  "webassembly": {
+    "en": "WebAssembly",
+    "zh": "WebAssembly"
+  },
+  "wasm": {
+    "en": "Wasm",
+    "zh": "Wasm"
+  },
+  "android": {
+    "en": "Android",
+    "zh": "Android"
+  },
+  "ios": {
+    "en": "iOS",
+    "zh": "iOS"
+  },
+  "macos": {
+    "en": "macOS",
+    "zh": "macOS"
+  },
+  "windows": {
+    "en": "Windows",
+    "zh": "Windows"
+  },
+  "linux": {
+    "en": "Linux",
+    "zh": "Linux"
+  },
+  "javascript": {
+    "en": "JavaScript",
+    "zh": "JavaScript"
+  },
+  "typescript": {
+    "en": "TypeScript",
+    "zh": "TypeScript"
+  },
+  "python": {
+    "en": "Python",
+    "zh": "Python"
+  },
+  "java": {
+    "en": "Java",
+    "zh": "Java"
+  },
+  "csharp": {
+    "en": "C#",
+    "zh": "C#"
+  },
+  "c-sharp": {
+    "en": "C#",
+    "zh": "C#"
+  },
+  "dotnet": {
+    "en": ".NET",
+    "zh": ".NET"
+  },
+  "rust": {
+    "en": "Rust",
+    "zh": "Rust"
+  },
+  "golang": {
+    "en": "Go",
+    "zh": "Go"
+  },
+  "c": {
+    "en": "C",
+    "zh": "C"
+  },
+  "cpp": {
+    "en": "C++",
+    "zh": "C++"
+  },
+  "c-plus-plus": {
+    "en": "C++",
+    "zh": "C++"
+  },
+  "llvm": {
+    "en": "LLVM",
+    "zh": "LLVM"
+  },
+  "frida": {
+    "en": "Frida",
+    "zh": "Frida"
+  },
+  "ghidra": {
+    "en": "Ghidra",
+    "zh": "Ghidra"
+  },
+  "ida": {
+    "en": "IDA",
+    "zh": "IDA"
+  },
+  "ida-pro": {
+    "en": "IDA Pro",
+    "zh": "IDA Pro"
+  },
+  "idapro": {
+    "en": "IDA Pro",
+    "zh": "IDA Pro"
+  },
+  "ida-plugin": {
+    "en": "IDA plugin",
+    "zh": "IDA 插件"
+  },
+  "ghidra-plugin": {
+    "en": "Ghidra plugin",
+    "zh": "Ghidra 插件"
+  },
+  "frida-scripts": {
+    "en": "Frida scripts",
+    "zh": "Frida 脚本"
+  },
+  "frida-script": {
+    "en": "Frida script",
+    "zh": "Frida 脚本"
+  },
+  "frida-hook": {
+    "en": "Frida hook",
+    "zh": "Frida 钩子"
+  },
+  "radare2": {
+    "en": "radare2",
+    "zh": "radare2"
+  },
+  "rizin": {
+    "en": "Rizin",
+    "zh": "Rizin"
+  },
+  "cutter": {
+    "en": "Cutter",
+    "zh": "Cutter"
+  },
+  "x64dbg": {
+    "en": "x64dbg",
+    "zh": "x64dbg"
+  },
+  "x64dbg-plugin": {
+    "en": "x64dbg plugin",
+    "zh": "x64dbg 插件"
+  },
+  "gdb": {
+    "en": "GDB",
+    "zh": "GDB"
+  },
+  "lldb": {
+    "en": "LLDB",
+    "zh": "LLDB"
+  },
+  "lldb-plugin": {
+    "en": "LLDB plugin",
+    "zh": "LLDB 插件"
+  },
+  "unity": {
+    "en": "Unity",
+    "zh": "Unity"
+  },
+  "unity3d": {
+    "en": "Unity 3D",
+    "zh": "Unity 3D"
+  },
+  "unreal-engine": {
+    "en": "Unreal Engine",
+    "zh": "虚幻引擎"
+  },
+  "il2cpp": {
+    "en": "IL2CPP",
+    "zh": "IL2CPP"
+  },
+  "electron": {
+    "en": "Electron",
+    "zh": "Electron"
+  },
+  "apk": {
+    "en": "APK",
+    "zh": "APK"
+  },
+  "dex": {
+    "en": "DEX",
+    "zh": "DEX"
+  },
+  "elf": {
+    "en": "ELF",
+    "zh": "ELF"
+  },
+  "pe": {
+    "en": "PE",
+    "zh": "PE"
+  },
+  "x86": {
+    "en": "x86",
+    "zh": "x86"
+  },
+  "x64": {
+    "en": "x64",
+    "zh": "x64"
+  },
+  "arm": {
+    "en": "Arm",
+    "zh": "Arm"
+  },
+  "arm64": {
+    "en": "Arm64",
+    "zh": "Arm64"
+  },
+  "riscv": {
+    "en": "RISC-V",
+    "zh": "RISC-V"
+  },
+  "mips": {
+    "en": "MIPS",
+    "zh": "MIPS"
+  },
+  "jvm": {
+    "en": "JVM",
+    "zh": "JVM"
+  },
+  "kernel": {
+    "en": "Kernel",
+    "zh": "内核"
+  },
+  "driver": {
+    "en": "Driver",
+    "zh": "驱动"
+  },
+  "drivers": {
+    "en": "Drivers",
+    "zh": "驱动"
+  },
+  "operating-system": {
+    "en": "Operating system",
+    "zh": "操作系统"
+  },
+  "embedded-systems": {
+    "en": "Embedded systems",
+    "zh": "嵌入式系统"
+  },
+  "hardware": {
+    "en": "Hardware",
+    "zh": "硬件"
+  },
+  "hardware-hacking": {
+    "en": "Hardware hacking",
+    "zh": "硬件破解"
+  },
+  "hardware-security": {
+    "en": "Hardware security",
+    "zh": "硬件安全"
+  },
+  "file-format": {
+    "en": "File format",
+    "zh": "文件格式"
+  },
+  "file-formats": {
+    "en": "File formats",
+    "zh": "文件格式"
+  },
+  "file-analysis": {
+    "en": "File analysis",
+    "zh": "文件分析"
+  },
+  "parser": {
+    "en": "Parser",
+    "zh": "解析器"
+  },
+  "parsing": {
+    "en": "Parsing",
+    "zh": "解析"
+  },
+  "serialization": {
+    "en": "Serialization",
+    "zh": "序列化"
+  },
+  "deserialization": {
+    "en": "Deserialization",
+    "zh": "反序列化"
+  },
+  "compression": {
+    "en": "Compression",
+    "zh": "压缩"
+  },
+  "extraction": {
+    "en": "Extraction",
+    "zh": "提取"
+  },
+  "extractor": {
+    "en": "Extractor",
+    "zh": "提取工具"
+  },
+  "asset-extraction": {
+    "en": "Asset extraction",
+    "zh": "资源提取"
+  },
+  "game-assets": {
+    "en": "Game assets",
+    "zh": "游戏资源"
+  },
+  "game-hacking": {
+    "en": "Game hacking",
+    "zh": "游戏修改"
+  },
+  "game-modding": {
+    "en": "Game modding",
+    "zh": "游戏模组"
+  },
+  "game-development": {
+    "en": "Game development",
+    "zh": "游戏开发"
+  },
+  "game-engine": {
+    "en": "Game engine",
+    "zh": "游戏引擎"
+  },
+  "game-tools": {
+    "en": "Game tools",
+    "zh": "游戏工具"
+  },
+  "cheat": {
+    "en": "Cheat",
+    "zh": "作弊工具"
+  },
+  "cheats": {
+    "en": "Cheats",
+    "zh": "作弊工具"
+  },
+  "graphics": {
+    "en": "Graphics",
+    "zh": "图形"
+  },
+  "rendering": {
+    "en": "Rendering",
+    "zh": "渲染"
+  },
+  "gpu": {
+    "en": "GPU",
+    "zh": "GPU"
+  },
+  "opengl": {
+    "en": "OpenGL",
+    "zh": "OpenGL"
+  },
+  "vulkan": {
+    "en": "Vulkan",
+    "zh": "Vulkan"
+  },
+  "directx": {
+    "en": "DirectX",
+    "zh": "DirectX"
+  },
+  "reimplementation": {
+    "en": "Reimplementation",
+    "zh": "重新实现"
+  },
+  "reconstruction": {
+    "en": "Reconstruction",
+    "zh": "重建"
+  },
+  "compatibility": {
+    "en": "Compatibility",
+    "zh": "兼容性"
+  },
+  "preservation": {
+    "en": "Preservation",
+    "zh": "保存"
+  },
+  "software-preservation": {
+    "en": "Software preservation",
+    "zh": "软件保存"
+  },
+  "software": {
+    "en": "Software",
+    "zh": "软件"
+  },
+  "software-engineering": {
+    "en": "Software engineering",
+    "zh": "软件工程"
+  },
+  "software-analysis": {
+    "en": "Software analysis",
+    "zh": "软件分析"
+  },
+  "software-security": {
+    "en": "Software security",
+    "zh": "软件安全"
+  },
+  "code-review": {
+    "en": "Code review",
+    "zh": "代码审查"
+  },
+  "testing": {
+    "en": "Testing",
+    "zh": "测试"
+  },
+  "unit-testing": {
+    "en": "Unit testing",
+    "zh": "单元测试"
+  },
+  "integration": {
+    "en": "Integration",
+    "zh": "集成"
+  },
+  "plugins": {
+    "en": "Plugins",
+    "zh": "插件"
+  },
+  "extension": {
+    "en": "Extension",
+    "zh": "扩展"
+  },
+  "extensions": {
+    "en": "Extensions",
+    "zh": "扩展"
+  },
+  "command-line": {
+    "en": "Command line",
+    "zh": "命令行"
+  },
+  "command-line-tool": {
+    "en": "Command-line tool",
+    "zh": "命令行工具"
+  },
+  "gui": {
+    "en": "GUI",
+    "zh": "图形界面"
+  },
+  "visualization": {
+    "en": "Visualization",
+    "zh": "可视化"
+  },
+  "interactive": {
+    "en": "Interactive",
+    "zh": "交互式"
+  },
+  "cross-platform": {
+    "en": "Cross-platform",
+    "zh": "跨平台"
+  },
+  "open-source": {
+    "en": "Open source",
+    "zh": "开源"
+  },
+  "python3": {
+    "en": "Python 3",
+    "zh": "Python 3"
+  },
+  "chatgpt": {
+    "en": "ChatGPT",
+    "zh": "ChatGPT"
+  },
+  "claude": {
+    "en": "Claude",
+    "zh": "Claude"
+  },
+  "claude-code": {
+    "en": "Claude Code",
+    "zh": "Claude Code"
+  },
+  "codex": {
+    "en": "Codex",
+    "zh": "Codex"
+  },
+  "cursor": {
+    "en": "Cursor",
+    "zh": "Cursor"
+  },
+  "copilot": {
+    "en": "Copilot",
+    "zh": "Copilot"
+  },
+  "llm-agent": {
+    "en": "LLM agent",
+    "zh": "大模型智能体"
+  },
+  "llm-agents": {
+    "en": "LLM agents",
+    "zh": "大模型智能体"
+  },
+  "ai-tools": {
+    "en": "AI tools",
+    "zh": "AI 工具"
+  },
+  "ai-powered": {
+    "en": "AI-powered",
+    "zh": "AI 辅助"
+  },
+  "agentic": {
+    "en": "Agentic",
+    "zh": "智能体"
+  },
+  "agentic-ai": {
+    "en": "Agentic AI",
+    "zh": "AI 智能体"
+  },
+  "agentic-workflows": {
+    "en": "Agentic workflows",
+    "zh": "智能体工作流"
+  },
+  "prompt-engineering": {
+    "en": "Prompt engineering",
+    "zh": "提示词工程"
+  },
+  "skills": {
+    "en": "Skills",
+    "zh": "技能"
+  },
+  "skill": {
+    "en": "Skill",
+    "zh": "技能"
+  },
+  "benchmark": {
+    "en": "Benchmark",
+    "zh": "基准测试"
+  },
+  "benchmarks": {
+    "en": "Benchmarks",
+    "zh": "基准测试"
+  },
+  "dataset": {
+    "en": "Dataset",
+    "zh": "数据集"
+  },
+  "datasets": {
+    "en": "Datasets",
+    "zh": "数据集"
+  },
+  "paper": {
+    "en": "Paper",
+    "zh": "论文"
+  },
+  "papers": {
+    "en": "Papers",
+    "zh": "论文"
+  },
+  "academic": {
+    "en": "Academic",
+    "zh": "学术"
+  },
+  "research-paper": {
+    "en": "Research paper",
+    "zh": "研究论文"
+  },
+  "analyzer": {
+    "en": "Analyzer",
+    "zh": "分析器"
+  },
+  "decompiler-engine": {
+    "en": "Decompiler engine",
+    "zh": "反编译引擎"
+  },
+  "commandline": {
+    "en": "Command line",
+    "zh": "命令行"
+  },
+  "aiagent": {
+    "en": "AI agent",
+    "zh": "AI 智能体"
+  },
+  "detect": {
+    "en": "Detection",
+    "zh": "检测"
+  },
+  "detector": {
+    "en": "Detector",
+    "zh": "检测器"
+  },
+  "cpu-emulator": {
+    "en": "CPU emulator",
+    "zh": "CPU 模拟器"
+  },
+  "cross-architecture": {
+    "en": "Cross-architecture",
+    "zh": "跨架构"
+  },
+  "diffing": {
+    "en": "Diffing",
+    "zh": "差异比较"
+  },
+  "bundle": {
+    "en": "Bundle",
+    "zh": "打包"
+  },
+  "debundle": {
+    "en": "Debundle",
+    "zh": "解包"
+  },
+  "radare2-plugin": {
+    "en": "radare2 plugin",
+    "zh": "radare2 插件"
+  },
+  "idapython-plugin": {
+    "en": "IDAPython plugin",
+    "zh": "IDAPython 插件"
+  },
+  "hook": {
+    "en": "Hook",
+    "zh": "钩子"
+  },
+  "pentest": {
+    "en": "Penetration testing",
+    "zh": "渗透测试"
+  },
+  "assembler": {
+    "en": "Assembler",
+    "zh": "汇编器"
+  },
+  "infosec": {
+    "en": "Information security",
+    "zh": "信息安全"
+  },
+  "mod": {
+    "en": "Mod",
+    "zh": "模组"
+  },
+  "il2cpp-hacking": {
+    "en": "IL2CPP hacking",
+    "zh": "IL2CPP 修改"
+  },
+  "ghidra-scripts": {
+    "en": "Ghidra scripts",
+    "zh": "Ghidra 脚本"
+  },
+  "bugbounty": {
+    "en": "Bug bounty",
+    "zh": "漏洞赏金"
+  },
+  "apk-decompiler": {
+    "en": "APK decompiler",
+    "zh": "APK 反编译器"
+  },
+  "malware-detection": {
+    "en": "Malware detection",
+    "zh": "恶意软件检测"
+  },
+  "unpacker": {
+    "en": "Unpacker",
+    "zh": "脱壳工具"
+  },
+  "ethical-hacking": {
+    "en": "Ethical hacking",
+    "zh": "道德黑客技术"
+  },
+  "internal": {
+    "en": "Internal",
+    "zh": "内部"
+  },
+  "dfir": {
+    "en": "Digital forensics and incident response",
+    "zh": "数字取证与事件响应"
+  },
+  "android-pentesting": {
+    "en": "Android penetration testing",
+    "zh": "Android 渗透测试"
+  },
+  "hack": {
+    "en": "Hacking",
+    "zh": "黑客技术"
+  },
+  "offensive-security": {
+    "en": "Offensive security",
+    "zh": "进攻性安全"
+  },
+  "java-decompiler": {
+    "en": "Java decompiler",
+    "zh": "Java 反编译器"
+  },
+  "patcher": {
+    "en": "Patcher",
+    "zh": "补丁工具"
+  },
+  "portable-executable": {
+    "en": "Portable Executable",
+    "zh": "可移植可执行文件"
+  },
+  "yara-rules": {
+    "en": "YARA rules",
+    "zh": "YARA 规则"
+  },
+  "jadx-plugin": {
+    "en": "JADX plugin",
+    "zh": "JADX 插件"
+  },
+  "ai-security": {
+    "en": "AI security",
+    "zh": "AI 安全"
+  },
+  "cyber-security": {
+    "en": "Cybersecurity",
+    "zh": "网络安全"
+  },
+  "android-malware": {
+    "en": "Android malware",
+    "zh": "Android 恶意软件"
+  },
+  "injection": {
+    "en": "Injection",
+    "zh": "注入"
+  },
+  "debugging-tool": {
+    "en": "Debugging tool",
+    "zh": "调试工具"
+  },
+  "firmware-security": {
+    "en": "Firmware security",
+    "zh": "固件安全"
+  },
+  "ssl-pinning": {
+    "en": "SSL pinning",
+    "zh": "SSL 证书锁定"
+  },
+  "malware-development": {
+    "en": "Malware development",
+    "zh": "恶意软件开发"
+  },
+  "trace": {
+    "en": "Trace",
+    "zh": "跟踪"
+  },
+  "dynamic-instrumentation": {
+    "en": "Dynamic instrumentation",
+    "zh": "动态插桩"
+  },
+  "game-preservation": {
+    "en": "Game preservation",
+    "zh": "游戏保存"
+  },
+  "android-reverse": {
+    "en": "Android reverse engineering",
+    "zh": "Android 逆向工程"
+  },
+  "sast": {
+    "en": "Static application security testing",
+    "zh": "静态应用安全测试"
+  },
+  "appsec": {
+    "en": "Application security",
+    "zh": "应用安全"
+  },
+  "javascript-deobfuscation": {
+    "en": "JavaScript deobfuscation",
+    "zh": "JavaScript 去混淆"
+  },
+  "android-application": {
+    "en": "Android application",
+    "zh": "Android 应用"
+  },
+  "embedded-linux": {
+    "en": "Embedded Linux",
+    "zh": "嵌入式 Linux"
+  },
+  "application-security": {
+    "en": "Application security",
+    "zh": "应用安全"
+  },
+  "steganography": {
+    "en": "Steganography",
+    "zh": "隐写术"
+  },
+  "android-hacking": {
+    "en": "Android hacking",
+    "zh": "Android 破解"
+  },
+  "network-forensics": {
+    "en": "Network forensics",
+    "zh": "网络取证"
+  },
+  "mobile-penetration-testing": {
+    "en": "Mobile penetration testing",
+    "zh": "移动端渗透测试"
+  },
+  "decomp": {
+    "en": "Decompilation",
+    "zh": "反编译"
+  },
+  "devirtualization": {
+    "en": "Devirtualization",
+    "zh": "去虚拟化"
+  },
+  "educational": {
+    "en": "Educational",
+    "zh": "教学"
+  },
+  "il2cpp-modding": {
+    "en": "IL2CPP modding",
+    "zh": "IL2CPP 模组制作"
+  },
+  "reverse-engineering-tool": {
+    "en": "Reverse engineering tool",
+    "zh": "逆向工程工具"
+  },
+  "network-monitoring": {
+    "en": "Network monitoring",
+    "zh": "网络监控"
+  },
+  "malware-analyzer": {
+    "en": "Malware analyzer",
+    "zh": "恶意软件分析器"
+  },
+  "il2cpp-metadata": {
+    "en": "IL2CPP metadata",
+    "zh": "IL2CPP 元数据"
+  },
+  "ast": {
+    "en": "Abstract syntax tree",
+    "zh": "抽象语法树"
+  },
+  "9patch": {
+    "en": "9-patch",
+    "zh": "9-patch"
+  },
+  "apktool": {
+    "en": "Apktool",
+    "zh": "Apktool"
+  },
+  "vala": {
+    "en": "Vala",
+    "zh": "Vala"
+  },
+  "cpu": {
+    "en": "CPU",
+    "zh": "CPU"
+  },
+  "bpf": {
+    "en": "BPF",
+    "zh": "BPF"
+  },
+  "dalvik": {
+    "en": "Dalvik",
+    "zh": "Dalvik"
+  },
+  "odex": {
+    "en": "ODEX",
+    "zh": "ODEX"
+  },
+  "art": {
+    "en": "ART",
+    "zh": "ART"
+  },
+  "bindiff": {
+    "en": "BinDiff",
+    "zh": "BinDiff"
+  },
+  "binexport": {
+    "en": "BinExport",
+    "zh": "BinExport"
+  },
+  "browserify": {
+    "en": "Browserify",
+    "zh": "Browserify"
+  },
+  "uefi": {
+    "en": "UEFI",
+    "zh": "UEFI"
+  },
+  "nodejs": {
+    "en": "Node.js",
+    "zh": "Node.js"
+  },
+  "react": {
+    "en": "React",
+    "zh": "React"
+  },
+  "chrome-extension": {
+    "en": "Chrome extension",
+    "zh": "Chrome 扩展"
+  },
+  "unity2d": {
+    "en": "Unity 2D",
+    "zh": "Unity 2D"
+  },
+  "emscripten": {
+    "en": "Emscripten",
+    "zh": "Emscripten"
+  },
+  "anti-bot": {
+    "en": "Anti-bot",
+    "zh": "反机器人检测"
+  },
+  "threejs": {
+    "en": "three.js",
+    "zh": "three.js"
+  },
+  "devtools": {
+    "en": "Developer tools",
+    "zh": "开发者工具"
+  },
+  "cdp": {
+    "en": "CDP",
+    "zh": "CDP"
+  },
+  "asar": {
+    "en": "ASAR",
+    "zh": "ASAR"
+  },
+  "js": {
+    "en": "JavaScript",
+    "zh": "JavaScript"
+  },
+  "retro-gaming": {
+    "en": "Retro gaming",
+    "zh": "复古游戏"
+  },
+  "rea": {
+    "en": "REA",
+    "zh": "REA"
+  },
+  "webgl": {
+    "en": "WebGL",
+    "zh": "WebGL"
+  },
+  "playwright": {
+    "en": "Playwright",
+    "zh": "Playwright"
+  },
+  "playstation": {
+    "en": "PlayStation",
+    "zh": "PlayStation"
+  },
+  "manifest-v3": {
+    "en": "Manifest V3",
+    "zh": "Manifest V3"
+  },
+  "babel": {
+    "en": "Babel",
+    "zh": "Babel"
+  },
+  "chrome-devtools-protocol": {
+    "en": "Chrome DevTools Protocol",
+    "zh": "Chrome 开发者工具协议"
+  },
+  "browser-automation": {
+    "en": "Browser automation",
+    "zh": "浏览器自动化"
+  },
+  "jadx": {
+    "en": "JADX",
+    "zh": "JADX"
+  },
+  "flutter": {
+    "en": "Flutter",
+    "zh": "Flutter"
+  },
+  "idapython": {
+    "en": "IDAPython",
+    "zh": "IDAPython"
+  },
+  "nintendo-ds": {
+    "en": "Nintendo DS",
+    "zh": "Nintendo DS"
+  },
+  "x86-64": {
+    "en": "x86-64",
+    "zh": "x86-64"
+  },
+  "matching-decompilation": {
+    "en": "Matching decompilation",
+    "zh": "匹配反编译"
+  },
+  "hacktoberfest": {
+    "en": "Hacktoberfest",
+    "zh": "Hacktoberfest"
+  },
+  "smali": {
+    "en": "smali",
+    "zh": "smali"
+  },
+  "lua": {
+    "en": "Lua",
+    "zh": "Lua"
+  },
+  "docker": {
+    "en": "Docker",
+    "zh": "Docker"
+  },
+  "adb": {
+    "en": "ADB",
+    "zh": "ADB"
+  },
+  "ds-decomp-studio": {
+    "en": "DS Decomp Studio",
+    "zh": "DS Decomp Studio"
+  },
+  "bluetooth-low-energy": {
+    "en": "Bluetooth Low Energy",
+    "zh": "低功耗蓝牙"
+  },
+  "mono": {
+    "en": "Mono",
+    "zh": "Mono"
+  },
+  "objective-c": {
+    "en": "Objective-C",
+    "zh": "Objective-C"
+  },
+  "gameboy-advance": {
+    "en": "Game Boy Advance",
+    "zh": "Game Boy Advance"
+  },
+  "binwalk": {
+    "en": "Binwalk",
+    "zh": "Binwalk"
+  },
+  "wireshark": {
+    "en": "Wireshark",
+    "zh": "Wireshark"
+  },
+  "go": {
+    "en": "Go",
+    "zh": "Go"
+  },
+  "pokemon": {
+    "en": "Pokémon",
+    "zh": "宝可梦"
+  },
+  "kotlin": {
+    "en": "Kotlin",
+    "zh": "Kotlin"
+  },
+  "apple": {
+    "en": "Apple",
+    "zh": "Apple"
+  },
+  "ue5": {
+    "en": "Unreal Engine 5",
+    "zh": "虚幻引擎 5"
+  },
+  "dart": {
+    "en": "Dart",
+    "zh": "Dart"
+  },
+  "jailbreak": {
+    "en": "Jailbreak",
+    "zh": "越狱"
+  },
+  "ble": {
+    "en": "Bluetooth Low Energy (BLE)",
+    "zh": "低功耗蓝牙（BLE）"
+  },
+  "swift": {
+    "en": "Swift",
+    "zh": "Swift"
+  },
+  "bluetooth": {
+    "en": "Bluetooth",
+    "zh": "蓝牙"
+  },
+  "theos": {
+    "en": "Theos",
+    "zh": "Theos"
+  },
+  "static-recompilation": {
+    "en": "Static recompilation",
+    "zh": "静态重编译"
+  },
+  "mach-o": {
+    "en": "Mach-O",
+    "zh": "Mach-O"
+  },
+  "metal": {
+    "en": "Metal",
+    "zh": "Metal"
+  },
+  "mitm": {
+    "en": "Man-in-the-middle",
+    "zh": "中间人"
+  },
+  "gamemaker": {
+    "en": "GameMaker",
+    "zh": "GameMaker"
+  },
+  "frontend": {
+    "en": "Frontend",
+    "zh": "前端"
+  },
+  "ue4": {
+    "en": "Unreal Engine 4",
+    "zh": "虚幻引擎 4"
+  },
+  "unreal-engine-5": {
+    "en": "Unreal Engine 5",
+    "zh": "虚幻引擎 5"
+  },
+  "swiftui": {
+    "en": "SwiftUI",
+    "zh": "SwiftUI"
+  },
+  "iphone": {
+    "en": "iPhone",
+    "zh": "iPhone"
+  },
+  "esp32": {
+    "en": "ESP32",
+    "zh": "ESP32"
+  },
+  "blutter": {
+    "en": "Blutter",
+    "zh": "Blutter"
+  },
+  "video-streaming": {
+    "en": "Video streaming",
+    "zh": "视频流传输"
+  },
+  "nds": {
+    "en": "Nintendo DS (NDS)",
+    "zh": "Nintendo DS（NDS）"
+  },
+  "hid": {
+    "en": "Human interface devices (HID)",
+    "zh": "人机接口设备（HID）"
+  },
+  "private-server": {
+    "en": "Private servers",
+    "zh": "私有服务器"
+  },
+  "sqlite": {
+    "en": "SQLite",
+    "zh": "SQLite"
+  },
+  "webpack": {
+    "en": "webpack",
+    "zh": "webpack"
+  },
+  "digital-preservation": {
+    "en": "Digital preservation",
+    "zh": "数字保存"
+  },
+  "html": {
+    "en": "HTML",
+    "zh": "HTML"
+  },
+  "steam": {
+    "en": "Steam",
+    "zh": "Steam"
+  },
+  "ue4ss": {
+    "en": "UE4SS",
+    "zh": "UE4SS"
+  },
+  "dom": {
+    "en": "Document Object Model (DOM)",
+    "zh": "文档对象模型（DOM）"
+  },
+  "event-replay": {
+    "en": "Event replay",
+    "zh": "事件重放"
+  },
+  "state-reconstruction": {
+    "en": "State reconstruction",
+    "zh": "状态重建"
+  },
+  "apple-silicon": {
+    "en": "Apple silicon",
+    "zh": "Apple 芯片"
+  },
+  "ios-reverse": {
+    "en": "iOS reverse engineering",
+    "zh": "iOS 逆向工程"
+  },
+  "ios-tweak": {
+    "en": "iOS tweaks",
+    "zh": "iOS 功能调整插件"
+  },
+  "can-bus": {
+    "en": "CAN bus",
+    "zh": "CAN 总线"
+  },
+  "extract": {
+    "en": "Extraction",
+    "zh": "提取"
+  },
+  "react-native": {
+    "en": "React Native",
+    "zh": "React Native"
+  },
+  "mqtt": {
+    "en": "MQTT",
+    "zh": "MQTT"
+  },
+  "flex": {
+    "en": "FLEX",
+    "zh": "FLEX"
+  },
+  "tweak": {
+    "en": "Tweaks",
+    "zh": "功能调整插件"
+  },
+  "kingdom-hearts": {
+    "en": "Kingdom Hearts",
+    "zh": "王国之心"
+  },
+  "bluetooth-le": {
+    "en": "Bluetooth LE",
+    "zh": "低功耗蓝牙"
+  },
+  "usb": {
+    "en": "USB",
+    "zh": "USB"
+  },
+  "usb-hid": {
+    "en": "USB HID",
+    "zh": "USB 人机接口设备"
+  },
+  "tkinter": {
+    "en": "Tkinter",
+    "zh": "Tkinter"
+  },
+  "game-server": {
+    "en": "Game servers",
+    "zh": "游戏服务器"
+  },
+  "codewarrior": {
+    "en": "CodeWarrior",
+    "zh": "CodeWarrior"
+  },
+  "ds-decomp": {
+    "en": "Nintendo DS decompilation",
+    "zh": "Nintendo DS 反编译"
+  },
+  "sdl2": {
+    "en": "SDL2",
+    "zh": "SDL2"
+  },
+  "ai-assisted": {
+    "en": "AI-assisted",
+    "zh": "AI 辅助"
+  },
+  "save-editor": {
+    "en": "Save editor",
+    "zh": "存档编辑器"
+  },
+  "datamining": {
+    "en": "Data mining",
+    "zh": "数据挖掘"
+  },
+  "modding-tools": {
+    "en": "Modding tools",
+    "zh": "模组制作工具"
+  },
+  "fmod": {
+    "en": "FMOD",
+    "zh": "FMOD"
+  },
+  "userscript": {
+    "en": "Userscripts",
+    "zh": "用户脚本"
+  },
+  "source-maps": {
+    "en": "Source maps",
+    "zh": "源码映射"
+  },
+  "css": {
+    "en": "CSS",
+    "zh": "CSS"
+  },
+  "web-platform": {
+    "en": "Web platform",
+    "zh": "Web 平台"
+  },
+  "recompilation": {
+    "en": "Recompilation",
+    "zh": "重编译"
+  },
+  "pc-port": {
+    "en": "PC port",
+    "zh": "PC 移植"
+  },
+  "rexglue": {
+    "en": "ReXGlue",
+    "zh": "ReXGlue"
+  },
+  "ipa": {
+    "en": "IPA",
+    "zh": "IPA"
+  },
+  "n64": {
+    "en": "Nintendo 64",
+    "zh": "Nintendo 64"
+  },
+  "xbox360": {
+    "en": "Xbox 360",
+    "zh": "Xbox 360"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "id": "awesomerea-discovery",
+  "version": "1.0.0",
+  "queries": [
+    {
+      "id": "brand-en",
+      "pair_id": "brand",
+      "intent": "branded",
+      "language": "en",
+      "query": "Awesome Reverse Engineering Anything awesomerea.org"
+    },
+    {
+      "id": "brand-zh",
+      "pair_id": "brand",
+      "intent": "branded",
+      "language": "zh-CN",
+      "query": "AwesomeREA 逆向工程 工具 案例 论文"
+    },
+    {
+      "id": "electron-tools-en",
+      "pair_id": "electron-tools",
+      "intent": "task",
+      "language": "en",
+      "query": "tools for reverse engineering Electron apps"
+    },
+    {
+      "id": "electron-tools-zh",
+      "pair_id": "electron-tools",
+      "intent": "task",
+      "language": "zh-CN",
+      "query": "Electron 应用逆向工程工具"
+    },
+    {
+      "id": "game-cases-en",
+      "pair_id": "game-cases",
+      "intent": "task",
+      "language": "en",
+      "query": "AI-assisted game reconstruction case studies"
+    },
+    {
+      "id": "game-cases-zh",
+      "pair_id": "game-cases",
+      "intent": "task",
+      "language": "zh-CN",
+      "query": "AI 辅助游戏重建案例"
+    },
+    {
+      "id": "decompilation-papers-en",
+      "pair_id": "decompilation-papers",
+      "intent": "task",
+      "language": "en",
+      "query": "papers on LLM decompilation evaluation"
+    },
+    {
+      "id": "decompilation-papers-zh",
+      "pair_id": "decompilation-papers",
+      "intent": "task",
+      "language": "zh-CN",
+      "query": "大语言模型反编译评估论文"
+    }
+  ]
+}

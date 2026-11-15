@@ -1,0 +1,1523 @@
+{
+  "scan-350913590": {
+    "decision": "exclude",
+    "reason_code": "outside-software-biology",
+    "reason_en": "Vaccine RNA sequencing and assembly research is outside this collection’s software and hardware reverse-engineering scope.",
+    "reason_zh": "疫苗 RNA 测序与序列组装研究不属于本合集的软件与硬件逆向工程范围。",
+    "readme_sha256": "0e4382b187ed30f8a5594555bd29b45f453a7d74da4f2a4b60130fdac9d02133",
+    "evidence_url": "https://github.com/NAalytics/Assemblies-of-putative-SARS-CoV2-spike-encoding-mRNA-sequences-for-vaccines-BNT-162b2-and-mRNA-1273/blob/main/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-249301266": {
+    "decision": "exclude",
+    "reason_code": "outside-software-biology",
+    "reason_en": "This project studies coronavirus biology using software analogies, rather than reverse engineering software or hardware.",
+    "reason_zh": "该项目借助软件类比研究冠状病毒生物学，并非对软件或硬件进行逆向工程。",
+    "readme_sha256": "8c10f9fabc8bb07cd3d4f0c2bea251999f32038d7204aadf4e0fd28a1c69c036",
+    "evidence_url": "https://github.com/geohot/corona/blob/master/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-1108308990": {
+    "decision": "exclude",
+    "reason_code": "financial-analysis",
+    "reason_en": "This is a token-economics framework using biological metaphors, not software protocol analysis or reverse engineering.",
+    "reason_zh": "该项目以生物学隐喻研究代币经济，并非软件协议分析或逆向工程。",
+    "readme_sha256": "388473e50ac7a2f671a7936bbb6ff0f3ed3797488b0ae7ef4fba0b2ca512db4c",
+    "evidence_url": "https://github.com/AmirhosseinHonardoust/Metabolic-Tokenomics/blob/main/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-1201245878": {
+    "decision": "exclude",
+    "reason_code": "financial-analysis",
+    "reason_en": "The README describes Solana token investment diligence and capital-allocation analysis, not software protocol reverse engineering.",
+    "reason_zh": "README 描述的是 Solana 代币投资尽调与资金配置分析，并非软件协议逆向工程。",
+    "readme_sha256": "867320cb3a6b8fc3f2e4b94be689359c20b99c6c898b3e259f4b0d0fdea9e4db",
+    "evidence_url": "https://github.com/LoreResearch/Lore/blob/master/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-1047477037": {
+    "decision": "exclude",
+    "reason_code": "financial-analysis",
+    "reason_en": "This project analyzes Morpho lending metrics and business-development opportunities, rather than software implementation or protocol internals.",
+    "reason_zh": "该项目分析 Morpho 借贷指标与业务增长机会，并非软件实现或协议内部机制。",
+    "readme_sha256": "b340b19cf49fdae8f4bafeb03dee9fc4092ee3ef1f4d27c6eb7778bee849a61c",
+    "evidence_url": "https://github.com/Waridah-Legal-Engineer/Morpho_Defi/blob/main/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-794938816": {
+    "decision": "exclude",
+    "reason_code": "personal-profile",
+    "reason_en": "This repository presents a developer profile and skills, rather than a specific reverse-engineering tool, case, or reference.",
+    "reason_zh": "该仓库介绍开发者个人资料与技能，并非具体的逆向工具、案例或参考资料。",
+    "readme_sha256": "02b500ee83e21b8e8f5c17c972e8afc40cec2d9968bd9dede9bf8016ab39652b",
+    "evidence_url": "https://github.com/Mr-SxR/Mr-SxR/blob/main/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-1006177183": {
+    "decision": "exclude",
+    "reason_code": "personal-profile",
+    "reason_en": "This repository presents a developer biography and portfolio overview, rather than a specific reverse-engineering resource.",
+    "reason_zh": "该仓库介绍开发者经历与作品概况，并非具体的逆向工程资源。",
+    "readme_sha256": "b4e8cf8817749e761834f93f9b7a32861f68c17ebab859be1afadfde6f527fe2",
+    "evidence_url": "https://github.com/Mr-SxR/MasudurRahmanSifat/blob/main/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-1111365511": {
+    "decision": "exclude",
+    "reason_code": "unrelated-language-research",
+    "reason_en": "Here, verbal design protocols are research transcripts used for LLM question classification, not software or network protocols.",
+    "reason_zh": "此处的“设计口述协议”是用于大语言模型问题分类的研究记录，并非软件或网络协议。",
+    "readme_sha256": "976e949399654e8bc8541d96655050edd908fef852098904b66869f1262cdf94",
+    "evidence_url": "https://github.com/ahmedshahriar/llm-eval-question-taxonomy-verbal-design-protocols/blob/main/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-526074219": {
+    "decision": "exclude",
+    "reason_code": "unrelated-ui-animation",
+    "reason_en": "The repository provides a sound-volume icon animation, with no reverse-engineering resource identified in the scanned description or README.",
+    "reason_zh": "该仓库提供音量图标动画，扫描到的简介与 README 未表明其包含逆向工程资源。",
+    "readme_sha256": "220866ccadaeaebfc466b21a79fdececc9d7304b3a6d79d6881d834ce54cf06f",
+    "evidence_url": "https://github.com/ab-g/Sound-Volume-Icon-Animation/blob/master/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-938693": {
+    "decision": "exclude",
+    "reason_code": "unrelated-chart-digitization",
+    "reason_en": "WebPlotDigitizer extracts numerical data from chart images; it is not a software or hardware reverse-engineering resource.",
+    "reason_zh": "WebPlotDigitizer 从图表图像中提取数值数据，不属于软件或硬件逆向工程资源。",
+    "readme_sha256": "2d8630f761ab39a9aa1fdc6485be259b2a8096d590d73cf03afeee1b879b865e",
+    "evidence_url": "https://github.com/automeris-io/WebPlotDigitizer/blob/master/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-1277667748": {
+    "decision": "exclude",
+    "reason_code": "ordinary-device-repair",
+    "reason_en": "The README describes routine Windows Bluetooth driver and connectivity repair, not protocol inspection or hardware reverse engineering.",
+    "reason_zh": "README 描述的是常规 Windows 蓝牙驱动与连接修复，并非协议检查或硬件逆向工程。",
+    "readme_sha256": "f178aba92d3a017784fd0bf1173e849a69c2245f552f083f1eb4cb9ee1594a32",
+    "evidence_url": "https://github.com/perirhinal-flit845/Bluetooth-Repair-Tool/blob/main/README.md",
+    "reviewed_at": "2026-10-16T04:09:02Z"
+  },
+  "scan-1182233683": {
+    "decision": "exclude",
+    "reason_code": "ordinary-media-manager",
+    "reason_en": "The reviewed README documents anime tracking, media downloads, and library management rather than software reverse-engineering tools or findings.",
+    "reason_zh": "复核的 README 介绍追番、媒体下载与媒体库管理，未提供软件逆向分析工具或分析结果。",
+    "readme_sha256": "9a7112a0b7139470d9711676ca1973cb63278089da0dafffac4b910d488d437a",
+    "evidence_url": "https://github.com/AlcMaple/tools/blob/main/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-95806994": {
+    "decision": "exclude",
+    "reason_code": "relative-date-parser",
+    "reason_en": "Parses relative-time expressions into Date objects; reverse refers to text-to-date conversion rather than software reverse engineering.",
+    "reason_zh": "将相对时间表达式解析为日期对象；reverse 指文本到日期的转换，而非软件逆向工程。",
+    "readme_sha256": "c6b66d28953a3a19870a9d347418a4873e1d6d46c9bfff2086add8dd4896ff02",
+    "evidence_url": "https://github.com/ezpn/timeago-reverse/blob/master/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-216306502": {
+    "decision": "exclude",
+    "reason_code": "runtime-value-serializer",
+    "reason_en": "A general-purpose runtime-value-to-source serializer; its documented purpose is serialization rather than reverse-engineering analysis.",
+    "reason_zh": "通用的运行时值转源码字符串序列化库；文档用途是序列化，而非逆向分析。",
+    "readme_sha256": "b5929b7cc661bf736fae46134b0a2b665c649b17443697a3d2650619f4cbb5c6",
+    "evidence_url": "https://github.com/lopatnov/jsToString/blob/master/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-159120342": {
+    "decision": "exclude",
+    "reason_code": "original-educational-game",
+    "reason_en": "An original language-immersion game using a fan engine, with educational user testing rather than reverse-engineering findings.",
+    "reason_zh": "基于同人引擎开发的语言沉浸式教育游戏，记录的是教学用户测试，而非逆向分析结果。",
+    "readme_sha256": "9e7389257f881a030f960f2e3eb037b40d2045904358820802df3362fac065fc",
+    "evidence_url": "https://github.com/aeglon97/PokemonUnity-develop/blob/master/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-460596523": {
+    "decision": "exclude",
+    "reason_code": "original-memory-game",
+    "reason_en": "A Pokemon-themed memory-card game with a generic application README; no reverse-engineering tool or case evidence is documented.",
+    "reason_zh": "宝可梦主题的翻牌记忆游戏，README 为通用应用模板，未提供逆向工具或案例证据。",
+    "readme_sha256": "036a6cb6eb41fcb0faca7ac31d0c396d3a46a2b852a8b91549a29619571f9d76",
+    "evidence_url": "https://github.com/enes9103/015_Memory_Card_Game_Pokemon/blob/main/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-1315192190": {
+    "decision": "exclude",
+    "reason_code": "announcement-data-monitor",
+    "reason_en": "Tracks and summarizes published game balance announcements rather than analyzing game code or proprietary data formats.",
+    "reason_zh": "跟踪和整理公开的游戏平衡性公告，而非分析游戏代码或专有数据格式。",
+    "readme_sha256": "771d2fe44ae9705c3dd1c15fbc7afec46fcfe6d5e55adc48905e6fa79371b2aa",
+    "evidence_url": "https://github.com/LuckLuffy/MechabellumData/blob/master/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-1233926446": {
+    "decision": "exclude",
+    "reason_code": "ordinary-reverse-proxy",
+    "reason_en": "An ordinary reverse proxy and API gateway; reverse describes traffic routing rather than software reverse engineering.",
+    "reason_zh": "普通反向代理与 API 网关；reverse 描述流量路由，而非软件逆向工程。",
+    "readme_sha256": "82d04abcaed74f0a7bab60b0ae7b7a6469a7bfd6f59bb24a3aecd94e3c0deaae",
+    "evidence_url": "https://github.com/maheensayuru/aegis-proxy/blob/main/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-851352657": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "A generic game promotion, installation, and gameplay guide without reverse-engineering tools, format analysis, or case evidence.",
+    "reason_zh": "通用的游戏推广、安装和玩法介绍，未提供逆向工具、格式分析或案例证据。",
+    "readme_sha256": "d207c4002ddcda6350e96308c0b9e35f05c1d93a705f57c0bc3098cdd00f8562",
+    "evidence_url": "https://github.com/yaznjvam537/League-Of-Legends/blob/master/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-1154239956": {
+    "decision": "exclude",
+    "reason_code": "feature-flag-platform",
+    "reason_en": "An enterprise feature-flag and dynamic-configuration platform rather than a reverse-engineering resource.",
+    "reason_zh": "企业功能开关与动态配置平台，不属于逆向工程资源。",
+    "readme_sha256": "66c59596268c79b6e74f2c63fe37c2c353e5012b12852f3ac655af9199f2ae57",
+    "evidence_url": "https://github.com/rdnrhm92/switch/blob/main/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-1201612895": {
+    "decision": "exclude",
+    "reason_code": "ordinary-editor-tooling",
+    "reason_en": "HTMX editor completion, documentation, and snippet tooling rather than software reverse-engineering analysis.",
+    "reason_zh": "HTMX 编辑器补全、文档和代码片段工具，未涉及软件逆向分析。",
+    "readme_sha256": "2eb49a741e469e2558b166dfe22694167b025d6c2d3b3b3c5d7c92295aef0433",
+    "evidence_url": "https://github.com/ribbonfernbutcherbird693/htmx-vscode-toolkit/blob/main/README.md",
+    "reviewed_at": "2026-10-16"
+  },
+  "scan-687097664": {
+    "decision": "exclude",
+    "reason_code": "general-school-application",
+    "reason_en": "Ordinary client for the Hessian school portal. The verified README documents app distribution, contributions, and Flutter development, without a documented reverse-engineering, analysis, or reconstruction purpose.",
+    "reason_zh": "面向黑森州学校门户的普通客户端。已核验的 README 介绍应用分发、参与贡献及 Flutter 开发，未呈现逆向工程、分析或重建用途。",
+    "readme_sha256": "fc5ed02f7fe54b866e5a359b366e8a1c1c77baeef6a538894753acc2fb0dbdf3",
+    "evidence_url": "https://github.com/lanis-mobile/lanis/blob/main/README.md",
+    "reviewed_at": "2026-10-16T10:57:20.920351Z"
+  },
+  "scan-503534767": {
+    "decision": "exclude",
+    "reason_code": "general-attendance-application",
+    "reason_en": "Ordinary college attendance and timetable app. The verified README describes fetching Ezygo data, attendance calculations, and badges, without documented protocol reverse engineering or software reconstruction.",
+    "reason_zh": "普通的高校出勤与课表应用。已核验的 README 介绍获取 Ezygo 数据、出勤计算和徽章功能，未记录协议逆向工程或软件重建工作。",
+    "readme_sha256": "c95d296265525e975364a491c381f746bf1882f27a5277c4dacf2f832cf91174",
+    "evidence_url": "https://github.com/adamsyy/Seventy5/blob/main/README.md",
+    "reviewed_at": "2026-10-16T10:57:21.517476Z"
+  },
+  "scan-13010571": {
+    "decision": "exclude",
+    "reason_code": "location-measurement-system",
+    "reason_en": "The exact README describes RSSI-based position estimation for mobile ZigBee sensor nodes and a Java/MySQL service for managing that sensor network. Its analysis concerns physical location measurements; no reverse-engineering workflow is documented.",
+    "reason_zh": "经精确哈希核验的 README 描述的是基于 RSSI 的移动 ZigBee 传感器节点定位，以及用于管理传感器网络的 Java/MySQL 服务；分析对象是物理定位测量值，未记录逆向工程工作流。",
+    "readme_sha256": "d353a96c85815c56bcc56e777faf7d778c820427c75142c40751b987f5716e7e",
+    "evidence_url": "https://github.com/alus-it/ZigBeeLocalizer/blob/master/README",
+    "reviewed_at": "2026-10-16T10:57:42.290451Z"
+  },
+  "scan-485301935": {
+    "decision": "exclude",
+    "reason_code": "word-puzzle-solver",
+    "reason_en": "The complete README identifies the project as a solver for the Macedonian Wordle variant Zborle and links the game. It documents no reverse-engineering, protocol or software-analysis purpose.",
+    "reason_zh": "完整 README 将项目明确描述为马其顿语 Wordle 变体 Zborle 的求解器，并提供游戏链接；未记录逆向工程、协议或软件分析用途。",
+    "readme_sha256": "c4a366c8ff594f75140e344678369539a9e75434f122b9926ed4ca30876bf0f7",
+    "evidence_url": "https://github.com/TheGoodCook155/zborleMKSolver/blob/main/README.md",
+    "reviewed_at": "2026-10-16T10:57:42.758530Z"
+  },
+  "scan-1126392619": {
+    "decision": "exclude",
+    "reason_code": "image-prompt-inference",
+    "reason_en": "The complete README describes an AI-art image analyzer that infers image-generation prompts, model names and settings, with image comparison and prompt templates. Its reverse-engineering claim concerns artwork generation rather than software or system behavior.",
+    "reason_zh": "完整 README 描述的是 AI 画作图像分析器，用于推测图像生成提示词、模型与参数，并提供图像比较及提示词模板；其逆向主张针对画作生成，而非软件或系统行为。",
+    "readme_sha256": "a317afd4d7392c07fd3ffbf07e7e2df84c42b553832ab7102ce22c65b83380a9",
+    "evidence_url": "https://github.com/CodingWithDodamani/PromptVision/blob/main/README.md",
+    "reviewed_at": "2026-10-16T10:57:43.260893Z"
+  },
+  "scan-1366958068": {
+    "decision": "exclude",
+    "reason_code": "personal-profile",
+    "reason_en": "The README is a personal skills and project-promotion profile, rather than a repository providing a reverse-engineering tool, case study or learning resource.",
+    "reason_zh": "README 是个人技能与项目宣传主页，并非提供逆向工程工具、案例研究或学习资料的仓库。",
+    "readme_sha256": "ba03c9d18016666cefb18f015a26b1ec2750d5a2d1fd0edea5832e18bfb55142",
+    "evidence_url": "https://github.com/UmarFarooqueJi/Umarfarooqueji/blob/main/README.md",
+    "reviewed_at": "2026-10-16T10:58:14.997434Z"
+  },
+  "scan-168154742": {
+    "decision": "exclude",
+    "reason_code": "general-color-utility",
+    "reason_en": "The complete README describes matching color-package operations between a base and target color; it identifies a general color utility, with no software or hardware reverse-engineering resource.",
+    "reason_zh": "完整 README 描述了从基础颜色到目标颜色的颜色包操作匹配，属于通用颜色工具，未提供软件或硬件逆向工程资源。",
+    "readme_sha256": "f86b87fa98648cd2b2fb98c331f04a4a8ebc1fb41e5ef35cac248bb04b74e526",
+    "evidence_url": "https://github.com/sielay/color-guess/blob/master/README.md",
+    "reviewed_at": "2026-10-16T10:57:41.115602Z"
+  },
+  "scan-400373122": {
+    "decision": "exclude",
+    "reason_code": "general-programming-tutorial",
+    "reason_en": "The README is an introductory C/C++ programming tutorial covering syntax, compilation, pointers, exceptions, digital systems, microcontrollers, Qt and testing. Its low-level content explains ordinary compilation; no reverse-engineering study or tool is identified.",
+    "reason_zh": "README 是介绍语法、编译、指针、异常、数字系统、微控制器、Qt 与测试的 C/C++ 入门教程。其中的底层内容讲解常规编译过程，未发现逆向工程研究或工具。",
+    "readme_sha256": "5bc3e6b90f2a2d9a97305ac9c67c1bfa3a8b2be7f0d433f2167ddc6e20f31290",
+    "evidence_url": "https://github.com/IsaacAlves7/cpp/blob/master/README.md",
+    "reviewed_at": "2026-10-16T10:58:14.401806Z"
+  },
+  "scan-345634228": {
+    "decision": "exclude",
+    "reason_code": "general-robotics-sdk",
+    "reason_en": "The verified README presents the FTC SKYSTONE competition SDK for building an Android robot-control app, with ordinary setup and release documentation; its purpose is robotics development.",
+    "reason_zh": "已核验的 README 将该项目定位为 FTC SKYSTONE 竞赛 SDK，用于构建 Android 机器人控制应用，内容为常规设置和发布文档，实际用途是机器人开发。",
+    "readme_sha256": "93fce103d97af2d75c911cb9cfe83f6f4ae20cf3efa71ed0ac09ed91069b6e47",
+    "evidence_url": "https://github.com/chrisneagu/FTC-Skystone-Dark-Angels-Romania-2020/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:14.823565Z"
+  },
+  "scan-267661329": {
+    "decision": "exclude",
+    "reason_code": "outside-software-climate",
+    "reason_en": "The verified README identifies a database and web map of global storm-surge reconstructions, which concerns geophysical data rather than software reconstruction.",
+    "reason_zh": "已核验的 README 将其定位为全球风暴潮重建数据库与网页地图，研究对象是地球物理数据，而非软件重建。",
+    "readme_sha256": "ec8048d2f6efd316fb94b497069e0df551278a00ed1a5159e9dd6e3f699fdae4",
+    "evidence_url": "https://github.com/moinabyssinia/gssr/blob/gh-pages/README.md",
+    "reviewed_at": "2026-10-16T12:04:15.242757Z"
+  },
+  "scan-756782572": {
+    "decision": "exclude",
+    "reason_code": "general-programming-tutorial",
+    "reason_en": "The complete README describes an IOTA-for-Flutter tutorial app demonstrating wallet, address and decentralized-identity SDK calls.",
+    "reason_zh": "完整 README 描述 IOTA-for-Flutter 教程应用，演示钱包、地址和去中心化身份 SDK 调用。",
+    "readme_sha256": "fd5d7e7f67bb8fd395f3f9d1e6b5bcb02adc3914a3a48f8da785cc66eebc670c",
+    "evidence_url": "https://github.com/iota-for-flutter/playground_app_complete/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:55.126307Z"
+  },
+  "scan-1214724485": {
+    "decision": "exclude",
+    "reason_code": "outside-software-3d",
+    "reason_en": "The verified README reconstructs physical objects from photographs and converts them into LEGO-style brick layouts; this is computer-vision geometry reconstruction.",
+    "reason_zh": "已核验的 README 描述从照片重建现实物体并转换为 LEGO 风格积木布局，属于计算机视觉几何重建。",
+    "readme_sha256": "71472901e5cc474396930014a3c5455241c2eb4a38778cb2cc53033fa2304b8d",
+    "evidence_url": "https://github.com/evanesmiller/Bricked/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:04:15.713747Z"
+  },
+  "scan-989025024": {
+    "decision": "exclude",
+    "reason_code": "outside-software-image-model",
+    "reason_en": "The complete README describes a variational-autoencoder demo that reconstructs handwritten digits drawn on a canvas.",
+    "reason_zh": "完整 README 描述的是变分自编码器演示，用于重建用户在画布上绘制的手写数字。",
+    "readme_sha256": "6b31da8e6e17080b7e93bb3720a02ee99e0000562e6040c5b1e58315b225ea58",
+    "evidence_url": "https://github.com/ajverse/VAE-mnist-APP/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:16.239044Z"
+  },
+  "scan-369877009": {
+    "decision": "exclude",
+    "reason_code": "outside-software-3d",
+    "reason_en": "The complete README describes a Flask interface for PIFuHD that converts a two-dimensional image into a three-dimensional model and media files.",
+    "reason_zh": "完整 README 描述 PIFuHD 的 Flask 界面，将二维图像转换为三维模型和媒体文件。",
+    "readme_sha256": "2a6d10159ae7f2a885f25f1ed290a0a6c11449f1dbdfe044e62d552b2e29307a",
+    "evidence_url": "https://github.com/desmondblue/image-reconstruction-web-app/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:04:16.679173Z"
+  },
+  "scan-25350650": {
+    "decision": "exclude",
+    "reason_code": "outside-software-biology",
+    "reason_en": "The verified README describes molecular-network simulation and visualization of living cells for molecular biology and synthetic biology.",
+    "reason_zh": "已核验的 README 描述用于分子生物学与合成生物学的活细胞分子网络模拟和可视化。",
+    "readme_sha256": "b9ba0e40949a6cae117d0e8b419db4355df4bd6a1c72753a4753753388764bde",
+    "evidence_url": "https://github.com/gentr1/Simulocyte/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:04:17.185240Z"
+  },
+  "scan-133690915": {
+    "decision": "exclude",
+    "reason_code": "outside-software-climate",
+    "reason_en": "The complete README identifies the Weber Basin Drought Study and associated scientific code, outside software/hardware reconstruction.",
+    "reason_zh": "完整 README 将其标为 Weber 流域干旱研究及配套科研代码，不属于软件或硬件重建。",
+    "readme_sha256": "c7005ee5ca7f26c8317a1035d9a29131abdd6b1264adb12d47fc3e200310209e",
+    "evidence_url": "https://github.com/jstagge/weber_paleo_clim/blob/master/ReadMe.md",
+    "reviewed_at": "2026-10-16T12:04:17.604727Z"
+  },
+  "scan-174997370": {
+    "decision": "exclude",
+    "reason_code": "outside-software-3d",
+    "reason_en": "The complete README identifies the repository only as a 3D reconstruction web app, consistent with its geometric-reconstruction description.",
+    "reason_zh": "完整 README 仅将仓库标为三维重建网页应用，与其几何重建的项目描述一致。",
+    "readme_sha256": "b6a38a46ce9df1929c8870b5c899b09302b54052e08dd54cf4532ff7817bcbb1",
+    "evidence_url": "https://github.com/kailin5/LIKE-3D-Reconstruction/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:04:18.089350Z"
+  },
+  "scan-1244450338": {
+    "decision": "exclude",
+    "reason_code": "outside-software-3d",
+    "reason_en": "The verified README orchestrates photos/video through COLMAP, Gaussian Splatting and mesh generation; its reconstruction target is physical scene geometry.",
+    "reason_zh": "已核验的 README 调度照片或视频经过 COLMAP、高斯泼溅和网格生成流程，重建目标是现实场景几何。",
+    "readme_sha256": "0e3c483380a9b5a7fba72da91ab484997f0f99de83821c3596fc0cd7cd9c8807",
+    "evidence_url": "https://github.com/KuoFengYuan/reconstudio/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:18.576860Z"
+  },
+  "scan-1173884122": {
+    "decision": "exclude",
+    "reason_code": "general-programming-tutorial",
+    "reason_en": "The complete README describes a Civil War and Reconstruction course portal built to learn HTML outlines, CSS typography and navigation styling.",
+    "reason_zh": "完整 README 描述美国内战与重建时期课程门户，用于学习 HTML 大纲、CSS 排版和导航样式。",
+    "readme_sha256": "bf524b8d001a688815c29fd6fd57d0ae0780f6c1af39227ab1304a97db196ec3",
+    "evidence_url": "https://github.com/mandersxn/civil-war/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:18.995053Z"
+  },
+  "scan-1065811716": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The complete README describes encrypted cloud file storage: splitting files, AES/ECC protection and Dropbox retrieval/reassembly.",
+    "reason_zh": "完整 README 描述加密云文件存储，包括文件分块、AES／ECC 保护及 Dropbox 下载重组。",
+    "readme_sha256": "f758cdb8ab87031f0a891f0fc4be8366351c8c96eb57db5acca84414f40e996a",
+    "evidence_url": "https://github.com/PRANAVO02/Fragment-Encrypt-Store-A-Hybrid-AES-ECC-Approach-for-Secure-Dropbox-Cloud-Storage/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:19.433349Z"
+  },
+  "scan-1270282448": {
+    "decision": "exclude",
+    "reason_code": "outside-software-medical-imaging",
+    "reason_en": "The verified README proposes a medical-imaging system that converts X-rays into three-dimensional bone geometry.",
+    "reason_zh": "已核验的 README 提出将 X 光图像转换为三维骨骼几何的医学影像系统。",
+    "readme_sha256": "bdc832d6d182322c911f7b90a89b6326678a2b0af32463d1c17e0fc405bf7a9d",
+    "evidence_url": "https://github.com/Saurabh-66/2D-X-ray-to-3D-Bone-Reconstruction/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:19.824087Z"
+  },
+  "scan-1189222912": {
+    "decision": "exclude",
+    "reason_code": "personal-profile",
+    "reason_en": "The verified README is a personal profile introducing the owner, professional roles and social links rather than a dedicated reverse-engineering artifact.",
+    "reason_zh": "已核验的 README 为介绍个人身份、职业角色和社交链接的主页，不是独立的逆向工程产物。",
+    "readme_sha256": "1ed96fc20cc0e8dad26739b8a6076fd12c73bf6089b76242527e33d4602af012",
+    "evidence_url": "https://github.com/VinodPrabhashvara/VinodPrabhashvara/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:20.433254Z"
+  },
+  "scan-1274303744": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The verified README describes a personal time-capsule app for locking messages, photos and other memories until future dates.",
+    "reason_zh": "已核验的 README 描述个人时间胶囊应用，将消息、照片等回忆锁定到未来日期。",
+    "readme_sha256": "84c5191e5dfc9c2b17bdfa1cfb46b2b2579d75d4805a5edc3d12aefe43a2fd3a",
+    "evidence_url": "https://github.com/5reskajana/TimeCapsule/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:04:20.858762Z"
+  },
+  "scan-1175215588": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The verified README describes ExamPro, an online examination and student-proctoring graduation project using Flutter and Firebase.",
+    "reason_zh": "已核验的 README 描述使用 Flutter 和 Firebase 构建的在线考试与学生监考毕业设计 ExamPro。",
+    "readme_sha256": "df1a2f15e4e43a799c4caa60de59b582b492e92e981b8b6c3ca4e2e894d81520",
+    "evidence_url": "https://github.com/abdulmanafmemon/Online-Exams-and-Proctoring-Flutter-App-/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:21.275162Z"
+  },
+  "scan-1420427322": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The complete README describes an AI-chat/community mobile client and its ordinary app architecture; it is a source snapshot of the author’s application.",
+    "reason_zh": "完整 README 描述 AI 聊天与社区移动客户端及常规应用架构，是作者应用的源码快照。",
+    "readme_sha256": "e5669946f3e421cc48f69853077a5ae20ce6fdcfd59d3bb03528df569f52c1e8",
+    "evidence_url": "https://github.com/albus666/xuanyu-ai-chat/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:56.607008Z"
+  },
+  "scan-637143500": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The complete README describes a location-bookmarking app using Google Maps, camera images and SQLite, with ordinary application setup.",
+    "reason_zh": "完整 README 描述使用 Google Maps、相机图片和 SQLite 的地点收藏应用，并提供常规应用设置说明。",
+    "readme_sha256": "5241e2099827cf947399c5872bf5fdd7fb58bcb888cd731287744c36c5399ef5",
+    "evidence_url": "https://github.com/Anantdevs/myPlace/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:29.916677Z"
+  },
+  "scan-1347950522": {
+    "decision": "exclude",
+    "reason_code": "outside-software-human-memory",
+    "reason_en": "The complete Korean README describes reconstruction of a person’s remembered scenes through interviews and AI image generation, not computer memory or software recovery.",
+    "reason_zh": "完整韩文 README 描述通过访谈与 AI 图像生成重现人的记忆场景，而非计算机内存或软件恢复。",
+    "readme_sha256": "6f3c5d0d14dd07b347f894769a532e7b010f5d94926be127e1c6e19d3c7b4f1a",
+    "evidence_url": "https://github.com/ejdms499-wq/memory-gyeol/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:30.394524Z"
+  },
+  "scan-1261649041": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The complete README describes a lyrics synchronization/translation application using Android media-session broadcasts and AI translation.",
+    "reason_zh": "完整 README 描述利用 Android 媒体会话广播与 AI 翻译实现的歌词同步和翻译应用。",
+    "readme_sha256": "6fb35ea8174567ac61709acc9d1b4c6e9b4edde845ad9d09d312ef6769d7b064",
+    "evidence_url": "https://github.com/Fash-Mayor/polytune_app/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:04:30.813208Z"
+  },
+  "scan-1387274933": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The verified README documents a freight/fleet business application with a Node.js API, React administration UI and Flutter client.",
+    "reason_zh": "已核验的 README 介绍货运与车队业务应用，包括 Node.js API、React 管理界面和 Flutter 客户端。",
+    "readme_sha256": "f1a3e8ce680960be032eba789f75ffdbab46d2621aad5425cc2e75ec6d041a89",
+    "evidence_url": "https://github.com/hakeemshah-tech/global-logistics-platform/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:31.324863Z"
+  },
+  "scan-997010215": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The complete README describes a health dashboard aggregating wearable, nutrition and user-goal data into daily summaries.",
+    "reason_zh": "完整 README 描述将可穿戴设备、营养和用户目标数据汇总为每日摘要的健康仪表板。",
+    "readme_sha256": "b5ad99d2e8326ee481988cfae64fe8746b81c210700a6e030c770bcd8a6db2de",
+    "evidence_url": "https://github.com/Jasperdeshields97/Pulse/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:31.798983Z"
+  },
+  "scan-1171262859": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The verified README describes passport and visa-access comparisons through the Passport Index API, favorites and PDF exports.",
+    "reason_zh": "已核验的 README 描述通过 Passport Index API 比较护照与免签范围，并提供收藏和 PDF 导出功能。",
+    "readme_sha256": "de254faeaf0ca3a32e5e2fea354e0d43068aa98b9ad05ace923a83b28d3519b1",
+    "evidence_url": "https://github.com/LEO0331/passportcomparison/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:32.222077Z"
+  },
+  "scan-1277746757": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The complete README presents an offline baseball-data visualization portfolio. It explicitly omits the live HTML-normalization integration from the public build.",
+    "reason_zh": "完整 README 将其定位为离线棒球数据可视化作品集，并明确说明公开版本未包含实时 HTML 规范化集成。",
+    "readme_sha256": "831bb4e048e634da3570e1cb4217fed70320ae83fe2b2f430cfcc9e5b9602e0b",
+    "evidence_url": "https://github.com/ltanedo/DiamondLabs/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:05:23.360552Z"
+  },
+  "scan-766103698": {
+    "decision": "exclude",
+    "reason_code": "general-programming-tutorial",
+    "reason_en": "The complete README provides Flutter/Dart course slides and code snapshots for comparing student exercises, not software-recovery work.",
+    "reason_zh": "完整 README 提供 Flutter／Dart 课程幻灯片与代码快照，供学生比较练习代码，不是软件恢复工作。",
+    "readme_sha256": "14360ee3af18a511eeb264b3a710630b4debec9a9460d15358866a4c9dd5fbff",
+    "evidence_url": "https://github.com/minal909/flutterudemyresource/blob/course_containt/README.md",
+    "reviewed_at": "2026-10-16T12:04:33.099459Z"
+  },
+  "scan-964485152": {
+    "decision": "exclude",
+    "reason_code": "outside-software-computer-vision",
+    "reason_en": "The complete README describes ordinary camera/gallery object detection with TensorFlow Lite and bounding-box display.",
+    "reason_zh": "完整 README 描述使用 TensorFlow Lite 对摄像头或相册图像进行常规目标检测并显示边界框。",
+    "readme_sha256": "8fffdd49008aaa063b9856ab1cbf2829558bcd78e17fe0b7051ad8c3ebe09b76",
+    "evidence_url": "https://github.com/muhakbarhamid21/mobilenet-object-detector/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:34.063814Z"
+  },
+  "scan-1324929061": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The complete README describes a project-management application whose MCP server lets agents report project status, not inspect or reconstruct software.",
+    "reason_zh": "完整 README 描述项目管理应用，其 MCP 服务器供智能体报告项目状态，并非检查或重建软件。",
+    "readme_sha256": "9e91631e4c3d81f55cf49ce2479940f46c7b90c8376fcd6bb8d6bca065d8aa52",
+    "evidence_url": "https://github.com/paulleungtc-git/project-management-tool/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:34.589032Z"
+  },
+  "scan-1159867914": {
+    "decision": "exclude",
+    "reason_code": "general-ui-animation",
+    "reason_en": "The verified README documents Flutter transition/reveal effects for UI and theme switching, using captured previous frames.",
+    "reason_zh": "已核验的 README 介绍利用上一帧截图实现 Flutter 界面和主题切换的转场与渐显效果。",
+    "readme_sha256": "c894b5c4840471eb7ba2300db6a10fee5e9f6bebb615e6a112df797ad5996290",
+    "evidence_url": "https://github.com/stanislavlysenko0912/ui_reveal/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:35.975823Z"
+  },
+  "scan-904306811": {
+    "decision": "exclude",
+    "reason_code": "general-application",
+    "reason_en": "The complete Portuguese README preserves a deprecated personal application monolith migrating to microservices, including business frontends and a social dashboard.",
+    "reason_zh": "完整葡萄牙文 README 保存迁移到微服务的已弃用个人单体应用，包括业务前端和社交仪表板。",
+    "readme_sha256": "b430201c49017cdb91a1ed213f04335901c78df1cfc1c381627d08afcd706124",
+    "evidence_url": "https://github.com/woragis/woragis-deprecated/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:58.442088Z"
+  },
+  "scan-500990573": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The exact README is a movie-screenplay quotation under a course-repository heading; it supplies no reverse-analysis project purpose.",
+    "reason_zh": "精确核验的 README 在课程仓库标题下引用电影剧本，未提供逆向分析项目用途。",
+    "readme_sha256": "bf842b8002fd558766a6cebe03848dc72c88d52d6d728f0474ef0337ffdafd24",
+    "evidence_url": "https://github.com/danderfer/Comp_Sci_Sem_2/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:30.377962Z"
+  },
+  "scan-135705277": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README is a computer-vision paper list about segmentation, scene depth, point clouds and image synthesis. Its reconstruction topics concern visual scenes.",
+    "reason_zh": "README 是关于分割、场景深度、点云和图像合成的计算机视觉论文列表，其重建主题针对视觉场景。",
+    "readme_sha256": "cca81548df797566e99fe599aa1f227772daf2e97103491c688b6e1879310a69",
+    "evidence_url": "https://github.com/USTCPCS/CVPR2018_attention/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:00:30.891497Z"
+  },
+  "scan-281289817": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README documents image-quality scoring, distortion classification and image denoising through a Django UI.",
+    "reason_zh": "README 记录了通过 Django 界面进行图像质量评分、失真分类和图像去噪的流程。",
+    "readme_sha256": "950892f3155a615d588772c67229093e62ac85c030daa96212852c886e6c5ec3",
+    "evidence_url": "https://github.com/RainFZY/IQA-Distortion-Classification-and-Reconstruction-System/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:00:31.482771Z"
+  },
+  "scan-141084217": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README identifies a pyGPlates service for plate-tectonic models and reconstruction of ancient geographic coordinates.",
+    "reason_zh": "README 明确描述了用于板块构造模型与古地理坐标重建的 pyGPlates 服务。",
+    "readme_sha256": "fafae2dfd5f2ba393afe97665e63158ade409d4efa008100f05a8b089052f505",
+    "evidence_url": "https://github.com/GPlates/gplates-web-service/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:00:31.900207Z"
+  },
+  "scan-1125955834": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes generating and viewing 3D Gaussian geometry from an input image with the SHARP model.",
+    "reason_zh": "README 描述了使用 SHARP 模型从输入图像生成并查看 3D 高斯几何体。",
+    "readme_sha256": "1d011f71a2ef631e5668a61081bd0f5514973d6b2fb0042a2e76bddbac4a83c5",
+    "evidence_url": "https://github.com/EuanTop/ml-sharp-gui/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:32.374485Z"
+  },
+  "scan-383025299": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README demonstrates an autoencoder research phenomenon: reconstruction of statistical outliers in machine-learning inputs.",
+    "reason_zh": "README 展示的是自编码器研究现象，即对机器学习输入中的统计异常样本进行重建。",
+    "readme_sha256": "07ab652c35838ceef8afd4d4e649078e3c33db2b0bcc997f12cc42b48051be18",
+    "evidence_url": "https://github.com/swyoon/outlier-reconstruction/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:33.782791Z"
+  },
+  "scan-1223109465": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes a badminton coaching application using video pose estimation, physical-motion reconstruction and training recommendations.",
+    "reason_zh": "README 描述的是利用视频姿态估计、人体运动重建和训练建议开展羽毛球教学的应用。",
+    "readme_sha256": "84417aa53a1fe6c7c8058b44e0346f49d8af0ca0c7011251967cce57c41484bd",
+    "evidence_url": "https://github.com/XiyuanFan/badminton/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:00:34.862237Z"
+  },
+  "scan-564978466": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README identifies a server for the ParticleChromo3D biological chromosome-structure reconstruction algorithm.",
+    "reason_zh": "README 明确描述了用于 ParticleChromo3D 生物染色体结构重建算法的服务端。",
+    "readme_sha256": "1f82ba17f6b1b6d4276533edbf79d28be377d9d17516cb0283254a862870dfb6",
+    "evidence_url": "https://github.com/OluwadareLab/ParticleChromo3D_Plus/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:35.345486Z"
+  },
+  "scan-126218597": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README identifies an OpenMVG/OpenMVS 3D reconstruction service implemented with Django, a geometric reconstruction workflow.",
+    "reason_zh": "README 明确描述了使用 Django 实现的 OpenMVG/OpenMVS 3D 重建服务，属于几何重建流程。",
+    "readme_sha256": "af4945020c148a0502306a6ec0cc290da203a6b26321a041e9ced6b5edb34bd7",
+    "evidence_url": "https://github.com/cjdool/3DDjango/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:00:35.771624Z"
+  },
+  "scan-49193429": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README documents transforming historical library catalog data into websites and combining reconstructed book collections in Solr.",
+    "reason_zh": "README 记录了将历史图书馆目录数据转换为网站，并在 Solr 中整合重建的藏书集合。",
+    "readme_sha256": "488040cae65931aa9a878b8e8a4be32fab7d68c46c09e6975a6dec51208cf4c0",
+    "evidence_url": "https://github.com/hbeyer/libreto-obsolete/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:00:36.211919Z"
+  },
+  "scan-1127316137": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes an application data snapshot, deduplication and incremental-sync library using Go chunking through Dart FFI.",
+    "reason_zh": "README 描述的是通过 Dart FFI 使用 Go 分块算法的应用数据快照、去重和增量同步库。",
+    "readme_sha256": "d4f9e3c82d3e79e9cdfdd2d4804dbcbbb9b66305dd0f2c962ed13bf7cf584921",
+    "evidence_url": "https://github.com/mario-meng/dart-cdc-sync/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:36.724871Z"
+  },
+  "scan-1395214706": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes a precision-farming IoT platform with sensor monitoring, physical digital-twin simulation and companion applications.",
+    "reason_zh": "README 描述的是精准农业物联网平台，提供传感器监测、物理数字孪生仿真及配套应用。",
+    "readme_sha256": "d1be89252c87766b2ef5004c9862cf7411bff0271c316cc5078ee8217201c84a",
+    "evidence_url": "https://github.com/Am4l-babu/AgriTwin/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:38.214387Z"
+  },
+  "scan-1209671282": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes video-based object geometry reconstruction using segmentation, COLMAP, Gaussian Splatting and mesh refinement.",
+    "reason_zh": "README 描述的是利用分割、COLMAP、高斯泼溅和网格细化进行基于视频的物体几何重建。",
+    "readme_sha256": "a891f88aa44ddc7abd677f4eff8795ac89d5321d734c4b4ae00a00125a71d636",
+    "evidence_url": "https://github.com/carlosfc02/gaussian-forge/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:38.661366Z"
+  },
+  "scan-1120151458": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes visual industrial-surface defect detection using an autoencoder reconstruction-error score and heatmaps.",
+    "reason_zh": "README 描述的是利用自编码器重建误差评分和热力图进行工业表面视觉缺陷检测。",
+    "readme_sha256": "3a58589c395e8f036dd8c0d8eea8faed8d6b4509b3dc818d8115073d5dde920a",
+    "evidence_url": "https://github.com/dinraj910/Industrial-Defect-Inspection-CNN-Autoencoder-Explainable-Heatmaps-/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:39.185879Z"
+  },
+  "scan-1267067683": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes reconstructing multispectral image bands and vegetation indices from ordinary RGB images.",
+    "reason_zh": "README 描述的是从普通 RGB 图像重建多光谱波段和植被指数。",
+    "readme_sha256": "af4e92184c716c7c1a5ff5a70a4dac2312b034fbc987e3e39c8ee8f9aef1e1a3",
+    "evidence_url": "https://github.com/getideas/MSUNet/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:39.710431Z"
+  },
+  "scan-963804089": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README is a digital-signal-processing teaching visualizer for sampling, quantization, PCM encoding and zero-order-hold signal reconstruction.",
+    "reason_zh": "README 描述的是用于采样、量化、PCM 编码和零阶保持信号重建的数字信号处理教学可视化工具。",
+    "readme_sha256": "2347b126ce6116701751743c98ac4e266de93a12ac247626de000794cf83cd31",
+    "evidence_url": "https://github.com/JeelDhamsaniya/Pulse-Coded-Modulation/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:00:40.594618Z"
+  },
+  "scan-1225535786": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes reconstructing room/object point clouds and meshes from video using Gaussian Splatting or NeRF pipelines.",
+    "reason_zh": "README 描述的是通过高斯泼溅或 NeRF 流程从视频重建房间／物体点云与网格。",
+    "readme_sha256": "48fec9372709cbd5e8efa9c48f0b31699438709b094515bae5ad39b7f19b896e",
+    "evidence_url": "https://github.com/Kajsing/RoomSplat/blob/Main/README.md",
+    "reviewed_at": "2026-10-16T12:00:41.107208Z"
+  },
+  "scan-1170811986": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README documents biological T-cell-receptor retrieval, germline allele assignment and reconstruction of receptor chains.",
+    "reason_zh": "README 记录的是生物学 T 细胞受体检索、胚系等位基因指派及受体链重建。",
+    "readme_sha256": "3e7ae09eb9601149e300682ed0b358b8df6392af71bb98f66176b9c8ca916732",
+    "evidence_url": "https://github.com/KilianMaire/tcr-explorer/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:35.281667Z"
+  },
+  "scan-1231607026": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes AI image-to-3D mesh generation and interactive viewing of reconstructed physical objects.",
+    "reason_zh": "README 描述的是利用 AI 从图像生成 3D 网格，并交互查看重建的物理物体。",
+    "readme_sha256": "32b50a6a6056f11148df358fb7320853f2c19a1b955891c1d30ac1c924ca95df",
+    "evidence_url": "https://github.com/liyinfb/images-to-3d/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:35.812548Z"
+  },
+  "scan-1038524892": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README presents a language-model efficiency program based on attention caching and wavelets.",
+    "reason_zh": "README 将项目描述为基于注意力缓存与小波技术的语言模型效率软件。",
+    "readme_sha256": "f4445c7983c14d2b44308774b7bb61cb501da70f46cf9c5f788dcc99bb619d22",
+    "evidence_url": "https://github.com/pluginepitaphe-cmd/DWARF/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:36.330426Z"
+  },
+  "scan-61272717": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes DICOM/MRI/CT data management and facial-tissue measurements for forensic physical-face reconstruction.",
+    "reason_zh": "README 描述的是为法医物理面部重建开展的 DICOM／MRI／CT 数据管理和面部组织测量。",
+    "readme_sha256": "c0b8dedcdd14120a58d0c352264214483e3d80d773ba6098278bd224dc655f91",
+    "evidence_url": "https://github.com/prathibhasathyajith/NeuroImagingDataPortal-ImageSelection/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:01:36.853957Z"
+  },
+  "scan-45649412": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The complete README describes reconstructing 3D objects from images taken by two or more webcams using OpenCV.",
+    "reason_zh": "完整 README 描述的是使用 OpenCV 从两个或更多网络摄像头的图像重建 3D 物体。",
+    "readme_sha256": "b9dd02d120f91f7865b2a7bfa9c9489271a8d0d76e155d2a65978fa3f79c26db",
+    "evidence_url": "https://github.com/xslim24x/Stereoscopic3DReconstruction/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:01:37.378407Z"
+  },
+  "scan-1241273096": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README implements a business-model ontology from an economics/design-science thesis, with value curves, financial summaries and business-model visualization.",
+    "reason_zh": "README 实现的是经济／设计科学论文中的商业模式本体，包含价值曲线、财务汇总和商业模式可视化。",
+    "readme_sha256": "46498bb1f931d3d623ad309b9023a240ff1b997168e0e755377b1bbfec2e8a11",
+    "evidence_url": "https://github.com/ZEYUJIANG1991/BMO-Lab/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:37.902421Z"
+  },
+  "scan-825315675": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README supplies general Flutter/Dart course slides and example-code snapshots for comparing a learner's implementation with lesson code.",
+    "reason_zh": "README 提供的是通用 Flutter／Dart 课程幻灯片及示例代码快照，用于将学员实现与课程代码对照。",
+    "readme_sha256": "14360ee3af18a511eeb264b3a710630b4debec9a9460d15358866a4c9dd5fbff",
+    "evidence_url": "https://github.com/ahmedyasser002/flutter-complete-guide-course-resources/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:38.880480Z"
+  },
+  "scan-306707066": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The complete README identifies cosmological large-scale-structure reconstruction from photometric redshift measurements.",
+    "reason_zh": "完整 README 明确描述的是通过测光红移测量重建宇宙大尺度结构。",
+    "readme_sha256": "de707bfe7412c74c6698c4777673654d0c4b9e42446390f087e289b4bc3ee029",
+    "evidence_url": "https://github.com/bhorowitz/photo-z/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:39.475538Z"
+  },
+  "scan-1133739220": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README reconstructs a climber's physical 3D pose from 2D video using MediaPipe and trajectory smoothing.",
+    "reason_zh": "README 描述的是使用 MediaPipe 和轨迹平滑从 2D 视频重建攀岩者的物理 3D 姿态。",
+    "readme_sha256": "1483f96fee904de54c68b44d048c2811b4b9cb388ba468ddf3cab932eb728ab8",
+    "evidence_url": "https://github.com/cruxbetalabs/reconstruct/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:39.924211Z"
+  },
+  "scan-1263992824": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes a Flutter binding to Apple's documented MKMapView API for maps, pins, overlays and screenshots.",
+    "reason_zh": "README 描述的是对 Apple 已公开文档的 MKMapView API 进行 Flutter 封装，提供地图、标记、覆盖层及截图。",
+    "readme_sha256": "76372abf0c5ace1699450c2aeda6e880e4cb31819af623ce682bfe31712eb6bc",
+    "evidence_url": "https://github.com/esenmx/mapkit_flutter/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:40.601081Z"
+  },
+  "scan-850763478": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README presents ordinary e-commerce application screens such as product details, shopping cart, signup and profile management.",
+    "reason_zh": "README 展示的是商品详情、购物车、注册和个人资料管理等普通电商应用界面。",
+    "readme_sha256": "832da7c1bd2ad814e2ed1e96088472772cbddb6a1bac83ea792d938d67edc3de",
+    "evidence_url": "https://github.com/HYDARAMONA/Shopyme_E_Commerce_App/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:41.048884Z"
+  },
+  "scan-490134977": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The complete README describes masked-face image restoration with a Pix2Pix conditional GAN for face recognition and related physical-face applications.",
+    "reason_zh": "完整 README 描述的是使用 Pix2Pix 条件 GAN 恢复戴口罩的人脸图像，用于人脸识别等物理面部应用。",
+    "readme_sha256": "ece9fd3d17ef8b680154c34bc6b3d9ac6cda65866e29d98f1a1f1e51c53501e0",
+    "evidence_url": "https://github.com/jawahar1609/Project_DIVULGE/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:41.610850Z"
+  },
+  "scan-1356767323": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes a personal-productivity client for tasks, habits, food, finance and focus controls, published as a client source snapshot.",
+    "reason_zh": "README 描述的是涵盖任务、习惯、饮食、财务和专注控制的个人生产力客户端，并以客户端源码快照形式公开。",
+    "readme_sha256": "4b4ac14c92e686d73014bad40ed95b6ff85ca5faeb236274dd90e208097f384a",
+    "evidence_url": "https://github.com/lucaspioli-oss/lumeon/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:42.102076Z"
+  },
+  "scan-1314953547": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README provides offline geographic lookup data and country-aware phone-input widgets for ordinary Flutter application development.",
+    "reason_zh": "README 提供的是用于常规 Flutter 应用开发的离线地理查询数据及按国家适配的电话号码输入组件。",
+    "readme_sha256": "700d331f51fe85e720f7435d25a9080776492286dc451c5154b863c21a88ed2a",
+    "evidence_url": "https://github.com/M-Tayyab-Mustafa/country_subdivision_data/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:43.152066Z"
+  },
+  "scan-950907336": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The complete README describes generating a 3D model from a PNG image with a neural renderer.",
+    "reason_zh": "完整 README 描述的是使用神经渲染器从 PNG 图像生成 3D 模型。",
+    "readme_sha256": "1011932ffc3a09a27f1204395e64cacef8fe988cbc24190cc933dbfe81cee667",
+    "evidence_url": "https://github.com/Mokmun/Poligon/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:43.672478Z"
+  },
+  "scan-1243959095": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The complete README distributes a transport-billing Android application and its sanitized Flutter development snapshot.",
+    "reason_zh": "完整 README 分发的是运输计费 Android 应用及其经过清理的 Flutter 开发快照。",
+    "readme_sha256": "163f693b5d9284f9514340147b6581e07cef142620c0c09d001268b1084e1891",
+    "evidence_url": "https://github.com/ranveerawasth/transport-billing-app/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:45.767183Z"
+  },
+  "scan-1231507664": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes an iMessage automated-reply application and installation workflow, without documenting protocol recovery or software analysis.",
+    "reason_zh": "README 描述的是 iMessage 自动回复应用及安装流程，未记录协议恢复或软件分析。",
+    "readme_sha256": "618a148fab17af006649eb8448b0263c842d0612b3e8d3f853666dde112b7132",
+    "evidence_url": "https://github.com/rocksunfishsinking953/nitro-imessage-agent/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:01:46.296177Z"
+  },
+  "scan-1247928431": {
+    "decision": "exclude",
+    "reason_code": "unrelated-project-purpose",
+    "reason_en": "The README describes build, test, signing and app-store publication automation through existing mobile development tools.",
+    "reason_zh": "README 描述的是通过现有移动开发工具进行构建、测试、签名和应用商店发布的自动化。",
+    "readme_sha256": "efd07363951deb82cab9ad95740516ec8c6793526cc5fdf61468ec4f60987221",
+    "evidence_url": "https://github.com/silviosotelo/mobile-release-mcp/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:01:46.948602Z"
+  },
+  "scan-623816748": {
+    "decision": "exclude",
+    "reason_code": "general-programming-course",
+    "reason_en": "The README distributes Flutter/Dart course slides and comparison code snapshots; it documents ordinary application development rather than reverse-engineering material.",
+    "reason_zh": "README 提供 Flutter/Dart 课程幻灯片和用于对照的代码快照，内容为普通应用开发，未记录逆向工程资料。",
+    "readme_sha256": "14360ee3af18a511eeb264b3a710630b4debec9a9460d15358866a4c9dd5fbff",
+    "evidence_url": "https://github.com/academind/flutter-complete-guide-course-resources/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:14.797748Z"
+  },
+  "scan-795687820": {
+    "decision": "exclude",
+    "reason_code": "physical-scene-viewer",
+    "reason_en": "The README identifies a viewer for 3D reconstructions of physical landmarks; the reconstructed objects are geographic scenes.",
+    "reason_zh": "README 明确说明这是实体地标三维重建结果的查看器，重建对象为地理场景。",
+    "readme_sha256": "7566f7737b14fc93176cf7e7912f097c6166f9945c9cc7627840bd40c57a90ee",
+    "evidence_url": "https://github.com/MegaScenes/web-viewer/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:15.241329Z"
+  },
+  "scan-701693534": {
+    "decision": "exclude",
+    "reason_code": "tomographic-reconstruction",
+    "reason_en": "The README describes computed-tomography image reconstruction, sinograms and volume visualization for scientific imaging.",
+    "reason_zh": "README 描述计算机断层成像重建、正弦图与体数据可视化，属于科学成像。",
+    "readme_sha256": "2401944aba58c33acc67139f4b7ee2fbb21c718915d4c0ca9380f7b90753722d",
+    "evidence_url": "https://github.com/gianthk/alrecon/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:03:15.727809Z"
+  },
+  "scan-666258413": {
+    "decision": "exclude",
+    "reason_code": "general-quotes-application",
+    "reason_en": "The README describes browsing, copying, downloading and sharing quotations in a conventional Flutter application.",
+    "reason_zh": "README 描述在普通 Flutter 应用中浏览、复制、下载和分享语录。",
+    "readme_sha256": "880afa009f594e1b2a88ce4d60b3045733d5b664f0e77d21106b44be0f87a5c4",
+    "evidence_url": "https://github.com/bunty-kumar/flutter_quotes/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:03:16.204027Z"
+  },
+  "scan-1061920932": {
+    "decision": "exclude",
+    "reason_code": "astronomical-instrument-modeling",
+    "reason_en": "The complete README describes geometric blueprints and 3D models of traditional astronomical instruments, outside software and system reverse engineering.",
+    "reason_zh": "完整 README 描述传统天文仪器的几何蓝图与三维模型，不属于软件或系统逆向工程。",
+    "readme_sha256": "233fbff81d69726b843cd56660a4f22bd4cd0a9d4f4b70be505fcf325661355b",
+    "evidence_url": "https://github.com/ftthimanshuu/AstroYantra/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:16.673567Z"
+  },
+  "scan-909147208": {
+    "decision": "exclude",
+    "reason_code": "physical-scene-reconstruction",
+    "reason_en": "The README describes image uploads, 3D scene/model reconstruction and a model gallery, without software or protocol reconstruction.",
+    "reason_zh": "README 描述图像上传、三维场景或模型重建及模型图库，未涉及软件或协议重建。",
+    "readme_sha256": "fcbe7a2206f391c4de77537bcf79bcbfdf8634774d7d53511f2b19c13fb00962",
+    "evidence_url": "https://github.com/SandeepaInduwaraSamaranayake/SwinVox_Web_App/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:17.102901Z"
+  },
+  "scan-677275590": {
+    "decision": "exclude",
+    "reason_code": "general-traffic-camera-application",
+    "reason_en": "The README presents a traffic-camera snapshot viewer with maps and bookmarks; no reverse-engineering or protocol investigation is documented.",
+    "reason_zh": "README 展示带地图与收藏功能的交通摄像头快照查看器，未记录逆向工程或协议研究。",
+    "readme_sha256": "caf829e0a0428fd011612db7c0934398317fa57943da618d1da3eaa2d5644227",
+    "evidence_url": "https://github.com/codeabelity/traffeye_sg_flutter/blob/develop/README.md",
+    "reviewed_at": "2026-10-16T12:03:17.608350Z"
+  },
+  "scan-1054453442": {
+    "decision": "exclude",
+    "reason_code": "spatial-measurement-system",
+    "reason_en": "The README documents an original time-of-flight sensor and stepper-motor system for mapping physical hallways, not analysis of existing software or device internals.",
+    "reason_zh": "README 记录的是使用飞行时间传感器与步进电机绘制实体走廊的原创测量系统，并非分析现有软件或设备内部机制。",
+    "readme_sha256": "afbbaa148e0cc6e0343ba4a0b9db759bc6a772c9f6638e3e23ec9c162182d345",
+    "evidence_url": "https://github.com/AmaiamUlHaque/Embedded-Spatial-Scanner/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:18.568799Z"
+  },
+  "scan-989498412": {
+    "decision": "exclude",
+    "reason_code": "digit-image-generation",
+    "reason_en": "The README describes a MNIST variational autoencoder for generating and reconstructing handwritten-digit images.",
+    "reason_zh": "README 描述用于生成与重建手写数字图像的 MNIST 变分自编码器。",
+    "readme_sha256": "6ece3d5ccbabf38659387fc1532c40f66b4090608d7205759914221f37f32cbb",
+    "evidence_url": "https://github.com/atharvpatil01/mnist-variational-autoencoder/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:19.089502Z"
+  },
+  "scan-610330175": {
+    "decision": "exclude",
+    "reason_code": "astronomical-visualization",
+    "reason_en": "The complete README describes a JavaScript/WebXR model of the Moon for a student project.",
+    "reason_zh": "完整 README 描述一个学生项目，使用 JavaScript/WebXR 构建月球模型。",
+    "readme_sha256": "88266374a66660cf8ad6662c546a5ced3a18d4fa7ae87ffb25de7c175a96423e",
+    "evidence_url": "https://github.com/BlueKilvin/VR-3D-Reconstruction/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:19.612458Z"
+  },
+  "scan-361197329": {
+    "decision": "exclude",
+    "reason_code": "human-body-image-reconstruction",
+    "reason_en": "The README bytes matching the captured SHA-256 describe PIFu reconstruction of human-body OBJ models from body and texture images, with a Django interface.",
+    "reason_zh": "与采集 SHA-256 一致的 README 描述通过 PIFu 从人体及纹理图像重建人体 OBJ 模型，并提供 Django 界面。",
+    "readme_sha256": "2c0dda8a9078ad116d1519ae8c850e012d5ff1da8c167a15bf45cfa352af05c8",
+    "evidence_url": "https://github.com/ddup-gh/recdemo/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:07:35.895281Z"
+  },
+  "scan-1316404085": {
+    "decision": "exclude",
+    "reason_code": "word-puzzle-solver",
+    "reason_en": "The source description identifies an image-based word-search puzzle solver and the exact README labels it a personal crossword project.",
+    "reason_zh": "来源简介明确说明这是基于图像的寻词谜题求解器，精确核验的 README 将其标为个人填词项目。",
+    "readme_sha256": "4f19c0ea49ddfa73b6677109056be173ef7a1bea5d2d0b5b40d9725991896453",
+    "evidence_url": "https://github.com/heidrickla/crossword/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:20.666329Z"
+  },
+  "scan-1018011136": {
+    "decision": "exclude",
+    "reason_code": "mathematical-waveform-visualization",
+    "reason_en": "The README describes an educational Fourier-series waveform and frequency-spectrum visualizer.",
+    "reason_zh": "README 描述用于教学的傅里叶级数波形与频谱可视化工具。",
+    "readme_sha256": "910d3718ae019400c352a5d0e29e16f6bbe467529f22141486b0e4fe6b64c4ff",
+    "evidence_url": "https://github.com/inverter3p/fourier/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:21.186756Z"
+  },
+  "scan-1388384255": {
+    "decision": "exclude",
+    "reason_code": "decorative-geometry-generation",
+    "reason_en": "The README reconstructs decorative Chinese symbols and text as red-lacquer 3D models from images or fonts.",
+    "reason_zh": "README 从图像或字体重建装饰性中文符号与文字的红漆风格三维模型。",
+    "readme_sha256": "9dd70615b49fa62c9048420d3732680d1dd5e023a9747a9d527f992f5d392d9b",
+    "evidence_url": "https://github.com/JesusGalindez/symbols-3D/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:21.791334Z"
+  },
+  "scan-489252461": {
+    "decision": "exclude",
+    "reason_code": "timeseries-anomaly-model",
+    "reason_en": "The source description is a Keras time-series anomaly-detection application; the README contains repository setup commands and no reverse-engineering study.",
+    "reason_zh": "来源简介为 Keras 时间序列异常检测应用；README 仅包含仓库设置命令，未记录逆向工程研究。",
+    "readme_sha256": "c69ddc2f171c4fe2c2f1237e32c1ad8b75e3ce8d950c1f93923887e7a63ecc9e",
+    "evidence_url": "https://github.com/oscarzapi/KerasAppTimeSeriesAnomalyDetection/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:03:22.264210Z"
+  },
+  "scan-1120045881": {
+    "decision": "exclude",
+    "reason_code": "medical-image-analysis",
+    "reason_en": "The complete README describes chest-X-ray anomaly detection for pneumonia screening using an autoencoder.",
+    "reason_zh": "完整 README 描述使用自编码器分析胸部 X 光片异常以筛查肺炎。",
+    "readme_sha256": "360ecbad835ed427e19ff289a0dba26059f2a0913f2696ac36fc26b2f121bdb6",
+    "evidence_url": "https://github.com/Prakrutee/pneumonia-detection-app/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:10.996950Z"
+  },
+  "scan-1235211148": {
+    "decision": "exclude",
+    "reason_code": "bioinformatics-education",
+    "reason_en": "The README provides biological sequence, protein-structure and phylogenetic algorithm visualizers for a bioinformatics course.",
+    "reason_zh": "README 提供用于生物信息学课程的生物序列、蛋白质结构与系统发育算法可视化工具。",
+    "readme_sha256": "27e52d909b1630be28e2c31a698931cc0a2986ba3b8119ef3db8f51d4041f315",
+    "evidence_url": "https://github.com/r-sayar/algbio-edu/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:11.601867Z"
+  },
+  "scan-1201275701": {
+    "decision": "exclude",
+    "reason_code": "physical-flow-reconstruction",
+    "reason_en": "The README describes PINN/CFD reconstruction of fluid velocity and pressure fields inside microfluidic chips.",
+    "reason_zh": "README 描述使用 PINN/CFD 重建微流控芯片内的流体速度与压力场。",
+    "readme_sha256": "2d3872cd694148d6096d3c55673d02f9382754fd22faebff5b7fb2f731534b15",
+    "evidence_url": "https://github.com/Ruler4396/pinn-platform-v4/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:12.097174Z"
+  },
+  "scan-1332771269": {
+    "decision": "exclude",
+    "reason_code": "text-remixing-application",
+    "reason_en": "The README describes generating new prose through Markov-chain word-level cut-up and recombination.",
+    "reason_zh": "README 描述使用马尔可夫链进行词级剪贴与重组以生成新文章。",
+    "readme_sha256": "ed4d2d3cca784d71a4ec996146fb5f118d0a64244988542648d45bc33e757caf",
+    "evidence_url": "https://github.com/tariki/cutup-machine/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:12.625185Z"
+  },
+  "scan-1383583551": {
+    "decision": "exclude",
+    "reason_code": "general-content-platform",
+    "reason_en": "The README documents a conventional Rust headless CMS with generated API contracts and synchronized frontends, without a reverse-engineering purpose.",
+    "reason_zh": "README 记录一个通过生成 API 契约及同步前端实现的常规 Rust 无头 CMS，未呈现逆向工程用途。",
+    "readme_sha256": "5628e2eaf3c6c6fad83c08b3a54c3605814ef8548fb5e4eda1d88974ac185aec",
+    "evidence_url": "https://github.com/tx7do/rushwind-cms/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:13.159210Z"
+  },
+  "scan-1050989424": {
+    "decision": "exclude",
+    "reason_code": "cultural-heritage-modeling",
+    "reason_en": "The README describes Gaussian-splatting digital twins of physical cultural-heritage sites from photographs.",
+    "reason_zh": "README 描述通过照片和高斯泼溅生成实体文化遗产地点的数字孪生模型。",
+    "readme_sha256": "73bd76166fdc758bbdd9bb3dd7bda2ea3731961954c2ff77dfd7cadcb8517d7a",
+    "evidence_url": "https://github.com/xubin123xubin/One-Click-Web-Based-3D-Reconstruction/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:13.661952Z"
+  },
+  "scan-182619456": {
+    "decision": "exclude",
+    "reason_code": "image-inpainting-application",
+    "reason_en": "The README describes removing and reconstructing regions of photographs using a partial-convolution image-repair model.",
+    "reason_zh": "README 描述使用部分卷积图像修复模型删除并重建照片中的区域。",
+    "readme_sha256": "85ca6cf16b44651c4269c9ef7c6e7e65a3b32e9c20c0c5c93acfbfc1f6eaadf9",
+    "evidence_url": "https://github.com/ZhangZhida/DataAnalyticsPipeline_ImageReconstruction/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:04:14.141787Z"
+  },
+  "scan-986769654": {
+    "decision": "exclude",
+    "reason_code": "general-notes-application",
+    "reason_en": "The complete README describes a notes app with calendar-based backups and restoration.",
+    "reason_zh": "完整 README 描述一个提供日历备份查看与恢复功能的笔记应用。",
+    "readme_sha256": "f0822377a9e2cee60eb549c06224748227236d91fe9e84fc62a8d0c9195d37fe",
+    "evidence_url": "https://github.com/A-THIF/NoteApp-with-Backup/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:14.555151Z"
+  },
+  "scan-1298425498": {
+    "decision": "exclude",
+    "reason_code": "general-lab-management",
+    "reason_en": "The README documents classroom computer administration, attendance, screenshots and remote management, without reverse-engineering investigation.",
+    "reason_zh": "README 记录教学机房的计算机管理、考勤、截图和远程管理，未涉及逆向工程研究。",
+    "readme_sha256": "7d28bf6c67f0c64e138e4e7d90822cf5739d5beabb05be8665b554a100da5691",
+    "evidence_url": "https://github.com/anan531/SmartLab-App/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:15.011810Z"
+  },
+  "scan-1366738940": {
+    "decision": "exclude",
+    "reason_code": "general-health-api-plugin",
+    "reason_en": "The README documents a Flutter wrapper around Apple HealthKit and Google Fit, including supported health measurements and API usage.",
+    "reason_zh": "README 记录封装 Apple HealthKit 与 Google Fit 的 Flutter 插件，介绍健康测量类型和 API 用法。",
+    "readme_sha256": "33cd262ce6deb1ec951589ee58867996023cb31355ccd533b39138b9025ce615",
+    "evidence_url": "https://github.com/asmodeoux/flutter-health-kit-plugin/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:04:15.443299Z"
+  },
+  "scan-1151664420": {
+    "decision": "exclude",
+    "reason_code": "personal-memory-application",
+    "reason_en": "The README explicitly concerns human memories and dream interpretation; it is not computer-memory reconstruction or software forensics.",
+    "reason_zh": "README 明确涉及人类记忆与梦境解读，并非计算机内存重建或软件取证。",
+    "readme_sha256": "42efd23b8be60f0c0e03a4a786adf76b1326d3441d034d5ddc3459f45d412ebc",
+    "evidence_url": "https://github.com/Cyamos2/EchoTrace/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:16.291984Z"
+  },
+  "scan-1090537306": {
+    "decision": "exclude",
+    "reason_code": "paleoclimate-visualization",
+    "reason_en": "The README turns paleoclimate NetCDF reconstruction results into geographic maps and climate time-series visualizations.",
+    "reason_zh": "README 将古气候 NetCDF 重建结果转换为地理地图与气候时间序列可视化。",
+    "readme_sha256": "25e89d147936dff4365d5f65dd6d30fd7894e5c3a85a1690e6d81a560d39a9f4",
+    "evidence_url": "https://github.com/DaveEdge1/presto-viz/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:16.689169Z"
+  },
+  "scan-1410864420": {
+    "decision": "exclude",
+    "reason_code": "general-language-learning-application",
+    "reason_en": "The README presents a personal English-learning product and a review-only client-code snapshot.",
+    "reason_zh": "README 展示一个个人英语学习产品及仅供审查的客户端代码快照。",
+    "readme_sha256": "149d7c0a2a82a9169f081b6b17c4bb20c7f61877eeb7d8c7304effee9b653ff9",
+    "evidence_url": "https://github.com/deniskocs/learn-english-showcase/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:17.189431Z"
+  },
+  "scan-1246530914": {
+    "decision": "exclude",
+    "reason_code": "general-podcast-player",
+    "reason_en": "The README describes ordinary podcast subscription, playback, download and optional transcription functions.",
+    "reason_zh": "README 描述常规的播客订阅、播放、下载及可选转录功能。",
+    "readme_sha256": "7ac12e0cd63d5606d0a06913fb62f7ca5e2f908f43bee5f5380618bc6e60a01d",
+    "evidence_url": "https://github.com/frontierviking/frontiercast-public/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:17.676471Z"
+  },
+  "scan-1297161009": {
+    "decision": "exclude",
+    "reason_code": "general-feature-flag-sdk",
+    "reason_en": "The README documents a GreenFlags client SDK, feature-flag caching and persistence, rather than protocol or software reverse engineering.",
+    "reason_zh": "README 记录 GreenFlags 客户端 SDK、功能开关缓存与持久化，并非协议或软件逆向工程。",
+    "readme_sha256": "3d9278729f57bda08921eee6236333015473514a311dcba462af60196f326837",
+    "evidence_url": "https://github.com/greenflags-dev/greenflags-flutter/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:04:18.336560Z"
+  },
+  "scan-1256307178": {
+    "decision": "exclude",
+    "reason_code": "general-photo-collage-application",
+    "reason_en": "The README describes capturing daily photographs and assembling monthly social-media collages.",
+    "reason_zh": "README 描述拍摄日常照片并生成用于社交媒体的月度拼贴图。",
+    "readme_sha256": "78905f9cabfdb9f48f26a3a55c9e47e499bd7b09d85f72f511cc26cd23bfafb5",
+    "evidence_url": "https://github.com/IAMBOT836/Dumpiez/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:05:28.504491Z"
+  },
+  "scan-1416845438": {
+    "decision": "exclude",
+    "reason_code": "general-music-player",
+    "reason_en": "The README presents a personal-library music player with import, queues and an optional social service.",
+    "reason_zh": "README 展示一个支持导入、播放队列及可选社交服务的个人音乐库播放器。",
+    "readme_sha256": "74d22aee14caa6dab7c6beadd6b176f71b76bd12ed63068b1e6a3af5683ffbc8",
+    "evidence_url": "https://github.com/kevinscott66/viora/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:05:29.023091Z"
+  },
+  "scan-275897752": {
+    "decision": "exclude",
+    "reason_code": "paleoenvironmental-reconstruction",
+    "reason_en": "The complete README identifies a site about reconstructing past environments from lake sediments.",
+    "reason_zh": "完整 README 明确说明这是介绍通过湖泊沉积物重建古环境的网站。",
+    "readme_sha256": "e08afbb2c1c669f1eaec7c5632101919fee6b6ca303c8ad964b1cbbac7eda316",
+    "evidence_url": "https://github.com/Magda-web/webpaleo/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:05:29.556998Z"
+  },
+  "scan-176830428": {
+    "decision": "exclude",
+    "reason_code": "general-flutter-ci-demo",
+    "reason_en": "The complete README demonstrates quickboot emulator snapshots for running Flutter tests in Travis CI.",
+    "reason_zh": "完整 README 演示利用 quickboot 模拟器快照在 Travis CI 中运行 Flutter 测试。",
+    "readme_sha256": "7f55abed68aa04e01494754db472cc51aa299b76a645f490750bff9b37904dfd",
+    "evidence_url": "https://github.com/mmcc007/hot-emulator-demo/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:05:30.501116Z"
+  },
+  "scan-1358147380": {
+    "decision": "exclude",
+    "reason_code": "general-flutter-application-snapshot",
+    "reason_en": "The description identifies a Flutter app snapshot for external review; the README contains only starter guidance and development-environment checks.",
+    "reason_zh": "简介将其标为供外部审查的 Flutter 应用快照；README 仅包含入门指南与开发环境检查。",
+    "readme_sha256": "5624a96fba4274944140b7474ec2a7a073ec1ad415aff419b32820e37bd1d586",
+    "evidence_url": "https://github.com/nousonworktechnologies/kredme-review/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:05:30.974542Z"
+  },
+  "scan-139072326": {
+    "decision": "exclude",
+    "reason_code": "biological-network-reconstruction",
+    "reason_en": "The README describes collaborative reconstruction and curation of genome-scale metabolic networks in systems biology.",
+    "reason_zh": "README 描述系统生物学中基因组尺度代谢网络的协作重建与整理。",
+    "readme_sha256": "328e76142d6914c5a0699456a8f94d1a17cf9a4dbe46cc3a5a7e9040d4b94df3",
+    "evidence_url": "https://github.com/porld/jamboree/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:05:31.462118Z"
+  },
+  "scan-490134989": {
+    "decision": "exclude",
+    "reason_code": "general-payment-sdk",
+    "reason_en": "The README documents normal integration of the Xendit payment service into Flutter applications.",
+    "reason_zh": "README 记录在 Flutter 应用中常规集成 Xendit 支付服务的方法。",
+    "readme_sha256": "ecfcd7cbc4229c718dcd00c388c31cf529c45e5fe0016fd9cc758df99defeb8c",
+    "evidence_url": "https://github.com/rapidev-indonesia/Flutter-Xendit/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:05:31.913698Z"
+  },
+  "scan-991964571": {
+    "decision": "exclude",
+    "reason_code": "general-network-camera-application",
+    "reason_en": "The README describes a phone camera service exposing image snapshots over HTTP, with flashlight and display controls.",
+    "reason_zh": "README 描述通过 HTTP 提供图像快照的手机摄像头服务，附带手电筒与显示控制。",
+    "readme_sha256": "db7d20c75cfafd83aa4972a2bdb8f55507b8c3e98035b4e9688124bfb3387fe9",
+    "evidence_url": "https://github.com/sanyabeast/cam_point/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:05:32.299943Z"
+  },
+  "scan-893354207": {
+    "decision": "exclude",
+    "reason_code": "cosmological-density-reconstruction",
+    "reason_en": "The complete README concerns density-field reconstruction and extraction of cosmic-web components in cosmology.",
+    "reason_zh": "完整 README 涉及宇宙学中的密度场重建与宇宙网组成部分提取。",
+    "readme_sha256": "1d8b5fdc65818e91f6c5f057ec51635823857a0081ea5b30e572e788534bf13b",
+    "evidence_url": "https://github.com/sinataamoli/Cosmic-web-LSS/blob/main/README.md",
+    "reviewed_at": "2026-10-16T12:05:32.695233Z"
+  },
+  "scan-1389232579": {
+    "decision": "exclude",
+    "reason_code": "physical-room-layout-application",
+    "reason_en": "The README describes scanning a desk with a camera and helping users restore the arrangement of physical objects after cleaning.",
+    "reason_zh": "README 描述通过摄像头扫描桌面，并帮助用户在清理后恢复实体物品的摆放位置。",
+    "readme_sha256": "c51130cd458189495ff9b85d418aa66f45a4be75a137f8cf3fa72051169c5881",
+    "evidence_url": "https://github.com/Sragon-000/fixlens-spatial-reconstruction/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:05:33.308458Z"
+  },
+  "scan-600415507": {
+    "decision": "exclude",
+    "reason_code": "image-restoration-application",
+    "reason_en": "The README describes restoring low-resolution distorted photographs and generating image captions.",
+    "reason_zh": "README 描述修复低分辨率失真照片并生成图像描述。",
+    "readme_sha256": "bbb7c7d317b81a13f6be932980c089e6dd819913dce37b0e5900d1eb63a589dc",
+    "evidence_url": "https://github.com/tahsina-azam/ReconLab/blob/main/Readme.md",
+    "reviewed_at": "2026-10-16T12:05:33.729843Z"
+  },
+  "scan-676264110": {
+    "decision": "exclude",
+    "reason_code": "general-screenshot-application",
+    "reason_en": "The source description is a screenshot-capture utility; the exact README is a generic Flutter starter without reverse-engineering material.",
+    "reason_zh": "来源简介为截图工具；精确核验的 README 是通用 Flutter 入门模板，未提供逆向工程资料。",
+    "readme_sha256": "37b209f28eaa74e24c536d8f828320f3ca9667c8fdea1fde261e55c9718ab974",
+    "evidence_url": "https://github.com/VANSHTRIVEDI/Multiple_Screenshot_Taker/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:05:34.135573Z"
+  },
+  "scan-707279121": {
+    "decision": "exclude",
+    "reason_code": "general-flutter-learning",
+    "reason_en": "The description presents Flutter concepts and widgets; the complete README only identifies a new Flutter project.",
+    "reason_zh": "简介介绍 Flutter 概念与组件；完整 README 仅将其标为新建 Flutter 项目。",
+    "readme_sha256": "90a3e94258fe9477838ac928f2e5ea13904ca99dce0db1346bfe6be49b01a124",
+    "evidence_url": "https://github.com/yurixcode/flutter-overview/blob/master/README.md",
+    "reviewed_at": "2026-10-16T12:05:34.623047Z"
+  },
+  "scan-1345928135": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes the ShadowStrike IL2CPP overlay trainer through a Download badge linking to a separate github.io page and a placeholder Releases link; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过指向独立 github.io 页面的下载徽章和一个占位的 Releases 链接推广 ShadowStrike IL2CPP 覆盖层训练工具，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "945471106c529bfa7d239a0d2f1cb6778ce122c6681710b6a248d649ce904593",
+    "evidence_url": "https://github.com/BADDIV/punchline-arena-enhancer/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1345931397": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes the Elysian Ledger companion for Disco Elysium, described as a portable binary, through a Download badge linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过指向独立 github.io 页面的下载徽章推广以便携程序形式提供的 Disco Elysium 伴侣工具 Elysian Ledger，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "5eee24b5ee545193149012a39f148404522f0b8c49da99e8d2144b957ad9bcde",
+    "evidence_url": "https://github.com/Pacool1980/disco-psychometry-probe/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1345958659": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes the Megabonk Forge reaction-training application through a Download badge linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过指向独立 github.io 页面的下载徽章推广反应训练应用 Megabonk Forge，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "057808d8e8ead060b4b1411f1784c4d8b9442babbd551fdd66ab907dbfe56982",
+    "evidence_url": "https://github.com/egalaksonoputra-commits/MegaBonk-Sparring/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1345962589": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes the MonstersAreComing-Chronicler session companion through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广会话记录工具 MonstersAreComing-Chronicler，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "f27972538092cb740bd54cff77a0dfef732a53116d1464f96400b92a1063dd10",
+    "evidence_url": "https://github.com/aryanrajug23nsut/MonsterTide-Tactician/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1345975706": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes the ChronoVault save manager for Rebirth Pub through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Rebirth Pub 存档管理工具 ChronoVault，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "a05dafc1836dca71445e1e3837f4877658d2d37e5cafe0e5995ae4cb119f78ac",
+    "evidence_url": "https://github.com/udflk/Rebirth-Pub-Save-Forge/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1345986452": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes a Frida script suite for SpacePeng through a Download badge linking to a separate github.io page; setup starts from an extracted archive, its command examples name scripts it does not link, and it gives no format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过指向独立 github.io 页面的下载徽章推广 SpacePeng 的 Frida 脚本套件；安装从解压归档开始，命令示例中的脚本均未提供链接，也没有格式分析或逆向分析结果。",
+    "readme_sha256": "7400ba3a56830942a0cd9e0653a7657d467d99c93b31fd54f237be7e2a02b714",
+    "evidence_url": "https://github.com/fdfsdfsdfss/spacepeng-frida-playground/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380512906": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes an Anime Shop Simulator mod toolkit through repeated Download badges linking to a separate github.io page; apart from a one-sentence generic build note it links no source files and gives no format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Anime Shop Simulator 模组工具包；除一句笼统的构建说明外，未链接任何源码文件，也没有格式分析或逆向分析结果。",
+    "readme_sha256": "6c6451370759d7614addaed4310633a15384c6119b16f55d1e9ae5f2f487ddee",
+    "evidence_url": "https://github.com/andreibalakin18-ai/anime-shop-sim-clerk-brain/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380513661": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes the Apprentice memory editor and runtime instrumentation suite through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广内存编辑与运行时插桩套件 Apprentice，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "87611c0436e3477e925bc52b9217dc9f6a20097583210f96fa9fa47801a00134",
+    "evidence_url": "https://github.com/malukbattah-hue/memory-forge/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380536736": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes the RoomRunner Toolkit gameplay overlay for Cumrooms through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Cumrooms 游戏覆盖层工具 RoomRunner Toolkit，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "9de5534c6233648fa0d3f0135f1a422b475d642481d6ae55abc28ce641899ab0",
+    "evidence_url": "https://github.com/aldimirosilva/Cumrooms-PUNCH-Trainer-Suite/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380541632": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes a Disco Elysium trainer companion suite through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Disco Elysium 修改器伴侣套件，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "f4aa786f4370246b62ac8666ee949db23dc6f78a3f63700f576a6995625cf736",
+    "evidence_url": "https://github.com/BlackBikerss/Elysium-Skill-Forge/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380573010": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes a Magical Princess trainer companion for macOS through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 macOS 版 Magical Princess 修改器伴侣工具，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "3c3ee74a2641a85184a128ef3a3092755365a57ba240b505eafeb5d4dc0563ae",
+    "evidence_url": "https://github.com/LuisFernando56/PrincessTrainer-Forge-macOS/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380575055": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes a Megabonk trainer companion through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Megabonk 修改器伴侣工具，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "8bd7e8d156cf6c6744d87f29a044066a8ad2c58b47ea2c6bb7686461ad0bdc7f",
+    "evidence_url": "https://github.com/revendaguestus-pixel/Megabonk-Companion-Suite/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380576047": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes a Megabonk trainer companion through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Megabonk 修改器伴侣工具，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "4358dd175d95d7276610aa50ad7c0d972d505d22b3cd6e32599b88bf40708d8c",
+    "evidence_url": "https://github.com/obitokirecovery-cpu/Megabonk-Companion-Suite/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380579130": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes a Monsters Are Coming trainer companion suite through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Monsters Are Coming 修改器伴侣套件，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "dac583613f8069c962e96faa1f6bd93ab3e9e94bccb705bcf591903ded7c2a5d",
+    "evidence_url": "https://github.com/satishjadhav77485-blip/Monsters-Are-Coming-Companion/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380594280": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes a Rebirth Pub save editor through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Rebirth Pub 存档编辑器，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "b29c67aaa89918d858dc7e268c8dbb968d24cf3f484a5451576c3ea8980ec5fc",
+    "evidence_url": "https://github.com/Madlil007/Rebirth-Pub-Save-Forge/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380604796": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes the OrbitKit game-instrumentation playground through repeated Download badges linking to a separate github.io page; it describes folders and examples without linking any files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广游戏插桩实验工具 OrbitKit；文中描述了目录和示例，但未链接任何文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "63aa4e8b45db3ef344550329d2699284ef3246d6d289e71fcd9a664fff7d0f8f",
+    "evidence_url": "https://github.com/Spleefy167/frida-orbit-lab/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380608491": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes a Taskbar Hero automation companion through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Taskbar Hero 自动化伴侣工具，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "db3c51380a08758280a734b05eded2e03483150501d102f4ad71e60435e0396c",
+    "evidence_url": "https://github.com/MrCopperDev/TaskbarHero-Forge/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1380615185": {
+    "decision": "exclude",
+    "reason_code": "game-promotion-page",
+    "reason_en": "The README promotes the ModForge-IL2Cpp Unity trainer framework through repeated Download badges linking to a separate github.io page; it links no source files and gives no build steps, format analysis or reverse-engineering findings.",
+    "reason_zh": "README 通过多个指向独立 github.io 页面的下载徽章推广 Unity IL2Cpp 修改器框架 ModForge-IL2Cpp，未链接任何源码文件，也没有构建步骤、格式分析或逆向分析结果。",
+    "readme_sha256": "533fbf91c47345acdcf6069dc7bb4e41ceaf4471cc5ee03f09426c671092a1e4",
+    "evidence_url": "https://github.com/stine814-sk/Il2Cpp-Trainer-Forge/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1421203934": {
+    "decision": "exclude",
+    "reason_code": "duplicate-readme-copy",
+    "reason_en": "The README is byte-identical to the scanned README of scan-1255951226 (index-login/MobileRE-Skill, created 2026-06-01), an earlier repository with the same name.",
+    "reason_zh": "README 与更早创建的同名仓库 scan-1255951226（index-login/MobileRE-Skill，创建于 2026-06-01）的扫描结果逐字节相同。",
+    "readme_sha256": "6d7ae893970a5fdee0729a75ff5c58c862b7b17e14e34e6f449a90bc778c5078",
+    "evidence_url": "https://github.com/helmutleclerc09/MobileRE-Skill/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1421230756": {
+    "decision": "exclude",
+    "reason_code": "duplicate-readme-copy",
+    "reason_en": "The README is byte-identical to the scanned README of scan-1255951226 (index-login/MobileRE-Skill, created 2026-06-01), an earlier repository with the same name.",
+    "reason_zh": "README 与更早创建的同名仓库 scan-1255951226（index-login/MobileRE-Skill，创建于 2026-06-01）的扫描结果逐字节相同。",
+    "readme_sha256": "6d7ae893970a5fdee0729a75ff5c58c862b7b17e14e34e6f449a90bc778c5078",
+    "evidence_url": "https://github.com/CemAhmed67836/MobileRE-Skill/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1421230956": {
+    "decision": "exclude",
+    "reason_code": "duplicate-readme-copy",
+    "reason_en": "The README is byte-identical to the scanned README of scan-1255951226 (index-login/MobileRE-Skill, created 2026-06-01), an earlier repository with the same name.",
+    "reason_zh": "README 与更早创建的同名仓库 scan-1255951226（index-login/MobileRE-Skill，创建于 2026-06-01）的扫描结果逐字节相同。",
+    "readme_sha256": "6d7ae893970a5fdee0729a75ff5c58c862b7b17e14e34e6f449a90bc778c5078",
+    "evidence_url": "https://github.com/ErikZhang22526/MobileRE-Skill/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1418462661": {
+    "decision": "exclude",
+    "reason_code": "duplicate-readme-copy",
+    "reason_en": "The README is byte-identical to the scanned README of scan-1337420546 (dslsdzc/rev-skills, created 2026-08-17), an earlier repository with the same name.",
+    "reason_zh": "README 与更早创建的同名仓库 scan-1337420546（dslsdzc/rev-skills，创建于 2026-08-17）的扫描结果逐字节相同。",
+    "readme_sha256": "fbce34be0aa0108b202f9485039352ca560f2aeee0e79a28a81e4c39fa7d737f",
+    "evidence_url": "https://github.com/georgesmorales/rev-skills/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1421214499": {
+    "decision": "exclude",
+    "reason_code": "duplicate-readme-copy",
+    "reason_en": "The README is byte-identical to the scanned README of scan-1337420546 (dslsdzc/rev-skills, created 2026-08-17), an earlier repository with the same name.",
+    "reason_zh": "README 与更早创建的同名仓库 scan-1337420546（dslsdzc/rev-skills，创建于 2026-08-17）的扫描结果逐字节相同。",
+    "readme_sha256": "fbce34be0aa0108b202f9485039352ca560f2aeee0e79a28a81e4c39fa7d737f",
+    "evidence_url": "https://github.com/walczak74/rev-skills/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1421972961": {
+    "decision": "exclude",
+    "reason_code": "duplicate-readme-copy",
+    "reason_en": "The README is byte-identical to the scanned README of scan-1337420546 (dslsdzc/rev-skills, created 2026-08-17), an earlier repository with the same name.",
+    "reason_zh": "README 与更早创建的同名仓库 scan-1337420546（dslsdzc/rev-skills，创建于 2026-08-17）的扫描结果逐字节相同。",
+    "readme_sha256": "fbce34be0aa0108b202f9485039352ca560f2aeee0e79a28a81e4c39fa7d737f",
+    "evidence_url": "https://github.com/JudithEngstrom89932/rev-skills/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1421997475": {
+    "decision": "exclude",
+    "reason_code": "duplicate-readme-copy",
+    "reason_en": "The README is byte-identical to the scanned README of scan-1337420546 (dslsdzc/rev-skills, created 2026-08-17), an earlier repository with the same name.",
+    "reason_zh": "README 与更早创建的同名仓库 scan-1337420546（dslsdzc/rev-skills，创建于 2026-08-17）的扫描结果逐字节相同。",
+    "readme_sha256": "fbce34be0aa0108b202f9485039352ca560f2aeee0e79a28a81e4c39fa7d737f",
+    "evidence_url": "https://github.com/MartinAydin/rev-skills/blob/main/README.md",
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1377172300": {
+    "decision": "exclude",
+    "reason_code": "upstream-unavailable",
+    "reason_en": "On 2026-10-17, GitHub returned HTTP 404 for both repository ID 1377172300 and the recorded name newliver666/apk-reverse.",
+    "reason_zh": "2026-10-17 复查时，GitHub 对仓库 ID 1377172300 和记录的名称 newliver666/apk-reverse 均返回 HTTP 404。",
+    "readme_sha256": "0b9e98e99566da7c38d4314d62e83c14f058e98c3ee38c8481489a2b8b9a597f",
+    "availability_check": {
+      "id": "scan-1377172300",
+      "recorded_full_name": "newliver666/apk-reverse",
+      "observed_at": "2026-10-17T13:47:11.766764Z",
+      "outcome": "not-found",
+      "http_status": 404,
+      "recorded_name_status": "not-found",
+      "recorded_name_http_status": 404
+    },
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1409072094": {
+    "decision": "exclude",
+    "reason_code": "upstream-unavailable",
+    "reason_en": "On 2026-10-17, GitHub returned HTTP 404 for both repository ID 1409072094 and the recorded name BAB2007/yuda-run-helper.",
+    "reason_zh": "2026-10-17 复查时，GitHub 对仓库 ID 1409072094 和记录的名称 BAB2007/yuda-run-helper 均返回 HTTP 404。",
+    "readme_sha256": "4008588feac4e464e9d1e4182413b1447916fe5c46c8f2bd988f3cffe4e736b3",
+    "availability_check": {
+      "id": "scan-1409072094",
+      "recorded_full_name": "BAB2007/yuda-run-helper",
+      "observed_at": "2026-10-17T13:47:12.840690Z",
+      "outcome": "not-found",
+      "http_status": 404,
+      "recorded_name_status": "not-found",
+      "recorded_name_http_status": 404
+    },
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1238268014": {
+    "decision": "exclude",
+    "reason_code": "upstream-unavailable",
+    "reason_en": "On 2026-10-17, GitHub returned HTTP 404 for repository ID 1238268014, and the recorded name Shellghostt/De-Caffeinator now resolves to a different repository, ID 1244345068.",
+    "reason_zh": "2026-10-17 复查时，GitHub 对仓库 ID 1238268014 返回 HTTP 404，记录的名称 Shellghostt/De-Caffeinator 现已指向另一个仓库（ID 1244345068）。",
+    "readme_sha256": "1305310db9d2fec4ae499d0f22338604c8239052355b9fdb523d94da46689a15",
+    "availability_check": {
+      "id": "scan-1238268014",
+      "recorded_full_name": "Shellghostt/De-Caffeinator",
+      "observed_at": "2026-10-17T13:47:10.599033Z",
+      "outcome": "name-reassigned",
+      "http_status": 404,
+      "recorded_name_status": "other-repository",
+      "recorded_name_http_status": 200,
+      "recorded_name_repository_id": "scan-1244345068",
+      "recorded_name_current_full_name": "Shellghostt/De-Caffeinator"
+    },
+    "reviewed_at": "2026-10-17"
+  },
+  "scan-1417013841": {
+    "decision": "exclude",
+    "reason_code": "upstream-unavailable",
+    "reason_en": "Metadata recheck on 2026-10-20: repository ID 1417013841 returned HTTP 404; albertolicea00/transfermovil-src-reversed now resolves to public repository ID 1423698173 (HTTP 200). The historical capture is retained, but its link no longer identifies the scanned repository.",
+    "reason_zh": "2026-10-20 元数据复查：仓库 ID 1417013841 返回 HTTP 404；albertolicea00/transfermovil-src-reversed 现指向公开仓库 ID 1423698173（HTTP 200）。保留历史采集记录，但其链接已不再对应当时扫描的仓库。",
+    "readme_sha256": "1530ac107640676f69c7f8654819cc0ead165e2d6c2f006de0d480e1b111e403",
+    "availability_check": {
+      "id": "scan-1417013841",
+      "recorded_full_name": "albertolicea00/transfermovil-src-reversed",
+      "observed_at": "2026-10-20T15:17:40.277450+00:00",
+      "outcome": "name-reassigned",
+      "http_status": 404,
+      "recorded_name_status": "other-repository",
+      "recorded_name_http_status": 200,
+      "recorded_name_repository_id": "scan-1423698173",
+      "recorded_name_current_full_name": "albertolicea00/transfermovil-src-reversed"
+    },
+    "reviewed_at": "2026-10-20T15:20:53.249852+00:00"
+  }
+}
