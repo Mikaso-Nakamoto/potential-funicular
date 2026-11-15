@@ -153,6 +153,28 @@ Check ('подписка base64: узлов ' + $fromB64.Count) ($fromB64.Count 
 $fromTxt = @(ConvertTo-Nodes $body)
 Check ('подписка текстом: узлов ' + $fromTxt.Count) ($fromTxt.Count -eq $links.Count)
 
+# ------------------------------------------------------------- секреты в логах
+$VpnDir = Join-Path (Split-Path -Parent $PSScriptRoot) 'vpn'
+$logDir = Join-Path $VpnDir 'logs'
+$logFiles = @()
+if (Test-Path $logDir) { $logFiles = @(Get-ChildItem $logDir -Filter '*.log' -File -ErrorAction SilentlyContinue) }
+$logText = ''
+foreach ($lf in $logFiles) {
+    try { $logText += (Get-Content $lf.FullName -Raw -ErrorAction SilentlyContinue) } catch { }
+}
+$secretHits = @()
+if ($logText -match 'vless://') { $secretHits += 'vless-ссылка' }
+if ($logText -match '/sub/[A-Za-z0-9]{8,}') { $secretHits += 'URL подписки' }
+Check ('в логах нет ключей и ссылки подписки (файлов: ' + $logFiles.Count + ')') ($secretHits.Count -eq 0) ($secretHits -join ', ')
+
+# внешние IP: сам лог IP не пишет, допустимы только локальные адреса
+$ips = @()
+try { $ips = @([regex]::Matches($logText, '\b((?:\d{1,3}\.){3}\d{1,3})\b') | ForEach-Object { $_.Groups[1].Value }) } catch { }
+$publicIps = @($ips | Where-Object {
+    $_ -notmatch '^(127\.|0\.|10\.|192\.168\.|169\.254\.|255\.)' -and $_ -notmatch '^172\.(1[6-9]|2[0-9]|3[01])\.'
+} | Select-Object -Unique)
+Check 'в логах нет внешних IP (только локальные)' ($publicIps.Count -eq 0) (($publicIps | Select-Object -First 3) -join ', ')
+
 # ----------------------------------------------------------------- итог
 Write-Host ''
 if ($script:fail -eq 0) {

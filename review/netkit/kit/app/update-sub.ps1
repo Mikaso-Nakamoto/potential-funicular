@@ -24,6 +24,10 @@ if (-not $p) {
     if ($url -notlike 'https://*') { Fail 'URL подписки должен начинаться с https://' }
     New-Item -ItemType Directory -Force -Path $Vpn | Out-Null
     [IO.File]::WriteAllText($SubFile, "url=$url`r`nhwid=$hwid`r`nua=$ua`r`n", (New-Object System.Text.UTF8Encoding $false))
+    # ссылку вставляли из буфера (Ctrl+V) — там осталась копия с токеном, и она же
+    # попадает в историю буфера Windows (Win+V). Стираем.
+    try { Set-Clipboard -Value ' ' -ErrorAction SilentlyContinue } catch { }
+    Write-Host '[i] Буфер обмена очищен: вставленная ссылка с токеном там больше не лежит.' -ForegroundColor DarkGray
     $p = @{ url = $url; hwid = $hwid; ua = $ua }
 }
 
