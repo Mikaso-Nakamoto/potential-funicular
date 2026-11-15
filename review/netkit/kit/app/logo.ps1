@@ -2,6 +2,8 @@
 # Два вида: крест с плащаницей (ткань качается) и весы с мечом (чаши качаются).
 # Морфинг между ними — плавная интерполяция "плотности" символов.
 
+$Esc = [char]27
+
 $ArtW = 32
 $ArtH = 24
 
@@ -211,12 +213,12 @@ function ConvertTo-AnsiRows($grid) {
             $i = $y * $ArtW + $x
             $col = $grid.Co[$i]
             if ($col -ne $cur) {
-                [void]$sb.Append("`e[" + (Get-Sgr $col) + 'm')
+                [void]$sb.Append("$Esc[" + (Get-Sgr $col) + 'm')
                 $cur = $col
             }
             [void]$sb.Append($grid.Ch[$i])
         }
-        [void]$sb.Append("`e[0m")
+        [void]$sb.Append("$Esc[0m")
         $rows.Add($sb.ToString())
     }
     return $rows

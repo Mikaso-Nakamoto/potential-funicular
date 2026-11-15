@@ -18,6 +18,8 @@ if (-not $env:SystemRoot) {
     if ($p) { $psExe = $p.Source }
 }
 
+$Esc = [char]27
+
 $ArtCol   = 4     # колонка логотипа (1-based)
 $ArtRow   = 2     # строка логотипа
 $RightCol = 39    # колонка правой панели
@@ -27,6 +29,7 @@ $script:UseAnsi = $true
 function Enable-VT {
     if (-not $env:SystemRoot) { return $true }
     try {
+        if ([Console]::IsOutputRedirected) { return $false }
         Add-Type -Namespace LwUsb -Name Vt -MemberDefinition @'
 [DllImport("kernel32.dll", SetLastError=true)] public static extern IntPtr GetStdHandle(int nStdHandle);
 [DllImport("kernel32.dll", SetLastError=true)] public static extern bool GetConsoleMode(IntPtr h, out uint mode);
@@ -34,11 +37,13 @@ function Enable-VT {
 '@ -ErrorAction Stop
         $h = [LwUsb.Vt]::GetStdHandle(-11)
         $m = [uint32]0
-        if ([LwUsb.Vt]::GetConsoleMode($h, [ref]$m)) {
-            return [LwUsb.Vt]::SetConsoleMode($h, ($m -bor 0x0004))
-        }
+        if (-not [LwUsb.Vt]::GetConsoleMode($h, [ref]$m)) { return $false }
+        [void][LwUsb.Vt]::SetConsoleMode($h, ($m -bor 0x0004))
+        # проверяем, что режим действительно включился
+        $m2 = [uint32]0
+        if (-not [LwUsb.Vt]::GetConsoleMode($h, [ref]$m2)) { return $false }
+        return (($m2 -band 0x0004) -eq 0x0004)
     } catch { return $false }
-    return $false
 }
 $script:UseAnsi = Enable-VT
 
@@ -81,10 +86,10 @@ function Write-ArtAnsi($grid) {
     $rows = ConvertTo-AnsiRows $grid
     $sb = New-Object System.Text.StringBuilder
     for ($i = 0; $i -lt $rows.Count; $i++) {
-        [void]$sb.Append("`e[" + ($ArtRow + $i) + ';' + $ArtCol + 'H')
+        [void]$sb.Append("$Esc[" + ($ArtRow + $i) + ';' + $ArtCol + 'H')
         [void]$sb.Append($rows[$i])
     }
-    [void]$sb.Append("`e[0m")
+    [void]$sb.Append("$Esc[0m")
     [Console]::Out.Write($sb.ToString())
 }
 
@@ -143,17 +148,17 @@ function Build-Scene($grid, $info) {
     $sb = New-Object System.Text.StringBuilder
     $rows = ConvertTo-AnsiRows $grid
     for ($i = 0; $i -lt $rows.Count; $i++) {
-        [void]$sb.Append("`e[" + ($ArtRow + $i) + ';' + $ArtCol + 'H')
+        [void]$sb.Append("$Esc[" + ($ArtRow + $i) + ';' + $ArtCol + 'H')
         [void]$sb.Append($rows[$i])
     }
 
     # палитра под логотипом
     $palRow = $ArtRow + $ArtH + 1
-    [void]$sb.Append("`e[" + $palRow + ';' + $ArtCol + 'H')
+    [void]$sb.Append("$Esc[" + $palRow + ';' + $ArtCol + 'H')
     for ($c = 0; $c -lt 16; $c++) {
-        [void]$sb.Append("`e[" + (Get-SgrCode $c) + 'm' + [char]0x2588 + [char]0x2588)
+        [void]$sb.Append("$Esc[" + (Get-SgrCode $c) + 'm' + [char]0x2588 + [char]0x2588)
     }
-    [void]$sb.Append("`e[0m")
+    [void]$sb.Append("$Esc[0m")
 
     # правая панель
     $right = Get-RightRows $info
@@ -163,20 +168,20 @@ function Build-Scene($grid, $info) {
         $row = $ArtRow + $i
         $kind = $right[$i][0]
         $text = $right[$i][1]
-        [void]$sb.Append("`e[" + $row + ';' + $RightCol + 'H')
+        [void]$sb.Append("$Esc[" + $row + ';' + $RightCol + 'H')
         switch ($kind) {
             'info' {
-                if ($i -eq 0) { [void]$sb.Append("`e[97m") }
-                elseif ($i -eq 1) { [void]$sb.Append("`e[90m") }
-                else { [void]$sb.Append("`e[37m") }
-                [void]$sb.Append($text + "`e[0m")
+                if ($i -eq 0) { [void]$sb.Append("$Esc[97m") }
+                elseif ($i -eq 1) { [void]$sb.Append("$Esc[90m") }
+                else { [void]$sb.Append("$Esc[37m") }
+                [void]$sb.Append($text + "$Esc[0m")
             }
-            'frame' { [void]$sb.Append("`e[36m" + $text + "`e[0m") }
+            'frame' { [void]$sb.Append("$Esc[36m" + $text + "$Esc[0m") }
             'item' {
-                [void]$sb.Append("`e[93m  [" + $text[0] + ']' + "`e[0m" + '  ' + $text[1])
+                [void]$sb.Append("$Esc[93m  [" + $text[0] + ']' + "$Esc[0m" + '  ' + $text[1])
             }
             'prompt' {
-                [void]$sb.Append("`e[92m" + $text + "`e[0m")
+                [void]$sb.Append("$Esc[92m" + $text + "$Esc[0m")
                 $script:PromptRow = $row
                 $script:PromptCol = $RightCol + $text.Length
             }
@@ -186,7 +191,7 @@ function Build-Scene($grid, $info) {
     # предупреждение, если окно слишком узкое
     try {
         if ([Console]::WindowWidth -gt 0 -and [Console]::WindowWidth -lt 84) {
-            [void]$sb.Append("`e[1;1H`e[91m Окно мало: разверни консоль на весь экран (Alt+Enter)`e[0m")
+            [void]$sb.Append("$Esc[1;1H`e[91m Окно мало: разверни консоль на весь экран (Alt+Enter)`e[0m")
         }
     } catch { }
     return $sb.ToString()
