@@ -25,3 +25,9 @@ outputs/
 *.p12
 *.pfx
 *.keystore
+
+# Audit inboxes: may contain real keys/subscriptions, never commit
+review/netkit/inbox/*
+!review/netkit/inbox/.gitkeep
+review/netkit/evidence/*
+!review/netkit/evidence/.gitkeep
