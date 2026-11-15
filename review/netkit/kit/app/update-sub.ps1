@@ -6,15 +6,34 @@
 #  ЧЕРЕЗ туннель, если конфигу больше 3 дней.)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'vless-lib.ps1')
+. (Join-Path $PSScriptRoot 'secret.ps1')
 
 $Vpn    = Join-Path (Split-Path -Parent $PSScriptRoot) 'vpn'
 $SubFile= Join-Path $Vpn 'sub.txt'
 $OutFile= Join-Path $Vpn 'config.json'
+$SubEnc = $SubFile + '.enc'
+$CfgEnc = $OutFile + '.enc'
 
 function Fail([string]$m) { Write-Host "[X] $m" -ForegroundColor Red; exit 1 }
 
-# --- параметры подписки (url / hwid / ua) ---
-$p = Read-SubParams $SubFile
+# --- пароль флешки (если задан): без него не читаем sub.txt и не пишем config.json ---
+$pw = ''
+if (Test-KitSecret $Vpn) {
+    Write-Host '[i] Ключи на флешке зашифрованы — нужен пароль.' -ForegroundColor Cyan
+    $pw = Read-KitPassword $Vpn
+    if (-not $pw) { Fail 'Пароль не введён или неверный. Ничего не изменено.' }
+}
+
+# --- параметры подписки (url / hwid / ua): из sub.txt или из его .enc ---
+$SubRead = $SubFile
+$SubTmp = ''
+if ($pw -and (Test-Path $SubEnc)) {
+    $SubTmp = Join-Path ([IO.Path]::GetTempPath()) ('lwusb-sub-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.txt')
+    if (-not (Unprotect-KitFile $SubEnc $SubTmp $pw)) { Fail 'vpn\sub.txt.enc не расшифровался: файл повреждён или пароль от другой флешки.' }
+    $SubRead = $SubTmp
+}
+$p = Read-SubParams $SubRead
+if ($SubTmp) { Remove-Item $SubTmp -Force -ErrorAction SilentlyContinue }
 if (-not $p) {
     $url  = Read-Host 'URL подписки (https://api.../sub/...)'
     $hwid = Read-Host 'x-hwid (GUID клиента; Enter — не отправлять)'
@@ -28,6 +47,7 @@ if (-not $p) {
     # попадает в историю буфера Windows (Win+V). Стираем.
     try { Set-Clipboard -Value ' ' -ErrorAction SilentlyContinue } catch { }
     Write-Host '[i] Буфер обмена очищен: вставленная ссылка с токеном там больше не лежит.' -ForegroundColor DarkGray
+    if ($pw) { Protect-KitFile $SubFile $pw $SubEnc | Out-Null; Write-Host '[i] sub.txt зашифрован (sub.txt.enc), открытый удалён.' -ForegroundColor DarkGray }
     $p = @{ url = $url; hwid = $hwid; ua = $ua }
 }
 
@@ -55,8 +75,16 @@ if (Test-Path $OutFile) {
 }
 [System.IO.File]::WriteAllText($OutFile, $json, (New-Object System.Text.UTF8Encoding $false))
 
+if ($pw) {
+    Protect-KitFile $OutFile $pw $CfgEnc | Out-Null
+    if (Test-Path ($OutFile + '.bak.json')) {
+        Protect-KitFile ($OutFile + '.bak.json') $pw ($Vpn + '\config.json.bak.json.enc') | Out-Null
+    }
+    Write-Host '[i] Конфиг зашифрован: vpn\config.json.enc (открытый удалён).' -ForegroundColor DarkGray
+}
+
 Write-Host ""
-Write-Host "[+] Готово: $($nodes.Count) сервер(ов) записано в vpn\config.json" -ForegroundColor Green
+Write-Host "[+] Готово: $($nodes.Count) сервер(ов) записано в vpn\$(if ($pw) { 'config.json.enc' } else { 'config.json' })" -ForegroundColor Green
 $i = 0
 foreach ($n in $nodes) {
     $i++

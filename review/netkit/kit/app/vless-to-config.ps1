@@ -4,12 +4,20 @@
 # Результат: vpn\config.json на флешке (+ бэкап старого в config.bak.json).
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'vless-lib.ps1')
+. (Join-Path $PSScriptRoot 'secret.ps1')
 
 $Vpn = Join-Path (Split-Path -Parent $PSScriptRoot) 'vpn'
 $OutFile = Join-Path $Vpn 'config.json'
+$CfgEnc = $OutFile + '.enc'
 
 Write-Host ""
 Write-Host "=== VLESS -> Xray config (мульти-серверный) ===" -ForegroundColor Cyan
+$pw = ''
+if (Test-KitSecret $Vpn) {
+    Write-Host '[i] Ключи на флешке зашифрованы — нужен пароль.' -ForegroundColor Cyan
+    $pw = Read-KitPassword $Vpn
+    if (-not $pw) { Write-Host '[X] Пароль неверный (3 попытки). Конфиг не меняю.' -ForegroundColor Red; exit 1 }
+}
 Write-Host "Вставляй ссылки по ОДНОЙ (правая кнопка мыши), после каждой — Enter." -ForegroundColor DarkGray
 Write-Host "Пустая строка (просто Enter) — закончить и записать конфиг." -ForegroundColor DarkGray
 Write-Host ""
@@ -43,8 +51,16 @@ if (Test-Path $OutFile) {
 }
 [System.IO.File]::WriteAllText($OutFile, $json, (New-Object System.Text.UTF8Encoding $false))
 
+if ($pw) {
+    Protect-KitFile $OutFile $pw $CfgEnc | Out-Null
+    if (Test-Path ($OutFile + '.bak.json')) {
+        Protect-KitFile ($OutFile + '.bak.json') $pw ($Vpn + '\config.json.bak.json.enc') | Out-Null
+    }
+    Write-Host '[i] Конфиг зашифрован паролем: vpn\config.json.enc, открытый удалён.' -ForegroundColor DarkGray
+}
+
 Write-Host ""
-Write-Host "[+] Записано: $OutFile" -ForegroundColor Green
+Write-Host "[+] Записано: $OutFile$(if ($pw) { '.enc' })" -ForegroundColor Green
 Write-Host "[i] Серверов: $($nodes.Count). Всё идёт через балансировщик leastPing —"
 Write-Host "    если один сервер умрёт, Xray сам переключит на живой."
 Write-Host "[i] Этот файл на колледжном ПК не открывать и нигде не копировать."

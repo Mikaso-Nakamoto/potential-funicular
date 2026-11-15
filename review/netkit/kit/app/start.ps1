@@ -14,6 +14,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'vless-lib.ps1')
+. (Join-Path $PSScriptRoot 'secret.ps1')
 
 # --- пути и настройки ---
 $App     = $PSScriptRoot
@@ -32,6 +33,9 @@ if ($Fast) {
 }
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
+$CfgEnc  = $Cfg + '.enc'          # vpn\config.json.enc (если задан пароль)
+$SubEnc  = $SubFile + '.enc'      # vpn\sub.txt.enc
+$script:KitPassword = $null       # пароль флешки на эту сессию (в файл не пишется)
 $Xray    = Join-Path $Vpn 'xray.exe'
 $Ts      = Get-Date -Format 'yyyyMMdd-HHmmss'
 $LogFile = Join-Path $Logs ('session-' + $Ts + '.log')
@@ -169,6 +173,51 @@ function Ask-Cleanup {
     if (-not $answered) { return $false }
     if ($buf -eq '') { return $true }
     return ($buf -match '^(y|Y|д|Д)')
+}
+
+function Save-KitCopies {
+    # после пересборки конфига: обновить зашифрованные копии на флешке (.enc)
+    if (-not $script:KitPassword) { return }
+    try {
+        if (Test-Path $Cfg) { Protect-KitFile $Cfg $script:KitPassword $CfgEnc -KeepSource | Out-Null }
+        $bak = $Cfg + '.bak.json'
+        if (Test-Path $bak) {
+            Protect-KitFile $bak $script:KitPassword (Join-Path $Vpn 'config.json.bak.json.enc') -KeepSource | Out-Null
+        }
+    } catch { Log ('не удалось обновить .enc: ' + $_.Exception.Message) }
+}
+
+function Enable-KitPassword {
+    # предлагает поставить пароль и сразу шифрует ключи; $true, если пароль задан
+    $lines = @(
+        '    Тогда config.json и sub.txt будут лежать на флешке зашифрованными,',
+        '    а пароль придётся вводить при каждом подключении (пункты 1 и 2).',
+        '    Пароль нигде не хранится: забыли — ключи собирать заново.'
+    )
+    if (-not (Read-KitYesNo '[?] Поставить пароль на ключи этой флешки?' $lines 30)) { return $false }
+    $pw = ''
+    try { $pw = Set-KitPassword $Vpn } catch { Log ('пароль не задан: ' + $_.Exception.Message); return $false }
+    if (-not $pw) { return $false }
+    try {
+        $plain = Join-Path $SessionDir 'config.json'
+        if (Test-Path $Cfg) {
+            New-Item -ItemType Directory -Force -Path $SessionDir | Out-Null
+            Copy-Item $Cfg $plain -Force
+        }
+        if (Test-Path $Cfg) { Protect-KitFile $Cfg $pw $CfgEnc | Out-Null }
+        $bak = $Cfg + '.bak.json'
+        if (Test-Path $bak) { Protect-KitFile $bak $pw (Join-Path $Vpn 'config.json.bak.json.enc') | Out-Null }
+        if (Test-Path $SubFile) { Protect-KitFile $SubFile $pw $SubEnc | Out-Null }
+        Log 'пароль задан, ключи зашифрованы (.enc)'
+        Write-Host '[+] Пароль задан, открытые копии с флешки удалены.' -ForegroundColor Green
+        if (Test-Path $plain) { $script:Cfg = $plain }
+        $script:KitPassword = $pw
+        return $true
+    } catch {
+        Log ('ошибка шифрования: ' + $_.Exception.Message)
+        Write-Host '[!] Не удалось зашифровать — файлы остались как были.' -ForegroundColor Red
+        return $false
+    }
 }
 
 function Get-FreePort {
@@ -328,6 +377,41 @@ try {
         }
     } catch {}
 
+    # --- пароль на ключи (если задан на флешке) ---
+    if (Test-KitSecret $Vpn) {
+        Write-Host ''
+        Write-Host '[i] Ключи на флешке зашифрованы — нужен пароль.' -ForegroundColor Cyan
+        $script:KitPassword = Read-KitPassword $Vpn
+        if (-not $script:KitPassword) {
+            Fail 'Пароль не введён или неверный — соединение не поднимаю, браузер не запущен.'
+        }
+        if (Test-Path $CfgEnc) {
+            $plain = Join-Path $SessionDir 'config.json'
+            if (-not (Unprotect-KitFile $CfgEnc $plain $script:KitPassword)) {
+                Fail 'vpn\config.json.enc не расшифровался: файл повреждён или пароль от другой флешки.'
+            }
+            try { (Get-Item $plain).LastWriteTime = (Get-Item $CfgEnc).LastWriteTime } catch { }
+            $script:Cfg = $plain
+            Log 'config.json расшифрован во временный каталог сессии'
+        } elseif (Test-Path $Cfg) {
+            New-Item -ItemType Directory -Force -Path $SessionDir | Out-Null
+            $plain = Join-Path $SessionDir 'config.json'
+            Copy-Item $Cfg $plain -Force
+            try { Protect-KitFile $Cfg $script:KitPassword $CfgEnc | Out-Null; Log 'config.json зашифрован (.enc)' } catch { }
+            $script:Cfg = $plain
+        }
+        if (Test-Path $SubEnc) {
+            $psub = Join-Path $SessionDir 'sub.txt'
+            if (Unprotect-KitFile $SubEnc $psub $script:KitPassword) { $script:SubFile = $psub }
+        } elseif (Test-Path $SubFile) {
+            try { Protect-KitFile $SubFile $script:KitPassword $SubEnc | Out-Null; Log 'sub.txt зашифрован (.enc)' } catch { }
+        }
+        $n = Remove-KitPlain $Vpn
+        if ($n -gt 0) { Log ('.enc на месте, открытых копий удалено: ' + $n) }
+    } elseif ((Test-Path $Cfg) -or (Test-Path $CfgEnc)) {
+        Enable-KitPassword | Out-Null
+    }
+
     # --- проверки ---
     if (-not (Test-Path $Cfg)) {
         Fail 'Нет vpn\config.json. Дома запусти ПОДГОТОВКА-ДОМА.bat и конвертер VLESS-ссылок (см. README).'
@@ -475,6 +559,7 @@ try {
             if ($nodes.Count -gt 0) {
                 Copy-Item $Cfg ($Cfg + '.bak.json') -Force
                 [IO.File]::WriteAllText($Cfg, (New-ConfigJson $nodes), (New-Object System.Text.UTF8Encoding $false))
+                Save-KitCopies
                 Log "получено $($nodes.Count) сервер(ов) — перезапускаю xray с новым конфигом"
                 Stop-OurXray
                 $script:SessionCfg = New-SessionConfig $Port

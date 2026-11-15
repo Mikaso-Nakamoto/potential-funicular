@@ -280,6 +280,62 @@ OUT="$(run_start -Server 9)"; RC=$?
 if [ "$RC" -ne 0 ]; then ok 'несуществующий номер отклонён'; else bad 'принят несуществующий сервер'; fi
 if grep -q 'а ты просишь -Server 9' <<<"$OUT"; then ok 'отказ с понятным текстом'; else bad 'нет понятного отказа'; fi
 
+# ------------------------------------------------------------------- сценарий 8
+say '8. ключи зашифрованы паролем: без пароля соединения нет, с верным — есть'
+"$PWSH" -NoProfile -Command "
+. '$WORK/kit/app/secret.ps1'
+Set-KitPasswordValue '$WORK/kit/vpn' 'пароль12345'
+Protect-KitFile '$WORK/kit/vpn/config.json' 'пароль12345' | Out-Null
+" >/dev/null 2>&1
+if [ -f "$WORK/kit/vpn/config.json.enc" ] && [ ! -f "$WORK/kit/vpn/config.json" ]; then
+  ok 'config.json зашифрован, открытого файла нет'
+else
+  bad 'шифрование ключей не сработало'
+fi
+if [ -f "$WORK/kit/vpn/secret.dat" ]; then ok 'secret.dat создан'; else bad 'secret.dat нет'; fi
+
+# без терминала пароль ввести некуда — соединение подниматься не должно
+OUT="$(run_start < /dev/null)"; RC=$?
+if [ "$RC" -ne 0 ]; then ok "без терминала отказ, код $RC"; else bad 'запуск без пароля прошёл'; fi
+if grep -q 'Пароль не введён или неверный' <<<"$OUT"; then ok 'отказ с понятным текстом'; else bad 'нет текста отказа'; fi
+if grep -q 'ввод перенаправлен' <<<"$OUT"; then ok 'объяснено, почему пароль не спрошен'; else bad 'нет пояснения про перенаправленный ввод'; fi
+if grep -q 'Браузер запущен' <<<"$OUT"; then bad 'браузер запущен без пароля'; else ok 'браузер не запускался'; fi
+
+# ввод пароля в псевдо-терминале pwsh маскирует и перемешивает с ответами на запросы
+# курсора, поэтому подменяем только сам ввод (как подменяем xray.exe и curl.exe):
+# пароль берётся из файла, вся остальная логика — настоящая.
+printf '\nfunction Read-KitPassword([string]$Vpn, [int]$Tries = 3) {\n    if (-not (Test-Path "%s")) { return "" }\n    $p = ([IO.File]::ReadAllText("%s")).Trim()\n    if (-not (Test-KitPassword $Vpn $p)) { Write-Host "[!] Неверный пароль (попытка 1 из 3)." -ForegroundColor Red; return "" }\n    return $p\n}\n' \
+  "$WORK/pw.txt" "$WORK/pw.txt" >> "$WORK/kit/app/secret.ps1"
+
+printf 'неверныйпароль' > "$WORK/pw.txt"
+OUT="$(run_start)"; RC=$?
+if [ "$RC" -ne 0 ]; then ok 'неверный пароль: соединения нет'; else bad 'неверный пароль принят'; fi
+if grep -q 'Пароль не введён или неверный' <<<"$OUT"; then ok 'отказ пароля с понятным текстом'; else bad 'нет текста отказа по паролю'; fi
+
+printf '#!/bin/sh\nsleep 2\n' > "$WORK/kit/app/LibreWolf/LibreWolf.exe"
+chmod +x "$WORK/kit/app/LibreWolf/LibreWolf.exe"
+printf 'пароль12345' > "$WORK/pw.txt"
+OUT="$(run_start)"; RC=$?
+if [ "$RC" -eq 0 ]; then ok 'верный пароль: сессия прошла'; else bad "верный пароль: код $RC"; echo "$OUT" | tail -6; fi
+if grep -q 'браузер закрыт пользователем' <<<"$OUT"; then ok 'сессия завершилась штатно'; else bad 'нет штатного завершения'; fi
+if grep -q 'config.json расшифрован во временный каталог' <<<"$OUT"; then ok 'конфиг расшифровывается в %TEMP%'; else bad 'нет отметки о расшифровке'; fi
+if [ -f "$WORK/kit/vpn/config.json" ]; then bad 'расшифрованный конфиг остался на флешке'; else ok 'на флешке только config.json.enc'; fi
+if grep -q "$WORK/kit/vpn/config.json" "$WORK/xray-config-used.txt" 2>/dev/null && \
+   grep -qv "lwusb-" <<<"$(tail -1 "$WORK/xray-config-used.txt")"; then
+  bad 'xray получил конфиг с флешки'
+else
+  ok 'xray работал с копией из %TEMP%'
+fi
+
+# возвращаем окружение в открытый вид, чтобы не мешать повторным прогонам
+rm -f "$WORK/kit/vpn/secret.dat"
+"$PWSH" -NoProfile -Command "
+. '$WORK/kit/app/secret.ps1'
+\$x = Unprotect-KitFile '$WORK/kit/vpn/config.json.enc' '$WORK/kit/vpn/config.json' 'пароль12345'
+Remove-Item '$WORK/kit/vpn/config.json.enc' -Force -ErrorAction SilentlyContinue
+" >/dev/null 2>&1
+
+
 say 'итог'
 if [ "$FAILED" -eq 0 ]; then echo 'ВСЁ ХОРОШО: все сценарии прошли'; exit 0; fi
 echo "ПРОВАЛОВ: $FAILED"; exit 1
