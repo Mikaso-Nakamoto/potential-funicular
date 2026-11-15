@@ -80,6 +80,12 @@ try { $obj = $json | ConvertFrom-Json } catch { }
 Check 'конфиг — валидный JSON' ($null -ne $obj) ('длина: ' + $json.Length)
 Check 'размер конфига разумный (>1 КБ)' ($json.Length -gt 1024)
 
+# ------------------------------------------------------------ режим одного сервера
+$oneObj = (New-ConfigJson -Nodes $nodes -Only 2) | ConvertFrom-Json
+Check 'режим -Only: остался один outbound' (@($oneObj.outbounds).Count -eq 1) ('их: ' + @($oneObj.outbounds).Count)
+Check 'режим -Only: балансировщика нет' ($null -eq $oneObj.routing.balancers)
+Check 'режим -Only: трафик идёт прямо в proxy-1' ("$($oneObj.routing.rules[0].outboundTag)" -eq 'proxy-1')
+
 $tags = @($obj.outbounds | ForEach-Object { $_.tag })
 Check ('теги outbound: ' + ($tags -join ',')) ($tags -contains 'proxy-1')
 Check 'нет outbound freedom/blackhole (прямого выхода наружу нет)' ((@($tags) -contains 'direct') -eq $false -and (@($tags) -contains 'block') -eq $false)

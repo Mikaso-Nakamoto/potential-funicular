@@ -173,51 +173,78 @@ function New-Outbound($Node, [int]$Index) {
     }
 }
 
-function New-ConfigJson($Nodes) {
+function New-ConfigJson($Nodes, [int]$Only = 0) {
     # Полный конфиг: один SOCKS-inbound на loopback, N прокси, observatory
     # и routing c балансировщиком leastPing. Правило одно: весь tcp+udp -> balancer.
+    #
+    # -Only N: оставить ТОЛЬКО N-й сервер и убрать балансировщик. Нужно, когда сайт
+    # не переносит смену выходного IP на каждом соединении (YouTube, Google):
+    # leastPing выбирает узел заново для каждого нового соединения, и одна
+    # страница грузится через разные адреса — сервис это рвёт.
+    #
     # Намеренно нет: HTTP-inbound (лишняя дверь), udp:true (лишний UDP-ASSOCIATE),
     # outbound freedom/blackhole (прямого пути наружу быть не должно вообще).
     # loglevel=none: Xray на warning пишет адреса назначения в лог на флешке.
+    $useNodes = @($Nodes)
+    $oneMode = ($Only -gt 0)
+    if ($oneMode) {
+        if ($Only -gt $useNodes.Count) {
+            throw ('Запрошен сервер ' + $Only + ', а в конфиге их ' + $useNodes.Count)
+        }
+        $useNodes = @($useNodes[$Only - 1])
+    }
     # обычный массив, а не Generic.List: List в разных сборках PowerShell ведёт себя
     # по-разному (в PS 7.7 @() вокруг него падал с 'Argument types do not match')
     $outbounds = @()
     $i = 0
-    foreach ($n in $Nodes) {
+    foreach ($n in $useNodes) {
         $i++
         $outbounds += (New-Outbound $n $i)
     }
-    $cfg = [ordered]@{
-        log = [ordered]@{ loglevel = "$(if ($script:LogLevel) { $script:LogLevel } else { 'none' })" }
-        inbounds = @(
-            [ordered]@{
-                tag = 'socks-in'
-                listen = '127.0.0.1'
-                port = 10808
-                protocol = 'socks'
-                settings = [ordered]@{ auth = 'noauth'; udp = $false }
-                sniffing = [ordered]@{ enabled = $true; destOverride = @('http', 'tls') }
+    $inbound = [ordered]@{
+        tag = 'socks-in'
+        listen = '127.0.0.1'
+        port = 10808
+        protocol = 'socks'
+        settings = [ordered]@{ auth = 'noauth'; udp = $false }
+        sniffing = [ordered]@{ enabled = $true; destOverride = @('http', 'tls') }
+    }
+    if ($oneMode) {
+        $cfg = [ordered]@{
+            log = [ordered]@{ loglevel = "$(if ($script:LogLevel) { $script:LogLevel } else { 'none' })" }
+            inbounds = @($inbound)
+            outbounds = $outbounds
+            routing = [ordered]@{
+                domainStrategy = 'AsIs'
+                rules = @(
+                    [ordered]@{ type = 'field'; network = 'tcp,udp'; outboundTag = 'proxy-1' }
+                )
             }
-        )
-        outbounds = $outbounds
-        observatory = [ordered]@{
-            subjectSelector = @('proxy-')
-            probeURL = 'https://www.gstatic.com/generate_204'
-            probeInterval = '3m'
-            enableConcurrency = $true
         }
-        routing = [ordered]@{
-            domainStrategy = 'AsIs'
-            balancers = @(
-                [ordered]@{
-                    tag = 'all-proxies'
-                    selector = @('proxy-')
-                    strategy = [ordered]@{ type = 'leastPing' }
-                }
-            )
-            rules = @(
-                [ordered]@{ type = 'field'; network = 'tcp,udp'; balancerTag = 'all-proxies' }
-            )
+    } else {
+        $cfg = [ordered]@{
+            log = [ordered]@{ loglevel = "$(if ($script:LogLevel) { $script:LogLevel } else { 'none' })" }
+            inbounds = @($inbound)
+            outbounds = $outbounds
+            observatory = [ordered]@{
+                subjectSelector = @('proxy-')
+                probeURL = 'https://www.gstatic.com/generate_204'
+                probeInterval = '3m'
+                enableConcurrency = $true
+            }
+            routing = [ordered]@{
+                domainStrategy = 'AsIs'
+                balancers = @(
+                    [ordered]@{
+                        tag = 'all-proxies'
+                        selector = @('proxy-')
+                        strategy = [ordered]@{ type = 'leastPing' }
+                    }
+                )
+                rules = @(
+                    [ordered]@{ type = 'field'; network = 'tcp,udp'; balancerTag = 'all-proxies' }
+                )
+            }
         }
     }
 

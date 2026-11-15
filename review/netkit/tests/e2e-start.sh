@@ -259,6 +259,23 @@ if [ "$RC" -eq 0 ]; then ok 'код возврата 0'; else bad "код воз
 if grep -q 'профиль сессии на локальном диске' <<<"$OUT"; then ok 'профиль вынесен из флешки'; else bad 'профиль остался на флешке'; fi
 if ls "$TMPDIR"/lwusb-profile-* >/dev/null 2>&1; then bad 'временный профиль остался на диске'; else ok 'временный профиль удалён'; fi
 
+# ------------------------------------------------------------------- сценарий 7
+say '7. -Server N: фиксация одного сервера вместо балансировщика'
+printf '#!/bin/sh\nsleep 2\n' > "$WORK/kit/app/LibreWolf/LibreWolf.exe"
+chmod +x "$WORK/kit/app/LibreWolf/LibreWolf.exe"
+cat > "$WORK/kit/vpn/xray.exe" <<SH
+#!/bin/sh
+cfg="\$(printf '%s' "\$2" | tr -d '\"')"
+exec python3 "$WORK/listen.py" "\$cfg"
+SH
+chmod +x "$WORK/kit/vpn/xray.exe"
+OUT="$(run_start -Server 1)"; RC=$?
+if [ "$RC" -eq 0 ]; then ok 'код возврата 0'; else bad "код возврата $RC"; echo "$OUT" | tail -5; fi
+if grep -q 'только сервер 1' <<<"$OUT"; then ok 'режим применён'; else bad 'режим не применился'; fi
+OUT="$(run_start -Server 9)"; RC=$?
+if [ "$RC" -ne 0 ]; then ok 'несуществующий номер отклонён'; else bad 'принят несуществующий сервер'; fi
+if grep -q 'а ты просишь -Server 9' <<<"$OUT"; then ok 'отказ с понятным текстом'; else bad 'нет понятного отказа'; fi
+
 say 'итог'
 if [ "$FAILED" -eq 0 ]; then echo 'ВСЁ ХОРОШО: все сценарии прошли'; exit 0; fi
 echo "ПРОВАЛОВ: $FAILED"; exit 1

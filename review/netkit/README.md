@@ -36,8 +36,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Invoke-LeakCheck.ps1
 
 - Отчёт: `AUDIT-REPORT.md` (F-01…F-19 по первому кругу + F-20…F-32 по второму разбору из 12 пунктов).
 - Исправленный комплект собран отдельно от git (код автора в репозиторий не кладём):
-  `inbox/dist/LibreWolf-USB-fixed.zip`, 70 284 байт, md5 `897ba052d20db6b1db847396d87f70a1`.
-- Копия для скачивания: https://drive.google.com/file/d/1eTauKTW6_dl18fNeFzFO7lMWPoerplXJ/view
+  `inbox/dist/LibreWolf-USB-fixed.zip`, 71 862 байт, md5 `6d90d09cf635f1a73fff466e3a907bc5`.
+- Копия для скачивания: https://drive.google.com/file/d/1M7oWEn07GroYHdWiCd1z-c09Sc-BU315/view
 - Что проверено статически и что требует живой машины — в §«Чего не проверял» отчёта.
 - В комплекте есть `ПРОВЕРКА.bat` → `app/self-check.ps1`: офлайн-прогон конвертера
   и сборки JSON на 6 тестовых ключах (без сети, без Xray) — 46 проверок, включая

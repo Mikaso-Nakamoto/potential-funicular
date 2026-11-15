@@ -8,7 +8,8 @@ param(
     [switch]$ForceUpdate,
     [switch]$IgnorePolicies,
     [switch]$Debug,
-    [switch]$Fast
+    [switch]$Fast,
+    [int]$Server = 0          # >0: только этот сервер, без балансировки (для YouTube и подобных)
 )
 
 $ErrorActionPreference = 'Stop'
@@ -36,6 +37,7 @@ $Ts      = Get-Date -Format 'yyyyMMdd-HHmmss'
 $LogFile = Join-Path $Logs ('session-' + $Ts + '.log')
 $SubMaxAgeDays = 3   # старше — пробуем обновить подписку через туннель
 $script:XraySeq = 0
+$script:OnlyServer = $Server
 $script:FailCode = 0   # 0 = штатно; Fail() и перехват ошибок выставляют код
 $script:XrayProc = $null
 $script:SessionCfg = ''
@@ -146,6 +148,24 @@ function New-SessionConfig([int]$P) {
     $obj = Get-Content $Cfg -Raw -Encoding UTF8 | ConvertFrom-Json
     if (@($obj.inbounds).Count -lt 1) { Fail 'config.json без inbound — пересоздай конфиг дома.' }
     $obj.inbounds[0].port = $P
+    if ($script:OnlyServer -gt 0) {
+        # фиксируем один сервер: балансировщик выбирает узел на КАЖДОЕ соединение,
+        # поэтому одна страница уходит через разные IP, и сервисы это рвут
+        $all = @($obj.outbounds)
+        if ($script:OnlyServer -gt $all.Count) {
+            Fail ('В config.json серверов: ' + $all.Count + ', а ты просишь -Server ' + $script:OnlyServer + '. Укажи число от 1 до ' + $all.Count + '.')
+        }
+        $pick = $all[$script:OnlyServer - 1]
+        $tag = "$($pick.tag)"
+        $obj.outbounds = @($pick)
+        $obj.routing = [ordered]@{
+            domainStrategy = 'AsIs'
+            rules = @(
+                [ordered]@{ type = 'field'; network = 'tcp,udp'; outboundTag = $tag }
+            )
+        }
+        try { $obj.PSObject.Properties.Remove('observatory') } catch {}
+    }
     $json = $obj | ConvertTo-Json -Depth 12
     $null = $json | ConvertFrom-Json   # самопроверка перед записью
     $path = Join-Path $SessionDir 'config.session.json'
@@ -289,6 +309,18 @@ try {
     $problems = @(Test-ConfigSafe $CfgObj)
     if ($problems.Count -gt 0) {
         Fail ("Конфиг не прошёл проверку безопасности:`n      - " + ($problems -join "`n      - ") + "`n      Дома пересоздай конфиг: app\update-sub.ps1 или app\vless-to-config.ps1.")
+    }
+
+    $srvCount = @($CfgObj.outbounds).Count
+    if ($script:OnlyServer -gt 0) {
+        Log ('режим: только сервер ' + $script:OnlyServer + ' из ' + $srvCount + ' (без балансировки)')
+    } else {
+        Log ('серверов в config.json: ' + $srvCount + ', балансировщик leastPing')
+        if ($srvCount -gt 1) {
+            Write-Host '[i] Балансировщик выбирает сервер на каждое соединение: выходной IP меняется.' -ForegroundColor DarkGray
+            Write-Host '    YouTube и Google такое не любят (страница грузится пустой). Лечится так:' -ForegroundColor DarkGray
+            Write-Host ('    START.bat -Server 1   (номер от 1 до ' + $srvCount + ', можно перебрать)') -ForegroundColor DarkGray
+        }
     }
 
     $cfgAge = ((Get-Date) - (Get-Item $Cfg).LastWriteTime).TotalDays
