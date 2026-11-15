@@ -116,9 +116,10 @@ function Write-ArtFrame($grid) {
     if ($script:UseAnsi) { Write-ArtAnsi $grid } else { Write-ArtFallback $grid }
 }
 
+# ConsoleColor -> ANSI SGR: индексы не совпадают (1 = синий у консоли, но красный у ANSI)
 function Get-SgrCode([int]$c) {
-    if ($c -lt 8) { return (30 + $c) }
-    return (90 + $c - 8)
+    $map = @(30, 34, 32, 36, 31, 35, 33, 37, 90, 94, 92, 96, 91, 95, 93, 97)
+    return $map[$c]
 }
 
 function Get-RightRows($info) {
