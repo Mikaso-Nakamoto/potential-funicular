@@ -272,6 +272,9 @@ chmod +x "$WORK/kit/vpn/xray.exe"
 OUT="$(run_start -Server 1)"; RC=$?
 if [ "$RC" -eq 0 ]; then ok 'код возврата 0'; else bad "код возврата $RC"; echo "$OUT" | tail -5; fi
 if grep -q 'только сервер 1' <<<"$OUT"; then ok 'режим применён'; else bad 'режим не применился'; fi
+if grep -q 'Режим: только сервер 1 из' <<<"$OUT"; then ok 'режим напечатан на экране'; else bad 'режим не виден на экране'; fi
+OUT="$(run_start)"; RC=$?
+if grep -q 'Режим: балансировщик leastPing' <<<"$OUT"; then ok 'без номера видно, что будет балансировка'; else bad 'режим балансировки не напечатан'; fi
 OUT="$(run_start -Server 9)"; RC=$?
 if [ "$RC" -ne 0 ]; then ok 'несуществующий номер отклонён'; else bad 'принят несуществующий сервер'; fi
 if grep -q 'а ты просишь -Server 9' <<<"$OUT"; then ok 'отказ с понятным текстом'; else bad 'нет понятного отказа'; fi

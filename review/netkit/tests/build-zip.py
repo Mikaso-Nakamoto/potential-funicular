@@ -22,8 +22,8 @@ if not os.path.isdir(KIT):
     KIT = os.path.join(HERE, '..', 'inbox', 'LibreWolf-USB')
 OUT = os.path.join(HERE, '..', 'inbox', 'dist', 'LibreWolf-USB-fixed.zip')
 
-SKIP_DIRS = {'__pycache__'}
-SKIP_FILES = {'.DS_Store', 'Thumbs.db'}
+SKIP_DIRS = {'__pycache__', 'logs'}
+SKIP_FILES = {'.DS_Store', 'Thumbs.db', 'sub.txt', 'config.json'}
 
 
 def main():

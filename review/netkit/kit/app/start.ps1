@@ -314,12 +314,17 @@ try {
     $srvCount = @($CfgObj.outbounds).Count
     if ($script:OnlyServer -gt 0) {
         Log ('режим: только сервер ' + $script:OnlyServer + ' из ' + $srvCount + ' (без балансировки)')
+        Write-Host ('[i] Режим: только сервер ' + $script:OnlyServer + ' из ' + $srvCount +
+                    ' — балансировщик выключен, выходной IP должен оставаться одним.') -ForegroundColor Green
     } else {
         Log ('серверов в config.json: ' + $srvCount + ', балансировщик leastPing')
         if ($srvCount -gt 1) {
-            Write-Host '[i] Балансировщик выбирает сервер на каждое соединение: выходной IP меняется.' -ForegroundColor DarkGray
+            Write-Host ('[i] Режим: балансировщик leastPing, серверов ' + $srvCount +
+                        ' — выходной IP будет МЕНЯТЬСЯ (в логе видно «IP через VPN сменился»).') -ForegroundColor Yellow
             Write-Host '    YouTube и Google такое не любят (страница грузится пустой). Лечится так:' -ForegroundColor DarkGray
             Write-Host ('    START.bat -Server 1   (номер от 1 до ' + $srvCount + ', можно перебрать)') -ForegroundColor DarkGray
+        } else {
+            Write-Host '[i] Режим: балансировщик leastPing, сервер в конфиге один — IP зависит только от него.' -ForegroundColor Green
         }
     }
 
@@ -487,6 +492,9 @@ try {
     $s.browserDir = $BrowserDir
     $s.port = $Port
     $s.lastIP = $VpnIP
+    $s.onlyServer = $script:OnlyServer
+    $s.serverCount = $srvCount
+    $s.ipChanges = 0
     $s.curl = $Curl
     $s.taskkill = $Taskkill
     $s.netstat = $Netstat
@@ -610,6 +618,10 @@ while (-not $s.stop) {
     if ($ip) {
         if ($s.lastIP -and ($ip -ne $s.lastIP)) {
             [void]$s.events.Add("IP через VPN сменился: $($s.lastIP) -> $ip")
+            $s.ipChanges = [int]$s.ipChanges + 1
+            if (($s.onlyServer -gt 0) -and ([int]$s.ipChanges -eq 2)) {
+                [void]$s.events.Add("ВНИМАНИЕ: включён режим -Server $($s.onlyServer), но выходной IP меняется — этот сервер сам меняет выход. Перебери номера (меню, пункт 2).")
+            }
             $s.lastIP = $ip
         }
         if ($s.realIP -and ($ip -eq $s.realIP)) { Breach 'УТЕЧКА: через прокси виден тот же IP, что и напрямую'; break }
