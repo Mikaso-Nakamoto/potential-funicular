@@ -79,9 +79,12 @@ OUT="$(run_update)"; echo "$OUT" | tail -3
 if grep -q 'Готово: 7 сервер' <<<"$OUT" && [ -f "$WORK/kit/vpn/config.json" ]; then
   ok 'конфиг записан, 7 серверов'
 else bad 'текстовая подписка не разобрана'; fi
-if python3 -c "import json,sys;d=json.load(open('$WORK/kit/vpn/config.json'));sys.exit(0 if len(d['outbounds'])==9 else 1)"; then
-  ok 'JSON валиден, 7 proxy + direct + block'
+if python3 -c "import json,sys;d=json.load(open('$WORK/kit/vpn/config.json'));sys.exit(0 if len(d['outbounds'])==7 and all(o['protocol']=='vless' for o in d['outbounds']) else 1)"; then
+  ok 'JSON валиден, 7 proxy, без direct/block'
 else bad 'структура конфига не та'; fi
+if python3 -c "import json,sys;d=json.load(open('$WORK/kit/vpn/config.json'));inb=d['inbounds'];sys.exit(0 if len(inb)==1 and inb[0]['protocol']=='socks' and inb[0]['port']==10808 and inb[0]['settings']['udp'] is False and d['log']['loglevel']=='none' else 1)"; then
+  ok 'один socks-inbound, udp выключен, loglevel none'
+else bad 'inbound/логи не те'; fi
 
 say '2. base64-подписка + бэкап прошлого конфига'
 sub "https://127.0.0.1:$PORT/sub64.txt"
@@ -120,7 +123,15 @@ if grep -q 'дубликат, пропущен' <<<"$OUT" && grep -q 'Серве
   ok 'дубликат отброшен, битая ссылка пропущена, 2 сервера'
 else bad 'поведение на дубликате/битой ссылке не то'; fi
 
-say '7. сверка с Python-версией на одних данных'
+say '7. незашифрованный узел в подписке не попадает в конфиг'
+cp "$HERE/fixtures/sub-body-none.txt" "$WORK/srv/subnone.txt"
+sub "https://127.0.0.1:$PORT/subnone.txt"
+OUT="$(run_update)"; echo "$OUT" | tail -2
+if grep -q 'Готово: 7 сервер' <<<"$OUT" && ! grep -q 'plain.example.com' "$WORK/kit/vpn/config.json"; then
+  ok 'security=none отброшен, остальные 7 серверов на месте'
+else bad 'незашифрованный узел попал в конфиг'; fi
+
+say '8. сверка с Python-версией на одних данных'
 "$PWSH" -NoProfile -File "$HERE/Dump-Config.ps1" -Body "$HERE/fixtures/sub-body.txt" -Out "$WORK/ps.json" >/dev/null 2>&1
 python3 - "$KIT/app/update-sub.py" "$WORK/ps.json" "$HERE/fixtures/sub-body.txt" <<'PY'
 import importlib.util, json, sys
