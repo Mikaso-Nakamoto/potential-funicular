@@ -273,6 +273,45 @@ function Read-SubParams([string]$SubFile) {
     return $p
 }
 
+function Measure-ServerPing {
+    # Параллельный TCP-замер до "host:port": без ICMP и без прав администратора.
+    # Возвращает @( @{Name; Ms} ), Ms = -1 — нет ответа за TimeoutMs.
+    param([string[]]$Targets, [int]$TimeoutMs = 2500)
+    $items = @()
+    foreach ($t in $Targets) {
+        $s = "$t".Trim()
+        $i = $s.LastIndexOf(':')
+        if ($i -le 0) { continue }
+        $h = $s.Substring(0, $i).Trim('[', ']')
+        $p = 0
+        if (-not [int]::TryParse($s.Substring($i + 1), [ref]$p) -or $p -le 0) { continue }
+        $c = New-Object Net.Sockets.TcpClient
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+        $task = $null
+        try { $task = $c.ConnectAsync($h, $p) } catch { $task = $null }
+        $items += [pscustomobject]@{ Name = $s; Client = $c; Task = $task; Sw = $sw; Ms = -1; Done = $false }
+    }
+    $deadline = [Diagnostics.Stopwatch]::StartNew()
+    while ($deadline.ElapsedMilliseconds -le $TimeoutMs) {
+        $pending = 0
+        foreach ($it in $items) {
+            if ($it.Done) { continue }
+            if ($it.Task -and $it.Task.IsCompleted) {
+                if (-not $it.Task.IsFaulted) { $it.Ms = [int]$it.Sw.ElapsedMilliseconds }
+                $it.Done = $true
+            } else { $pending++ }
+        }
+        if ($pending -eq 0) { break }
+        Start-Sleep -Milliseconds 15
+    }
+    $out = @()
+    foreach ($it in $items) {
+        try { $it.Client.Dispose() } catch { }
+        $out += [pscustomobject]@{ Name = $it.Name; Ms = $it.Ms }
+    }
+    return ,$out
+}
+
 function Get-SubBody([string]$Url, [string]$Hwid, [string]$Ua, [int]$ProxyPort = 0) {
     # скачивает тело подписки (через локальный SOCKS, если ProxyPort > 0),
     # распаковывает base64 (в т.ч. без паддинга и url-safe). '' = не получилось.

@@ -36,6 +36,8 @@ $SubFile = Join-Path $Vpn 'sub.txt'
 $CfgEnc  = $Cfg + '.enc'          # vpn\config.json.enc (если задан пароль)
 $SubEnc  = $SubFile + '.enc'      # vpn\sub.txt.enc
 $script:KitPassword = $null       # пароль флешки на эту сессию (в файл не пишется)
+$script:PingTargets = @()          # host:port серверов для замера задержки
+$script:LastPing = Get-Date        # время последнего авто-пинга (раз в 30 с)
 $Xray    = Join-Path $Vpn 'xray.exe'
 $Ts      = Get-Date -Format 'yyyyMMdd-HHmmss'
 $LogFile = Join-Path $Logs ('session-' + $Ts + '.log')
@@ -173,6 +175,18 @@ function Ask-Cleanup {
     if (-not $answered) { return $false }
     if ($buf -eq '') { return $true }
     return ($buf -match '^(y|Y|д|Д)')
+}
+
+function Write-ServerPing {
+    # задержка до серверов одной строкой: раз в 30 секунд и по клавише p
+    if (-not $script:PingTargets -or $script:PingTargets.Count -eq 0) { return }
+    $res = @(Measure-ServerPing $script:PingTargets 2500)
+    $parts = @()
+    for ($i = 0; $i -lt $res.Count; $i++) {
+        if ([int]$res[$i].Ms -ge 0) { $parts += ('{0}: {1} мс' -f ($i + 1), [int]$res[$i].Ms) }
+        else { $parts += ('{0}: нет ответа' -f ($i + 1)) }
+    }
+    Write-Host ('[пинг ' + (Get-Date -Format 'HH:mm:ss') + '] ' + ($parts -join '   ')) -ForegroundColor DarkCyan
 }
 
 function Save-KitCopies {
@@ -433,6 +447,13 @@ try {
     }
 
     $srvCount = @($CfgObj.outbounds).Count
+    $script:PingTargets = @()
+    foreach ($ob in @($CfgObj.outbounds)) {
+        if ("$($ob.tag)" -notlike 'proxy-*') { continue }
+        $vn = $null
+        if ($ob.settings -and $ob.settings.vnext) { $vn = @($ob.settings.vnext)[0] }
+        if ($vn) { $script:PingTargets += ("$($vn.address):$($vn.port)") }
+    }
     if ($script:OnlyServer -gt 0) {
         Log ('режим: только сервер ' + $script:OnlyServer + ' из ' + $srvCount + ' (без балансировки)')
         Write-Host ('[i] Режим: только сервер ' + $script:OnlyServer + ' из ' + $srvCount +
@@ -750,7 +771,12 @@ while (-not $s.stop) {
         $ipFail = 0
     } else {
         $ipFail++
-        if ($ipFail -ge 3) { Breach 'VPN перестал отвечать (IP через прокси не определяется)'; break }
+        # Нет ответа о IP при живом SOCKS — это НЕ утечка: браузер всё равно идёт в туннель
+        # (failover_direct=false). Раньше здесь убивался браузер, и при загруженном канале
+        # это выглядело как «браузер сам закрылся». Теперь только предупреждаем.
+        if ($ipFail -eq 5) {
+            [void]$s.events.Add('ВНИМАНИЕ: сервер не отвечает на проверку IP (канал занят или узел перегружен). Браузер не закрываю — трафик всё равно идёт в туннель.')
+        }
     }
 }
 '@
@@ -820,6 +846,17 @@ while (-not $s.stop) {
             $ev = $s.events[0]; $s.events.RemoveAt(0)
             Log $ev
         }
+        # задержка до серверов: раз в 30 секунд и в любой момент по клавише p
+        if (((Get-Date) - $script:LastPing).TotalSeconds -ge 30) {
+            $script:LastPing = Get-Date
+            Write-ServerPing
+        }
+        try {
+            if ((-not [Console]::IsInputRedirected) -and [Console]::KeyAvailable) {
+                $k = [Console]::ReadKey($true)
+                if ("$($k.KeyChar)" -eq 'p') { Write-ServerPing; $script:LastPing = Get-Date }
+            }
+        } catch { }
         Start-Sleep -Milliseconds 1000
     }
 

@@ -34,10 +34,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Invoke-LeakCheck.ps1
 
 ## Результат
 
-- Отчёт: `AUDIT-REPORT.md` (F-01…F-19 по первому кругу, F-20…F-32 по второму разбору из 12 пунктов, F-33…F-60 по дальнейшим правкам).
+- Отчёт: `AUDIT-REPORT.md` (F-01…F-19 по первому кругу, F-20…F-32 по второму разбору из 12 пунктов, F-33…F-62 по дальнейшим правкам).
 - Исправленный комплект собран отдельно от git (код автора в репозиторий не кладём):
-  `inbox/dist/LibreWolf-USB-fixed.zip`, 96 970 байт, md5 `db68d1bc07c291b85dd75baaea44f9c2`.
-- Копия для скачивания: [LibreWolf-USB-fixed.zip](https://github.com/Mikaso-Nakamoto/potential-funicular/blob/kit-f60/review/netkit/dist/LibreWolf-USB-fixed.zip) (тег `kit-f60`).
+  `inbox/dist/LibreWolf-USB-fixed.zip`, 102 999 байт, md5 `2fd5a09f345e4e4045587d77b42cf01f`.
+- Копия для скачивания: [LibreWolf-USB-fixed.zip](https://github.com/Mikaso-Nakamoto/potential-funicular/blob/kit-f62/review/netkit/dist/LibreWolf-USB-fixed.zip) (тег `kit-f62`).
 - Что проверено статически и что требует живой машины — в §«Чего не проверял» отчёта.
 - В комплекте есть `ПРОВЕРКА.bat` → `app/self-check.ps1`: офлайн-прогон конвертера
   и сборки JSON на 6 тестовых ключах (без сети, без Xray) — 52 проверки, включая

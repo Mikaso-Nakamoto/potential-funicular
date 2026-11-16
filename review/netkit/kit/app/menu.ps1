@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-60'
+$Build = 'F-62'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -149,6 +149,7 @@ function Show-Menu {
     Show-Item '7' 'Проверить комплект' 'офлайн-проверки конфига, ничего не меняет'
     Show-Item '8' 'Ускорить флешку и проводник' 'замер, где тормозит, и настройки Windows против лагов'
     Show-Item '9' 'Проверить IP и страну' 'браузер не нужен: что видят сайты через туннель'
+    Show-Item '10' 'Задержка до серверов (пинг)' 'какой сервер быстрее отвечает; браузер не нужен'
     Show-Item '0' 'Выход' ''
 
     Write-Host ''
@@ -293,6 +294,24 @@ function Show-Help([string]$num) {
                 'Проверка в приватном окне (Ctrl+Shift+P) показывает, кто виноват.',
                 '',
                 'Команда: powershell -ExecutionPolicy Bypass -File app\ip-check.ps1'
+            )
+        }
+        '10' {
+            $lines = @(
+                'Пункт 10 — пинг серверов.',
+                '',
+                'Меряет задержку до каждого сервера из vpn\config.json: TCP-подключение',
+                'к его адресу и порту, без ICMP и без прав администратора. Показывает',
+                'миллисекунды по каждому и подсказывает, какой номер брать в пункте 2.',
+                '',
+                'Это задержка до сервера, а не скорость через него: 40 мс — отличный',
+                'сервер, 150-250 мс — рабочий, 800+ или «нет ответа» — сервер далеко',
+                'или перегружен.',
+                '',
+                'То же самое сессия делает сама: пока браузер открыт, задержки печатаются',
+                'раз в 30 секунд. Нажать пинг вручную в сессии — клавиша p, затем Enter.',
+                '',
+                'Команда: powershell -ExecutionPolicy Bypass -File app\ping-servers.ps1'
             )
         }
         '0' {
@@ -440,11 +459,15 @@ while ($true) {
             [void](Run-PS (Join-Path $App 'ip-check.ps1'))
             Pause-Menu
         }
+        '10' {
+            [void](Run-PS (Join-Path $App 'ping-servers.ps1'))
+            Pause-Menu
+        }
         '0' { break }
         '' { continue }
         default {
             Write-Host ''
-            Write-Host '   Такого пункта нет. Есть 1–9 и 0. Справка: ?1 … ?9.' -ForegroundColor Red
+            Write-Host '   Такого пункта нет. Есть 1–10 и 0. Справка: ?1 … ?10.' -ForegroundColor Red
             Start-Sleep -Milliseconds 1200
         }
     }
