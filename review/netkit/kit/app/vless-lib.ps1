@@ -265,6 +265,16 @@ function New-ConfigJson($Nodes, [int]$Only = 0) {
                     }
                 )
                 rules = @(
+                    # Видео YouTube привязано к одному выходному IP: если балансировщик
+                    # даёт на каждый чанк новый узел, перемотка встаёт и появляется
+                    # «ошибка воспроизведения». Поэтому видео-домены всегда идут через
+                    # proxy-1, а остальное — через leastPing.
+                    [ordered]@{
+                        type = 'field'
+                        domain = @('domain:youtube.com', 'domain:googlevideo.com', 'domain:ytimg.com',
+                                   'domain:ggpht.com', 'domain:youtube-nocookie.com', 'domain:yt.be')
+                        outboundTag = 'proxy-1'
+                    }
                     [ordered]@{ type = 'field'; network = 'tcp,udp'; balancerTag = 'all-proxies' }
                 )
             }

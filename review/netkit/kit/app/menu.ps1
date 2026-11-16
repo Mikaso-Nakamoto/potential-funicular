@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-73'
+$Build = 'F-74'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -200,6 +200,8 @@ function Show-Help([string]$num) {
                 '',
                 'Сервер выбирается балансировщиком на каждое соединение, поэтому выходной',
                 'IP меняется. Для YouTube, Google и Госуслуг это плохо — используй пункт 2.',
+                'Исключение: видео YouTube (youtube.com, googlevideo.com и др.) всегда идёт',
+                'через proxy-1 — иначе перемотка встаёт с «ошибкой воспроизведения».',
                 '',
                 'Когда закроешь окно браузера, скрипт это заметит (до 5 секунд), пискнет и',
                 'спросит про следы на этом ПК: Y — чистить, N — оставить, 60 секунд без',

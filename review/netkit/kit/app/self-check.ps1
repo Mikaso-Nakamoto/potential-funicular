@@ -107,9 +107,11 @@ $tcpOut = @($obj.outbounds | Where-Object { $_.settings -and $_.settings.vnext -
 Check 'tcpSettings.header.request.path[]' (@($tcpOut.streamSettings.tcpSettings.header.request.path)[0] -eq '/tp')
 
 $rules = @($obj.routing.rules)
-Check 'routing: ровно одно правило' ($rules.Count -eq 1)
-Check 'routing: правило идёт через balancer' ($rules[0].balancerTag -eq 'all-proxies')
-Check 'routing: прямого пути наружу нет' (@($rules | Where-Object { $_.outboundTag }).Count -eq 0)
+Check 'routing: два правила (видео + остальное)' ($rules.Count -eq 2)
+Check 'routing: видео YouTube идёт через proxy-1' ($rules[0].outboundTag -eq 'proxy-1' -and @($rules[0].domain) -contains 'domain:googlevideo.com')
+Check 'routing: остальное — через balancer' ($rules[1].balancerTag -eq 'all-proxies')
+# прямой путь наружу — это direct/freedom; направление на свой proxy-* — не путь наружу
+Check 'routing: прямого пути наружу нет' (@($rules | Where-Object { "$($_.outboundTag)" -match '^(direct|freedom|block|blackhole)$' }).Count -eq 0)
 $bal = @($obj.routing.balancers)[0]
 Check 'balancer: selector по префиксу proxy-' (@($bal.selector) -contains 'proxy-')
 Check 'balancer: стратегия leastPing' (($bal.strategy).type -eq 'leastPing')

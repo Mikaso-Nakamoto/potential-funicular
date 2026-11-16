@@ -21,6 +21,13 @@ $ErrorActionPreference = 'Stop'
 $App     = $PSScriptRoot
 $Root    = Split-Path -Parent $App
 $Vpn     = Join-Path $Root 'vpn'
+
+# интерпретатор для дочерних скриптов (чистка следов и т.п.); в PS 7 pwsh зовётся иначе
+$psExe = 'powershell.exe'
+if (-not $env:SystemRoot) {
+    $p0 = Get-Command pwsh -ErrorAction SilentlyContinue
+    if ($p0) { $psExe = $p0.Source }
+}
 $Logs    = Join-Path $Vpn 'logs'
 $Profile = Join-Path $Root 'profile'
 $ProfileTemp = $false
@@ -251,6 +258,26 @@ function New-SessionConfig([int]$P) {
             )
         }
         try { $obj.PSObject.Properties.Remove('observatory') } catch {}
+    } else {
+        # config.json, собранный до этой сборки, не знает про фиксацию видео YouTube.
+        # Добавляем правило на лету — иначе балансировщик меняет узел на каждый чанк,
+        # и перемотка встаёт с «ошибкой воспроизведения».
+        $tags = @($obj.outbounds | ForEach-Object { "$($_.tag)" })
+        if ($tags.Count -gt 1) {
+            $rules = @($obj.routing.rules)
+            $hasYt = @($rules | Where-Object { @($_.domain) -contains 'domain:googlevideo.com' }).Count -gt 0
+            if (-not $hasYt) {
+                $obj.routing.rules = @(
+                    [ordered]@{
+                        type = 'field'
+                        domain = @('domain:youtube.com', 'domain:googlevideo.com', 'domain:ytimg.com',
+                                   'domain:ggpht.com', 'domain:youtube-nocookie.com', 'domain:yt.be')
+                        outboundTag = $tags[0]
+                    }
+                ) + $rules
+                Log ('в конфиг сессии добавлено правило: видео YouTube идёт через ' + $tags[0])
+            }
+        }
     }
     $json = $obj | ConvertTo-Json -Depth 12
     $null = $json | ConvertFrom-Json   # самопроверка перед записью
@@ -927,7 +954,8 @@ while (-not $s.stop) {
         throw '__LWUSB_STOP__'
     }
 
-    Log 'браузер закрыт пользователем'
+    if ($script:QuitByUser) { Log 'сессия завершена по клавише q' }
+    else { Log 'браузер закрыт пользователем' }
     Write-Host ''
     try { [Console]::Beep(880, 150); [Console]::Beep(660, 200) } catch { }
     Write-Host '[OK] Браузер закрыт — это заметил скрипт, дальше два шага:' -ForegroundColor Green
