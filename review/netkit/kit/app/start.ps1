@@ -9,6 +9,7 @@ param(
     [switch]$IgnorePolicies,
     [switch]$Debug,
     [switch]$Fast,
+    [switch]$AskServer,       # спросить номер сервера здесь же (нужно, если ключи под паролем)
     [int]$Server = 0          # >0: только этот сервер, без балансировки (для YouTube и подобных)
 )
 
@@ -427,6 +428,31 @@ try {
     $problems = @(Test-ConfigSafe $CfgObj)
     if ($problems.Count -gt 0) {
         Fail ("Конфиг не прошёл проверку безопасности:`n      - " + ($problems -join "`n      - ") + "`n      Дома пересоздай конфиг: app\update-sub.ps1 или app\vless-to-config.ps1.")
+    }
+
+    $objsAll = @($CfgObj.outbounds)
+
+    # --- выбор сервера в этой же сессии (пункт 2 при зашифрованных ключах) ---
+    if ($AskServer -and ($script:OnlyServer -le 0)) {
+        Write-Host ''
+        Write-Host '[?] Какой сервер использовать в этой сессии?' -ForegroundColor Cyan
+        for ($k = 0; $k -lt $objsAll.Count; $k++) {
+            $ad = ''
+            try { $v = @($objsAll[$k].settings.vnext)[0]; $ad = "$($v.address):$($v.port)" } catch { }
+            Write-Host ('    [{0}] {1}  {2}' -f ($k + 1), $objsAll[$k].tag, $ad) -ForegroundColor Gray
+        }
+        Write-Host '    Номер (Enter — балансировщик, то есть выходной IP будет меняться): ' -ForegroundColor Green -NoNewline
+        $ans = ''
+        try { $ans = (Read-Host).Trim() } catch { }
+        if ($ans -match '^\d+$') {
+            $n = [int]$ans
+            if ($n -ge 1 -and $n -le $objsAll.Count) {
+                $script:OnlyServer = $n
+                Log ('выбран сервер ' + $n + ' (список из -AskServer)')
+            } else {
+                Write-Host ('[!] Номера от 1 до ' + $objsAll.Count + ' — беру балансировщик.') -ForegroundColor Yellow
+            }
+        }
     }
 
     $srvCount = @($CfgObj.outbounds).Count

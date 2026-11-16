@@ -170,6 +170,10 @@ function Read-KitPassword([string]$Vpn, [int]$Tries = 3) {
         if (-not $p) { Write-Host '[!] Пустой пароль.' -ForegroundColor Red; continue }
         if (Test-KitPassword $Vpn $p) { return $p }
         Write-Host "[!] Неверный пароль (попытка $i из $Tries)." -ForegroundColor Red
+        if ($i -eq 1) {
+            Write-Host '    Проверь раскладку (RU/EN) и Caps Lock: пароль вводится теми же' -ForegroundColor DarkYellow
+            Write-Host '    символами, что и при задании. Кириллица и латиница не взаимозаменяемы.' -ForegroundColor DarkYellow
+        }
     }
     return ''
 }

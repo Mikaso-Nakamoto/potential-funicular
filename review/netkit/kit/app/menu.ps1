@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-69'
+$Build = 'F-70'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -45,15 +45,37 @@ function Get-State {
     $xray = Test-Path (Join-Path $Vpn 'xray.exe')
     $s.Add(@('Браузер', $(if ($browser) { 'есть' } else { 'нет' }), $browser, 'пункт 4'))
     $s.Add(@('Xray', $(if ($xray) { 'есть' } else { 'нет' }), $xray, 'пункт 4'))
+    $cfgOpen  = Test-Path $Cfg
+    $cfgEnc   = Test-Path ($Cfg + '.enc')
+    $subOpen  = Test-Path $SubFile
+    $subEnc   = Test-Path ($SubFile + '.enc')
+    $hasSecret = Test-Path (Join-Path $Vpn 'secret.dat')
+
     $servers = @(Get-Servers)
     if ($servers.Count -gt 0) {
         $age = [int]((Get-Date) - (Get-Item $Cfg).LastWriteTime).TotalDays
         $s.Add(@('Серверы', ("$($servers.Count) шт., обновлены $age дн. назад"), $true, 'пункт 3'))
+    } elseif ($cfgEnc) {
+        # ключи зашифрованы: число серверов видно только после пароля, но файл на месте
+        $age = [int]((Get-Date) - (Get-Item ($Cfg + '.enc')).LastWriteTime).TotalDays
+        $s.Add(@('Серверы', ("под паролем, обновлены $age дн. назад"), $true, ''))
     } else {
         $s.Add(@('Серверы', 'нет', $false, 'пункт 3/4'))
     }
-    $hasSub = ((Test-Path $SubFile) -and ((Get-Content $SubFile -Raw -ErrorAction SilentlyContinue) -match 'url\s*=\s*\S+'))
-    $s.Add(@('Подписка', $(if ($hasSub) { 'настроена' } else { 'нет' }), $hasSub, 'пункт 4'))
+
+    $hasSub = $false
+    if ($subOpen) {
+        $hasSub = ((Get-Content $SubFile -Raw -ErrorAction SilentlyContinue) -match 'url\s*=\s*\S+')
+    }
+    if ($hasSub) {
+        $s.Add(@('Подписка', 'настроена', $true, ''))
+    } elseif ($subEnc) {
+        $s.Add(@('Подписка', 'настроена, под паролем', $true, ''))
+    } else {
+        $s.Add(@('Подписка', 'нет', $false, 'пункт 4'))
+    }
+
+    if ($hasSecret) { $s.Add(@('Пароль', 'задан', $true, '')) }
     $s.Add(@('Профиль', $(if (Test-Path (Join-Path $Root 'profile')) { 'на флешке есть' } else { 'чистый' }), $true, ''))
     return $s
 }
@@ -189,6 +211,7 @@ function Show-Help([string]$num) {
                 'Пункт 2 — запуск с выбором сервера.',
                 '',
                 'Покажет список серверов из vpn\config.json с номерами и адресами.',
+                'Если ключи под паролем, список появится после ввода пароля.',
                 'Введи номер — вся сессия пойдёт через один сервер, выходной IP перестанет',
                 'меняться. Если номер не вводить, будет как в пункте 1.',
                 '',
@@ -429,8 +452,14 @@ while ($true) {
             Pause-Menu
         }
         '2' {
-            $a = Ask-Server
-            if ($null -ne $a) { [void](Run-PS (Join-Path $App 'start.ps1') $a) }
+            if (Test-Path (Join-Path $Vpn 'secret.dat')) {
+                # конфиг зашифрован: список серверов можно показать только после пароля,
+                # поэтому выбор делает сам start.ps1 (флаг -AskServer)
+                [void](Run-PS (Join-Path $App 'start.ps1') @('-AskServer'))
+            } else {
+                $a = Ask-Server
+                if ($null -ne $a) { [void](Run-PS (Join-Path $App 'start.ps1') $a) }
+            }
             Pause-Menu
         }
         '3' {
