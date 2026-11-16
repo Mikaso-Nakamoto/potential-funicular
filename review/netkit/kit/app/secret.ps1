@@ -100,9 +100,11 @@ function Set-KitPassword([string]$Vpn) {
     # интерактивно: придумать пароль и записать secret.dat
     if (Test-KitSecret $Vpn) { throw 'Пароль уже задан.' }
     while ($true) {
-        $p1 = ConvertFrom-Secure (Read-Host 'Придумай пароль (минимум 8 символов)' -AsSecureString)
+        Write-Host '[i] Пароль скрыт звёздочками; Backspace — стереть, Esc — отмена.' -ForegroundColor DarkGray
+        $p1 = Read-KitMasked 'Придумай пароль (минимум 8 символов):'
+        if (-not $p1) { Write-Host '[i] Отменено.' -ForegroundColor Yellow; return '' }
         if ($p1.Length -lt 8) { Write-Host '[!] Короче 8 символов — ещё раз.' -ForegroundColor Red; continue }
-        $p2 = ConvertFrom-Secure (Read-Host 'Повтори пароль' -AsSecureString)
+        $p2 = Read-KitMasked 'Повтори пароль ещё раз:'
         if ($p1 -ne $p2) { Write-Host '[!] Не совпало — ещё раз.' -ForegroundColor Red; continue }
         Set-KitPasswordValue $Vpn $p1
         Write-Host '[+] Пароль задан. Вводить его нужно при каждом подключении.' -ForegroundColor Green
@@ -125,6 +127,33 @@ function Test-KitPassword([string]$Vpn, [string]$Password) {
     return (Test-KitMac $got $want)
 }
 
+function Read-KitMasked([string]$Prompt) {
+    # ввод «вслепую» со звёздочками: Read-Host -AsSecureString на экран не выводит
+    # вообще ничего, и непонятно, нажалась ли клавиша. Здесь каждый символ
+    # показывается как *, Backspace стирает, Esc отменяет.
+    if ($Prompt) { Write-Host ($Prompt + ' ') -ForegroundColor Gray -NoNewline }
+    $sb = New-Object System.Text.StringBuilder
+    while ($true) {
+        if ([Console]::IsInputRedirected) { Write-Host ''; return '' }
+        if (-not [Console]::KeyAvailable) { Start-Sleep -Milliseconds 30; continue }
+        $k = [Console]::ReadKey($true)
+        if ($k.Key -eq 'Enter') { Write-Host ''; break }
+        if ($k.Key -eq 'Escape') { Write-Host ''; return '' }
+        if ($k.Key -eq 'Backspace') {
+            if ($sb.Length -gt 0) {
+                [void]$sb.Remove($sb.Length - 1, 1)
+                Write-Host "`b `b" -NoNewline
+            }
+            continue
+        }
+        $c = $k.KeyChar
+        if ([char]::IsControl($c)) { continue }
+        [void]$sb.Append($c)
+        Write-Host '*' -NoNewline
+    }
+    return $sb.ToString()
+}
+
 function Read-KitPassword([string]$Vpn, [int]$Tries = 3) {
     # спрашивает пароль до 3 раз; '' при отказе (вызывающий сам решает, как упасть)
     if (-not (Test-KitSecret $Vpn)) { return '' }
@@ -134,9 +163,10 @@ function Read-KitPassword([string]$Vpn, [int]$Tries = 3) {
             return ''
         }
     } catch { }
+    Write-Host '[i] Пароль скрыт звёздочками; Backspace — стереть, Esc — отмена.' -ForegroundColor DarkGray
     for ($i = 1; $i -le $Tries; $i++) {
         $p = ''
-        try { $p = ConvertFrom-Secure (Read-Host 'Пароль флешки' -AsSecureString) } catch { return '' }
+        try { $p = Read-KitMasked 'Пароль флешки:' } catch { return '' }
         if (-not $p) { Write-Host '[!] Пустой пароль.' -ForegroundColor Red; continue }
         if (Test-KitPassword $Vpn $p) { return $p }
         Write-Host "[!] Неверный пароль (попытка $i из $Tries)." -ForegroundColor Red
@@ -222,7 +252,7 @@ function Read-KitYesNo([string]$Title, [string[]]$Lines, [int]$TimeoutSec = 30) 
     Write-Host ''
     Write-Host $Title -ForegroundColor Cyan
     foreach ($l in $Lines) { Write-Host $l -ForegroundColor DarkGray }
-    Write-Host ('    Enter или Y — да,   N — нет,   ' + $TimeoutSec + ' секунд без ответа — пропустить.') -ForegroundColor DarkGray
+    Write-Host ('    Y — да,   N — нет (Enter не нужен),   ' + $TimeoutSec + ' секунд без ответа — пропустить.') -ForegroundColor DarkGray
     Write-Host '    > ' -ForegroundColor Green -NoNewline
     $buf = ''
     $answered = $false
@@ -233,7 +263,12 @@ function Read-KitYesNo([string]$Title, [string[]]$Lines, [int]$TimeoutSec = 30) 
                 $k = [Console]::ReadKey($true)
                 if ($k.Key -eq 'Enter') { $answered = $true; break }
                 if ($k.Key -eq 'Escape') { Write-Host ''; return $false }
-                if ("$($k.KeyChar)" -match '^[A-Za-zА-Яа-я]$') { $buf += $k.KeyChar; Write-Host $k.KeyChar -NoNewline }
+                if ("$($k.KeyChar)" -match '^[A-Za-zА-Яа-я]$') {
+                    $buf += $k.KeyChar
+                    Write-Host $k.KeyChar -NoNewline
+                    # y/n срабатывают сразу — Enter не обязателен
+                    if ("$($k.KeyChar)" -match '^[yYnNдДнН]$') { $answered = $true; break }
+                }
             }
         } catch { return $false }
         Start-Sleep -Milliseconds 100

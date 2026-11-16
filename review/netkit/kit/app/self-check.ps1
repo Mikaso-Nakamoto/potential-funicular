@@ -181,13 +181,22 @@ if ($logText -match 'vless://') { $secretHits += 'vless-ссылка' }
 if ($logText -match '/sub/[A-Za-z0-9]{8,}') { $secretHits += 'URL подписки' }
 Check ('в логах нет ключей и ссылки подписки (файлов: ' + $logFiles.Count + ')') ($secretHits.Count -eq 0) ($secretHits -join ', ')
 
-# внешние IP: сам лог IP не пишет, допустимы только локальные адреса
-$ips = @()
-try { $ips = @([regex]::Matches($logText, '\b((?:\d{1,3}\.){3}\d{1,3})\b') | ForEach-Object { $_.Groups[1].Value }) } catch { }
-$publicIps = @($ips | Where-Object {
-    $_ -notmatch '^(127\.|0\.|10\.|192\.168\.|169\.254\.|255\.)' -and $_ -notmatch '^172\.(1[6-9]|2[0-9]|3[01])\.'
-} | Select-Object -Unique)
-Check 'в логах нет внешних IP (только локальные)' ($publicIps.Count -eq 0) (($publicIps | Select-Object -First 3) -join ', ')
+# внешние адреса: IP через VPN пишется намеренно (диагностика), а ПРЯМОЙ IP — нет.
+# Поэтому ругаемся только на внешний адрес в строке без пометки про VPN.
+$seen = @()
+$suspect = @()
+foreach ($line in ($logText -split "`n")) {
+    foreach ($m in [regex]::Matches($line, '\b((?:\d{1,3}\.){3}\d{1,3})\b')) {
+        $ip = $m.Groups[1].Value
+        if ($ip -match '^(127\.|0\.|10\.|192\.168\.|169\.254\.|255\.)') { continue }
+        if ($ip -match '^172\.(1[6-9]|2[0-9]|3[01])\.') { continue }
+        $seen += $ip
+        $isVpnIp = ($line -match 'VPN|сменился|обновление успешно|откат успешен')
+        if (-not $isVpnIp) { $suspect += ($ip + ' в строке: ' + $line.Trim()) }
+    }
+}
+$seenCount = @($seen | Select-Object -Unique).Count
+Check ('в логах нет прямого IP (адреса через VPN не в счёт; внешних найдено: ' + $seenCount + ')') ($suspect.Count -eq 0) (($suspect | Select-Object -First 2) -join '; ')
 
 # ----------------------------------------------------------------- итог
 Write-Host ''
