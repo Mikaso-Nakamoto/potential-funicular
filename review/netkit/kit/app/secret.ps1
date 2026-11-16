@@ -75,7 +75,7 @@ function ConvertFrom-KitB64([string]$S) {
 
 function Set-KitPasswordValue([string]$Vpn, [string]$Password) {
     # неинтерактивно: записать secret.dat для пароля (нужно для тестов и для смены)
-    if ("$Password".Length -lt 8) { throw 'Пароль короче 8 символов.' }
+    if ("$Password".Length -lt 10) { throw 'Пароль короче 10 символов.' }
     New-Item -ItemType Directory -Force -Path $Vpn | Out-Null
     $salt = New-KitRandom 16
     $k = Get-KitKeys $Password $salt $script:KitSecretIters
@@ -101,9 +101,20 @@ function Set-KitPassword([string]$Vpn) {
     if (Test-KitSecret $Vpn) { throw 'Пароль уже задан.' }
     while ($true) {
         Write-Host '[i] Пароль скрыт звёздочками; Backspace — стереть, Esc — отмена.' -ForegroundColor DarkGray
-        $p1 = Read-KitMasked 'Придумай пароль (минимум 8 символов):'
+        $p1 = Read-KitMasked 'Придумай пароль (минимум 10 символов, лучше 4-5 слов):'
         if (-not $p1) { Write-Host '[i] Отменено.' -ForegroundColor Yellow; return '' }
-        if ($p1.Length -lt 8) { Write-Host '[!] Короче 8 символов — ещё раз.' -ForegroundColor Red; continue }
+        if ($p1.Length -lt 10) { Write-Host '[!] Короче 10 символов — ещё раз.' -ForegroundColor Red; continue }
+        # 200 000 итераций PBKDF2 на видеокарте — это десятки тысяч паролей в секунду,
+        # поэтому короткий словарный пароль подбирается за минуты. Не запрещаем, но честно
+        # предупреждаем: смысл пароля — только в его длине и случайности.
+        $weak = $false
+        if ($p1.Length -lt 12) { $weak = $true }
+        if ($p1 -match '^\d+$') { $weak = $true }
+        if ($p1 -match '(?i)^(qwerty|password|пароль|123456|admin|iloveyou)') { $weak = $true }
+        if ($weak) {
+            Write-Host '[!] Пароль короткий или предсказуемый: такой подбирают перебором.' -ForegroundColor Yellow
+            Write-Host '    Надёжнее — фраза из 4-5 случайных слов через пробел: «паром-улитка-стена-7».' -ForegroundColor DarkYellow
+        }
         $p2 = Read-KitMasked 'Повтори пароль ещё раз:'
         if ($p1 -ne $p2) { Write-Host '[!] Не совпало — ещё раз.' -ForegroundColor Red; continue }
         Set-KitPasswordValue $Vpn $p1

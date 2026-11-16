@@ -1009,6 +1009,29 @@ finally {
     if ($script:SessionCfg -and (Test-Path $script:SessionCfg)) {
         Remove-Item $script:SessionCfg -Force -ErrorAction SilentlyContinue
     }
+
+    # Секреты сессии лежали в %TEMP% открытым текстом: config.json с UUID узлов,
+    # sub.txt с токеном подписки, логи xray. Раньше каталог оставался после выхода —
+    # то есть на ПК лежала открытая копия того, что на флешке зашифровано.
+    if ($script:SessionDir -and (Test-Path $script:SessionDir)) {
+        try {
+            $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+            foreach ($f in @(Get-ChildItem $script:SessionDir -File -Force -ErrorAction SilentlyContinue)) {
+                try {
+                    $len = [int]$f.Length
+                    if ($len -gt 0 -and $len -le 5242880) {
+                        $rnd = New-Object byte[] $len
+                        $rng.GetBytes($rnd)
+                        [IO.File]::WriteAllBytes($f.FullName, $rnd)
+                    }
+                } catch { }
+            }
+            $rng.Dispose()
+        } catch { }
+        Remove-Item $script:SessionDir -Recurse -Force -ErrorAction SilentlyContinue
+        if (Test-Path $script:SessionDir) { Log ('не удалось удалить каталог сессии: ' + $script:SessionDir) }
+        else { Log 'открытые копии ключей и логи сессии затёрты и удалены из %TEMP%' }
+    }
     if ($ProfileTemp -and $Profile -and (Test-Path $Profile)) {
         for ($i = 0; $i -lt 6; $i++) {
             try { Remove-Item $Profile -Recurse -Force -ErrorAction Stop; break } catch { Start-Sleep -Milliseconds 500 }
