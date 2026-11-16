@@ -277,7 +277,13 @@ function Get-KitBrowserPids([string]$Dir) {
     foreach ($p in @(Get-Process -ErrorAction SilentlyContinue)) {
         $path = ''
         try { $path = $p.Path } catch {}
-        if ($path -and $path.StartsWith($Dir, [StringComparison]::OrdinalIgnoreCase)) { $pids += [int]$p.Id }
+        if ($path) {
+            if ($path.StartsWith($Dir, [StringComparison]::OrdinalIgnoreCase)) { $pids += [int]$p.Id }
+        } elseif ("$($p.ProcessName)" -eq 'librewolf') {
+            # Path не читается (процесс другого уровня доступа) — сравнивать нечем,
+            # поэтому опираемся на имя: иначе закрытие браузера можно не заметить
+            $pids += [int]$p.Id
+        }
     }
     return $pids
 }
@@ -771,8 +777,15 @@ while (-not $s.stop) {
     $ip = Get-IP $s.port
     if ($ip) {
         if ($s.lastIP -and ($ip -ne $s.lastIP)) {
-            [void]$s.events.Add("IP через VPN сменился: $($s.lastIP) -> $ip")
             $s.ipChanges = [int]$s.ipChanges + 1
+            # балансировщик меняет выход часто: строку в лог — не чаще раза в минуту,
+            # иначе консоль превращается в поток «IP сменился»
+            $dueLog = $true
+            try { $dueLog = (((Get-Date) - [datetime]$s.lastIpLog).TotalSeconds -ge 60) } catch { $dueLog = $true }
+            if ($dueLog) {
+                $s.lastIpLog = Get-Date
+                [void]$s.events.Add("IP через VPN сменился: $($s.lastIP) -> $ip (смен всего: $($s.ipChanges))")
+            }
             if (($s.onlyServer -gt 0) -and ([int]$s.ipChanges -eq 2)) {
                 [void]$s.events.Add("ВНИМАНИЕ: включён режим -Server $($s.onlyServer), но выходной IP меняется — этот сервер сам меняет выход. Перебери номера (меню, пункт 2).")
             }
@@ -838,6 +851,7 @@ while (-not $s.stop) {
     # --- ожидание завершения / срабатывания kill-switch ---
     # PID от Start-Process — это лончер: он умирает, передав работу настоящему процессу.
     # Следим за всеми процессами из папки браузера + за lock-файлом профиля.
+    Write-Host '     Клавиша q — закончить сессию сразу (если браузер уже закрыт, а ожидание тянется).' -ForegroundColor DarkGray
     Write-Host '     Слежу за браузером: закроешь все окна LibreWolf — сразу предложу' -ForegroundColor DarkGray
     Write-Host '     почистить следы и выключу VPN. Можно закрывать и это окно — тогда' -ForegroundColor DarkGray
     Write-Host '     VPN останется до перезагрузки, а хвосты уберутся при следующем запуске меню.' -ForegroundColor DarkGray
@@ -853,8 +867,8 @@ while (-not $s.stop) {
         if (($bpids.Count -gt 0) -or $lockNow) {
             $goneFor = 0
             # обратная связь: видно, что скрипт действительно следит
-            if (($waited % 20) -eq 0 -and $waited -gt 0) {
-                Write-Host ('     …жду закрытия браузера (процессов LibreWolf: ' + $bpids.Count + ')') -ForegroundColor DarkGray
+            if (($waited % 43) -eq 0 -and $waited -gt 0) {
+                Write-Host ('     …жду закрытия браузера (процессов LibreWolf: ' + $bpids.Count + '). Если он уже закрыт — нажми q.') -ForegroundColor DarkGray
             }
         } else {
             $goneFor++
@@ -879,8 +893,17 @@ while (-not $s.stop) {
             if ((-not [Console]::IsInputRedirected) -and [Console]::KeyAvailable) {
                 $k = [Console]::ReadKey($true)
                 if ("$($k.KeyChar)" -eq 'p') { Write-ServerPing; $script:LastPing = Get-Date }
+                if ("$($k.KeyChar)" -eq 'q') { $script:QuitByUser = $true }
             }
         } catch { }
+        if ($script:QuitByUser) {
+            Log 'сессия закончена по клавише q (ждать закрытия браузера не стали)'
+            Write-Host '     Сессия закончена по клавише q.' -ForegroundColor Yellow
+            if ($bpids.Count -gt 0) {
+                Write-Host ('     Браузер ещё открыт (процессов: ' + $bpids.Count + '): после выключения VPN он останется без сети.') -ForegroundColor Yellow
+            }
+            break
+        }
         Start-Sleep -Milliseconds 700
     }
 
