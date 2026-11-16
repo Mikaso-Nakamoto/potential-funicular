@@ -9,19 +9,12 @@ param(
     [switch]$Force              # переустановить даже то, что уже лежит (браузер, xray)
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'vless-lib.ps1')
 $App  = $PSScriptRoot
 $Root = Split-Path -Parent $App
 $Vpn  = Join-Path $Root 'vpn'
 $Dl   = Join-Path $Root '_download'
 
-# системные бинарники — по полному пути: вызов по имени подменяется файлом из PATH
-function Get-SystemExe([string]$Name) {
-    if ($env:SystemRoot) {
-        $p = Join-Path $env:SystemRoot ('System32\' + $Name)
-        if (Test-Path $p) { return $p }
-    }
-    return $Name
-}
 $Curl = Get-SystemExe 'curl.exe'
 $Tar  = Get-SystemExe 'tar.exe'
 . (Join-Path $PSScriptRoot 'ui-bar.ps1')
@@ -35,10 +28,10 @@ function Get-Api([string]$url, [string]$who) {
         return Invoke-RestMethod -Uri $url -TimeoutSec 40 -Headers @{ 'User-Agent' = 'LibreWolf-USB' }
     } catch {
         $msg = $_.Exception.Message
-        if ($msg -match 'rate limit|403|Forbidden') { Fail "${who}: превышен лимит запросов (403). Подожди час и повтори, либо скачай файл вручную." }
-        if ($msg -match 'SSL|TLS|certificate|Сертификат') { Fail "${who}: ошибка TLS ($msg). Проверь прокси/антивирус с перехватом HTTPS и часы Windows." }
-        if ($msg -match 'resolve|connect|timed out|unreachable|Имя') { Fail "${who} недоступен: нет связи с интернетом ($msg)." }
-        Fail "${who} недоступен: $msg"
+        if ($msg -match 'rate limit|403|Forbidden') { Fail-Fetch "${who}: превышен лимит запросов (403). Подожди час и повтори, либо скачай файл вручную." }
+        if ($msg -match 'SSL|TLS|certificate|Сертификат') { Fail-Fetch "${who}: ошибка TLS ($msg). Проверь прокси/антивирус с перехватом HTTPS и часы Windows." }
+        if ($msg -match 'resolve|connect|timed out|unreachable|Имя') { Fail-Fetch "${who} недоступен: нет связи с интернетом ($msg)." }
+        Fail-Fetch "${who} недоступен: $msg"
     }
 }
 
@@ -54,7 +47,7 @@ function Expand-Zip([string]$zip, [string]$dst) {
     try { Expand-Archive -LiteralPath $zip -DestinationPath $dst -Force -ErrorAction Stop; return $true } catch { return $false }
 }
 
-function Fail([string]$msg) {
+function Fail-Fetch([string]$msg) {
     Write-Host ""
     Write-Host "[X] $msg" -ForegroundColor Red
     Write-Host "    Интернет должен быть обычным (домашним), без прокси-блокировок." -ForegroundColor DarkGray
@@ -81,11 +74,11 @@ function Download([string]$url, [string]$out, [string]$label = 'Загрузка
         Write-Host "     [..] обрыв — пробую докачать остаток" -ForegroundColor Yellow
         $r = Invoke-DownloadBar $Curl $url $out $label -Resume
     }
-    if (-not $r.Ok) { Remove-Item $out -Force -ErrorAction SilentlyContinue; Fail "Не скачалось: $url (код curl $($r.Code), $($r.Size) б из $($r.Total))" }
-    if (-not (Test-Path $out) -or (Get-Item $out).Length -lt 100000) { Remove-Item $out -Force -ErrorAction SilentlyContinue; Fail "Файл пустой/битый: $out" }
+    if (-not $r.Ok) { Remove-Item $out -Force -ErrorAction SilentlyContinue; Fail-Fetch "Не скачалось: $url (код curl $($r.Code), $($r.Size) б из $($r.Total))" }
+    if (-not (Test-Path $out) -or (Get-Item $out).Length -lt 100000) { Remove-Item $out -Force -ErrorAction SilentlyContinue; Fail-Fetch "Файл пустой/битый: $out" }
     if ($Zip -and -not (Test-ZipMagic $out)) {
         Remove-Item $out -Force -ErrorAction SilentlyContinue
-        Fail "Скачался не архив (первые байты не PK): $url — вероятно, вместо файла отдана страница-заглушка или требуется вход. Удали _download\ и повтори."
+        Fail-Fetch "Скачался не архив (первые байты не PK): $url — вероятно, вместо файла отдана страница-заглушка или требуется вход. Удали _download\ и повтори."
     }
 }
 
@@ -137,7 +130,7 @@ foreach ($u in $candidates) {
     Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
 }
 if (-not $okDl) {
-    Fail ("Не удалось скачать LibreWolf. Открой в браузере страницу релизов, скачай вручную '{0}' и положи в папку _download\ на флешке, потом запусти подготовку снова: https://gitlab.com/librewolf-community/browser/bsys6/-/releases" -f $zipName)
+    Fail-Fetch ("Не удалось скачать LibreWolf. Открой в браузере страницу релизов, скачай вручную '{0}' и положи в папку _download\ на флешке, потом запусти подготовку снова: https://gitlab.com/librewolf-community/browser/bsys6/-/releases" -f $zipName)
 }
 Write-Host "     скачано: $([math]::Round((Get-Item $zipPath).Length/1MB,1)) МБ"
 
@@ -156,7 +149,7 @@ foreach ($su in ($shaTried | Select-Object -Unique)) {
         Remove-Item $shaPath -Force -ErrorAction SilentlyContinue
         if ($expected -match '^[0-9a-fA-F]{64}$') {
             if ($zipHash -ne $expected.ToLower()) {
-                Fail "sha256 НЕ СОВПАЛ у LibreWolf: ожидался $($expected.ToLower()), получен $zipHash. Удали _download\ и повтори."
+                Fail-Fetch "sha256 НЕ СОВПАЛ у LibreWolf: ожидался $($expected.ToLower()), получен $zipHash. Удали _download\ и повтори."
             }
             Write-Host "     sha256 OK (сверено с $su)" -ForegroundColor Green
             $shaOk = $true
@@ -177,7 +170,7 @@ if (-not $shaOk) {
         Write-Host "     1) сверь sha256 вручную на странице релиза;" -ForegroundColor Yellow
         Write-Host "     2) если совпало — запусти подготовку снова с -AllowUnverified:" -ForegroundColor Yellow
         Write-Host "        powershell -ExecutionPolicy Bypass -File app\prepare-home.ps1 -AllowUnverified" -ForegroundColor DarkGray
-        Fail 'sha256 не подтверждён (либо не скачался файл суммы).'
+        Fail-Fetch 'sha256 не подтверждён (либо не скачался файл суммы).'
     }
     Write-Host "         продолжаю по -AllowUnverified" -ForegroundColor Yellow
 }
@@ -186,9 +179,9 @@ if (-not $shaOk) {
 Write-Host "     распаковка..."
 $stage = Join-Path $Dl 'stage'
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
-if (-not (Expand-Zip $zipPath $stage)) { Fail "Не удалось распаковать архив LibreWolf (tar и Expand-Archive не сработали)." }
+if (-not (Expand-Zip $zipPath $stage)) { Fail-Fetch "Не удалось распаковать архив LibreWolf (tar и Expand-Archive не сработали)." }
 $exe = Get-ChildItem $stage -Recurse -Filter 'LibreWolf.exe' | Select-Object -First 1
-if (-not $exe) { Fail "В архиве не нашёлся LibreWolf.exe — распакуй вручную и положи папку браузера в app\LibreWolf\" }
+if (-not $exe) { Fail-Fetch "В архиве не нашёлся LibreWolf.exe — распакуй вручную и положи папку браузера в app\LibreWolf\" }
 $src = Split-Path $exe.FullName
 $dst = Join-Path $App 'LibreWolf'
 if (Test-Path $dst) { Remove-Item $dst -Recurse -Force }
@@ -211,7 +204,7 @@ $relUrl = 'https://api.github.com/repos/XTLS/Xray-core/releases/latest'
 if ($XrayVersion) { $relUrl = "https://api.github.com/repos/XTLS/Xray-core/releases/tags/$XrayVersion" }
 $gh = Get-Api $relUrl 'GitHub API'
 $asset = @($gh.assets) | Where-Object { $_.name -eq 'Xray-windows-64.zip' } | Select-Object -First 1
-if (-not $asset) { Fail "В последнем релизе Xray ($($gh.tag_name)) нет Xray-windows-64.zip. Возьми файл со старой страницы релизов." }
+if (-not $asset) { Fail-Fetch "В последнем релизе Xray ($($gh.tag_name)) нет Xray-windows-64.zip. Возьми файл со старой страницы релизов." }
 $xz = Join-Path $Dl 'Xray-windows-64.zip'
 Download "$($asset.browser_download_url)" $xz 'Xray' -Zip
 
@@ -229,7 +222,7 @@ if (-not $expect) {
     Remove-Item $shaTmp -Force -ErrorAction SilentlyContinue
 }
 if ($expect) {
-    if ($xzHash -ne $expect) { Fail "sha256 НЕ СОВПАЛ у Xray ($($gh.tag_name)): ожидался $expect, получен $xzHash. Удали _download\ и повтори." }
+    if ($xzHash -ne $expect) { Fail-Fetch "sha256 НЕ СОВПАЛ у Xray ($($gh.tag_name)): ожидался $expect, получен $xzHash. Удали _download\ и повтори." }
     Write-Host "     sha256 OK ($($gh.tag_name))" -ForegroundColor Green
 } else {
     Write-Host "     [!] Хеш Xray не опубликован в API — целостность НЕ подтверждена." -ForegroundColor Red
@@ -238,15 +231,15 @@ if ($expect) {
         Write-Host ""
         Write-Host "     Остановился намеренно: распаковывать непроверенный xray.exe нельзя" -ForegroundColor Red
         Write-Host "     (этот файл и держит весь трафик). Сверь sha256 вручную, затем запусти с -AllowUnverified." -ForegroundColor Yellow
-        Fail 'sha256 xray.exe не подтверждён.'
+        Fail-Fetch 'sha256 xray.exe не подтверждён.'
     }
     Write-Host "         продолжаю по -AllowUnverified" -ForegroundColor Yellow
 }
 
 Write-Host "     распаковка в vpn\..."
-if (-not (Expand-Zip $xz $Vpn)) { Fail "Не удалось распаковать Xray-windows-64.zip." }
+if (-not (Expand-Zip $xz $Vpn)) { Fail-Fetch "Не удалось распаковать Xray-windows-64.zip." }
 $xrayExe = Join-Path $Vpn 'xray.exe'
-if (-not (Test-Path $xrayExe)) { Fail "После распаковки нет vpn\xray.exe — распакуй архив вручную в папку vpn\" }
+if (-not (Test-Path $xrayExe)) { Fail-Fetch "После распаковки нет vpn\xray.exe — распакуй архив вручную в папку vpn\" }
 try { $ver = (& $xrayExe version | Select-Object -First 1) } catch { $ver = '(версию показать не удалось)' }
 Remove-Item $xz -Force -ErrorAction SilentlyContinue
 Write-Host "     Xray готов: $ver" -ForegroundColor Green

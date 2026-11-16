@@ -2,6 +2,7 @@
 # Поднимает Xray на отдельном порту (браузер не запускается), спрашивает три сервиса
 # через SOCKS и печатает ответы. Нужен, когда «VPN включён, а Google показывает не ту страну».
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'vless-lib.ps1')
 
 $App  = $PSScriptRoot
 $Root = Split-Path -Parent $App
@@ -9,26 +10,8 @@ $Vpn  = Join-Path $Root 'vpn'
 $Cfg  = Join-Path $Vpn 'config.json'
 $Xray = Join-Path $Vpn 'xray.exe'
 
-function Say([string]$t, [string]$c = 'Gray') { Write-Host $t -ForegroundColor $c }
-function Head([string]$t) { Write-Host ''; Say ('=== ' + $t + ' ===') 'Cyan' }
-
-function Get-SystemExe([string]$Name) {
-    if ($env:SystemRoot) {
-        $p = Join-Path $env:SystemRoot ('System32\' + $Name)
-        if (Test-Path $p) { return $p }
-    }
-    return $Name
-}
 $Curl = Get-SystemExe 'curl.exe'
 
-function Get-FreePort {
-    for ($i = 0; $i -lt 40; $i++) {
-        $p = Get-Random -Minimum 20000 -Maximum 60000
-        $l = New-Object Net.Sockets.TcpListener([Net.IPAddress]::Loopback, $p)
-        try { $l.Start(); $l.Stop(); return $p } catch { try { $l.Stop() } catch { } }
-    }
-    return 0
-}
 
 Head 'Проверка IP и страны'
 

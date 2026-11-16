@@ -7,12 +7,12 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'vless-lib.ps1')
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $App  = $PSScriptRoot
 $Root = Split-Path -Parent $App
 
-function Say([string]$text, [string]$color = 'Gray') { Write-Host $text -ForegroundColor $color }
 . (Join-Path $PSScriptRoot 'ui-bar.ps1')
 
 $exePath  = Join-Path $App 'LibreWolf\LibreWolf.exe'

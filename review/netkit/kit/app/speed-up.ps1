@@ -10,16 +10,12 @@ param(
     [switch]$Hide       # скрыть служебные папки в проводнике
 )
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'vless-lib.ps1')
 
 $App  = $PSScriptRoot
 $Root = Split-Path -Parent $App
 $Vpn  = Join-Path $Root 'vpn'
 
-function Say([string]$t, [string]$c = 'Gray') { Write-Host $t -ForegroundColor $c }
-function Head([string]$t) {
-    Write-Host ''
-    Say ('=== ' + $t + ' ===') 'Cyan'
-}
 
 Head 'Ускорение флешки'
 

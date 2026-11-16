@@ -14,7 +14,6 @@ $OutFile= Join-Path $Vpn 'config.json'
 $SubEnc = $SubFile + '.enc'
 $CfgEnc = $OutFile + '.enc'
 
-function Fail([string]$m) { Write-Host "[X] $m" -ForegroundColor Red; exit 1 }
 
 # --- пароль флешки (если задан): без него не читаем sub.txt и не пишем config.json ---
 $pw = ''

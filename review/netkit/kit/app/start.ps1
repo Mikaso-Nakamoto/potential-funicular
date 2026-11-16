@@ -142,39 +142,19 @@ function Get-ListenerPid([int]$P) {
 
 function Ask-Cleanup {
     # После закрытия браузера спрашивает, чистить ли следы этой сессии.
-    # Enter/Y — чистить, N/Esc — нет, 30 секунд без ответа — пропустить.
-    # При перенаправленном вводе (запуск из скрипта) не спрашивает вовсе.
-    try {
-        if ([Console]::IsInputRedirected) { return $false }
-    } catch { return $false }
+    # Сам ввод — общий Read-KitYesNo из secret.ps1 (одна реализация на весь комплект).
+    $lines = @(
+        '    История PowerShell, временные файлы, кэш миниатюр, недавние документы, DNS-кэш.'
+    )
+    return (Read-KitYesNo '[?] Почистить следы этой сессии на этом ПК?' $lines 30)
+}
 
-    Write-Host ''
-    Write-Host '[?] Почистить следы этой сессии на этом ПК?' -ForegroundColor Cyan
-    Write-Host '    История PowerShell, временные файлы, кэш миниатюр, недавние документы, DNS-кэш.' -ForegroundColor DarkGray
-    Write-Host '    Enter или Y — чистить,   N — оставить,   30 секунд — пропустить.' -ForegroundColor DarkGray
-    Write-Host '    > ' -ForegroundColor Green -NoNewline
-
-    $buf = ''
-    $answered = $false
-    $deadline = (Get-Date).AddSeconds(30)
-    while ((Get-Date) -lt $deadline) {
-        try {
-            if ([Console]::KeyAvailable) {
-                $k = [Console]::ReadKey($true)
-                if ($k.Key -eq 'Enter') { $answered = $true; break }
-                if ($k.Key -eq 'Escape') { Write-Host ''; return $false }
-                if ("$($k.KeyChar)" -match '^[A-Za-zА-Яа-я]$') {
-                    $buf += $k.KeyChar
-                    Write-Host $k.KeyChar -NoNewline
-                }
-            }
-        } catch { return $false }
-        Start-Sleep -Milliseconds 100
-    }
-    Write-Host ''
-    if (-not $answered) { return $false }
-    if ($buf -eq '') { return $true }
-    return ($buf -match '^(y|Y|д|Д)')
+function Format-PingPart([int]$N, $Item) {
+    # «N: 42 мс» или «N: нет ответа»; всё, что не число, считается таймаутом
+    $ms = -1
+    try { if ($null -ne $Item -and $null -ne $Item.Ms) { $ms = [int]$Item.Ms } } catch { $ms = -1 }
+    if ($ms -ge 0) { return ('{0}: {1} мс' -f $N, $ms) }
+    return ('{0}: нет ответа' -f $N)
 }
 
 function Write-ServerPing {
@@ -186,7 +166,10 @@ function Write-ServerPing {
         $parts = @()
         $i = 0
         foreach ($x in $res) {
-            if ($x -is [array]) { foreach ($y in $x) { $i++; $parts += (Format-PingPart $i $y) }; continue }
+            if ($x -is [array]) {
+                foreach ($y in $x) { $i++; $parts += (Format-PingPart $i $y) }
+                continue
+            }
             $i++
             $parts += (Format-PingPart $i $x)
         }
@@ -195,13 +178,6 @@ function Write-ServerPing {
     } catch {
         Write-Host ('[пинг] не удалось замерить: ' + $_.Exception.Message) -ForegroundColor DarkGray
     }
-}
-
-function Format-PingPart([int]$N, $Item) {
-    $ms = -1
-    try { if ($null -ne $Item -and $null -ne $Item.Ms) { $ms = [int]$Item.Ms } } catch { $ms = -1 }
-    if ($ms -ge 0) { return ('{0}: {1} мс' -f $N, $ms) }
-    return ('{0}: нет ответа' -f $N)
 }
 
 function Save-KitCopies {
@@ -247,14 +223,6 @@ function Enable-KitPassword {
         Write-Host '[!] Не удалось зашифровать — файлы остались как были.' -ForegroundColor Red
         return $false
     }
-}
-
-function Get-FreePort {
-    for ($i = 0; $i -lt 40; $i++) {
-        $p = Get-Random -Minimum 20000 -Maximum 60000
-        if ((Get-ListenerPid $p) -eq 0) { return $p }
-    }
-    return 0
 }
 
 function New-SessionConfig([int]$P) {

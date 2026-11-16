@@ -16,6 +16,29 @@ function Get-SystemExe([string]$Name) {
     return $Name
 }
 
+function Fail([string]$msg, [int]$code = 1) {
+    # единая точка отказа для домашних скриптов: сообщение и код возврата.
+    # start.ps1 объявляет свой Fail (с логом сессии) — он подключается позже и перекрывает этот.
+    Write-Host ''
+    Write-Host "[X] $msg" -ForegroundColor Red
+    exit $code
+}
+
+function Say([string]$t, [string]$c = 'Gray') { Write-Host $t -ForegroundColor $c }
+
+function Head([string]$t) { Write-Host ''; Say ('=== ' + $t + ' ===') 'Cyan' }
+
+function Get-FreePort {
+    # свободный порт в диапазоне 20000-60000: слушаем и сразу отпускаем.
+    # Если порт занят чужим процессом, TcpListener.Start() бросит — берём следующий.
+    for ($i = 0; $i -lt 40; $i++) {
+        $p = Get-Random -Minimum 20000 -Maximum 60000
+        $l = New-Object Net.Sockets.TcpListener([Net.IPAddress]::Loopback, $p)
+        try { $l.Start(); $l.Stop(); return $p } catch { try { $l.Stop() } catch { } }
+    }
+    return 0
+}
+
 function ConvertFrom-VlessLink([string]$Link) {
     # Возвращает [pscustomobject] с полями узла или $null (с предупреждением).
     $link = "$Link".Trim()
