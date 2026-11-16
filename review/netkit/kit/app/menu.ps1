@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-62'
+$Build = 'F-64'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
