@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-71'
+$Build = 'F-72'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -201,9 +201,12 @@ function Show-Help([string]$num) {
                 'Сервер выбирается балансировщиком на каждое соединение, поэтому выходной',
                 'IP меняется. Для YouTube, Google и Госуслуг это плохо — используй пункт 2.',
                 '',
-                'Когда закроешь окно браузера, скрипт сначала спросит про следы на этом ПК',
-                '(Y — чистить, N — оставить, 30 секунд без ответа — пропустить), а уже',
-                'потом выключит VPN и снимет правила брандмауэра.',
+                'Когда закроешь окно браузера, скрипт это заметит (до 5 секунд), пискнет и',
+                'спросит про следы на этом ПК: Y — чистить, N — оставить, 60 секунд без',
+                'ответа — пропустить. Потом выключит VPN и снимет правила брандмауэра.',
+                '',
+                'Если закрыть это окно раньше браузера, VPN останется висеть: при следующем',
+                'запуске меню хвосты (xray и правила) убираются автоматически.',
                 '',
                 'Пароль: если ключи на флешке зашифрованы, при каждом запуске спрашивается',
                 'пароль (ввод звёздочками, 3 попытки). Задаётся он один раз — при первом',
@@ -387,6 +390,36 @@ function Run-PS([string]$Script, [string[]]$ScriptArgs = @()) {
     return $code
 }
 
+function Remove-KitLeftovers {
+    # Если прошлое окно закрыли вместе с браузером, xray и правила брандмауэра могли
+    # остаться. Убираем при старте меню — но только когда сессия не идёт в другом окне.
+    $busy = @()
+    try {
+        $busy = @(Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" -ErrorAction SilentlyContinue |
+                  Where-Object { $_.CommandLine -and ($_.CommandLine -match 'start\.ps1') })
+    } catch { $busy = @() }
+    if ($busy.Count -gt 0) { return }
+
+    $killed = 0
+    foreach ($p in @(Get-Process -Name 'xray' -ErrorAction SilentlyContinue)) {
+        $path = ''
+        try { $path = $p.Path } catch { }
+        if ($path -and $path.StartsWith($Vpn, [StringComparison]::OrdinalIgnoreCase)) {
+            try { Stop-Process -Id $p.Id -Force -ErrorAction Stop; $killed++ } catch { }
+        }
+    }
+    $rules = 0
+    try {
+        foreach ($r in @(Get-NetFirewallRule -DisplayName 'LibreWolf-USB-KILLSWITCH*' -ErrorAction SilentlyContinue)) {
+            try { Remove-NetFirewallRule -InputObject $r -ErrorAction SilentlyContinue; $rules++ } catch { }
+        }
+    } catch { }
+    if ($killed -gt 0 -or $rules -gt 0) {
+        Write-Host ('  Хвосты прошлой сессии убраны: процессов xray — ' + $killed + ', правил брандмауэра — ' + $rules) -ForegroundColor Yellow
+        Start-Sleep -Milliseconds 1200
+    }
+}
+
 function Clear-Screen {
     # в переадресованном выводе (лог, >файл) Clear-Host падает — просто пропускаем
     try { Clear-Host } catch { }
@@ -458,6 +491,7 @@ function Ask-Clean {
 }
 
 # ---------------------------------------------------------------- цикл
+Remove-KitLeftovers
 while ($true) {
     Clear-Screen
     Show-Menu

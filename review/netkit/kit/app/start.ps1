@@ -145,9 +145,11 @@ function Ask-Cleanup {
     # После закрытия браузера спрашивает, чистить ли следы этой сессии.
     # Сам ввод — общий Read-KitYesNo из secret.ps1 (одна реализация на весь комплект).
     $lines = @(
-        '    История PowerShell, временные файлы, кэш миниатюр, недавние документы, DNS-кэш.'
+        '    Уберу: историю PowerShell, временные файлы комплекта, кэш миниатюр,',
+        '    списки недавних документов, журналы ошибок и DNS-кэш.',
+        '    VPN после этого выключится в любом случае — «нет» значит только «следы не трогать».'
     )
-    return (Read-KitYesNo '[?] Почистить следы этой сессии на этом ПК?' $lines 30)
+    return (Read-KitYesNo '[?] Почистить следы этой сессии на этом ПК?' $lines 60)
 }
 
 function Format-PingPart([int]$N, $Item) {
@@ -836,8 +838,13 @@ while (-not $s.stop) {
     # --- ожидание завершения / срабатывания kill-switch ---
     # PID от Start-Process — это лончер: он умирает, передав работу настоящему процессу.
     # Следим за всеми процессами из папки браузера + за lock-файлом профиля.
+    Write-Host '     Слежу за браузером: закроешь все окна LibreWolf — сразу предложу' -ForegroundColor DarkGray
+    Write-Host '     почистить следы и выключу VPN. Можно закрывать и это окно — тогда' -ForegroundColor DarkGray
+    Write-Host '     VPN останется до перезагрузки, а хвосты уберутся при следующем запуске меню.' -ForegroundColor DarkGray
+    Write-Host ''
     $sawLock = $false
     $goneFor = 0
+    $waited = 0
     while ($true) {
         if ($s.breach) { $script:Breach = "$($s.breach)"; break }
         $bpids = @(Get-KitBrowserPids $BrowserDir)
@@ -845,12 +852,18 @@ while (-not $s.stop) {
         if ($lockNow) { $sawLock = $true }
         if (($bpids.Count -gt 0) -or $lockNow) {
             $goneFor = 0
+            # обратная связь: видно, что скрипт действительно следит
+            if (($waited % 20) -eq 0 -and $waited -gt 0) {
+                Write-Host ('     …жду закрытия браузера (процессов LibreWolf: ' + $bpids.Count + ')') -ForegroundColor DarkGray
+            }
         } else {
             $goneFor++
-            $limit = 20
-            if ($sawLock) { $limit = 8 }
+            # PID лончера умирает сразу, поэтому 4 подряд «пусто» — это уже точно закрытие
+            $limit = 8
+            if ($sawLock) { $limit = 4 }
             if ($goneFor -ge $limit) { break }
         }
+        $waited++
         while ($s.events.Count -gt 0) {
             $ev = $s.events[0]; $s.events.RemoveAt(0)
             Log $ev
@@ -868,12 +881,15 @@ while (-not $s.stop) {
                 if ("$($k.KeyChar)" -eq 'p') { Write-ServerPing; $script:LastPing = Get-Date }
             }
         } catch { }
-        Start-Sleep -Milliseconds 1000
+        Start-Sleep -Milliseconds 700
     }
 
-    # --- остановка watchdog ---
+    # --- остановка watchdog (опрос, а не «спим 6.5 с вслепую») ---
     $s.stop = $true
-    Start-Sleep -Milliseconds 6500
+    for ($w = 0; $w -lt 32; $w++) {
+        if ($Ps.IsCompleted) { break }
+        Start-Sleep -Milliseconds 250
+    }
     if (-not $Ps.IsCompleted) { try { $Ps.Stop() } catch {} }
     try { $Ps.Dispose(); $Rs.Close() } catch {}
 
@@ -890,7 +906,10 @@ while (-not $s.stop) {
 
     Log 'браузер закрыт пользователем'
     Write-Host ''
-    Write-Host '[OK] Браузер закрыт.' -ForegroundColor Green
+    try { [Console]::Beep(880, 150); [Console]::Beep(660, 200) } catch { }
+    Write-Host '[OK] Браузер закрыт — это заметил скрипт, дальше два шага:' -ForegroundColor Green
+    Write-Host '     1) спрошу про следы на этом ПК (Y/N, 60 секунд),' -ForegroundColor Gray
+    Write-Host '     2) выключу VPN и сниму правила брандмауэра.' -ForegroundColor Gray
 
     # порядок по просьбе: сначала предложение почистить следы, затем отключение VPN.
     # Чистка при живом туннеле безопасна: она не ходит в сеть и не трогает xray.
