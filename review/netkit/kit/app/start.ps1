@@ -862,15 +862,25 @@ while (-not $s.stop) {
         throw '__LWUSB_STOP__'
     }
 
-    Log 'браузер закрыт пользователем, xray остановлен, сессия чистая'
+    Log 'браузер закрыт пользователем'
     Write-Host ''
-    Write-Host '[OK] Браузер закрыт. VPN выключен, правила брандмауэра снимаются.' -ForegroundColor Green
+    Write-Host '[OK] Браузер закрыт.' -ForegroundColor Green
 
+    # порядок по просьбе: сначала предложение почистить следы, затем отключение VPN.
+    # Чистка при живом туннеле безопасна: она не ходит в сеть и не трогает xray.
+    $cleaned = $false
     if (Ask-Cleanup) {
         Write-Host ''
         Log 'чистка следов по запросу после закрытия браузера'
         & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $App 'clean-traces.ps1')
-        Write-Host ''
+        $cleaned = $true
+    }
+
+    Stop-OurXray
+    Log 'xray остановлен, сессия чистая'
+    Write-Host ''
+    Write-Host '[OK] VPN выключен, правила брандмауэра снимаются.' -ForegroundColor Green
+    if ($cleaned) {
         Write-Host '[OK] Следы этой сессии убраны. Флешку можно вынимать.' -ForegroundColor Green
     } else {
         Write-Host '[i] Следы не тронуты. Убрать позже: меню → пункт 6.' -ForegroundColor DarkGray

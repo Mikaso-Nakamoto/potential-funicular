@@ -56,48 +56,109 @@ try {
         exit 1
     }
 
-    function Get-Json([string]$url) {
-        $raw = & $Curl -s --max-time 15 --socks5-hostname ("127.0.0.1:" + $port) $url 2>$null
-        if (-not $raw) { return $null }
-        try { return (($raw -join '') | ConvertFrom-Json) } catch { return $null }
+    # --- сервисы: разные базы, чтобы видеть расхождения, а не одну точку зрения ---
+    $services = @(
+        @{ name = 'ipinfo';   url = 'https://ipinfo.io/json';        fmt = 'json' },
+        @{ name = 'ipwho.is'; url = 'https://ipwho.is/';             fmt = 'json' },
+        @{ name = 'ipapi';    url = 'https://ipapi.co/json/';        fmt = 'json' },
+        @{ name = 'ifconfig'; url = 'https://ifconfig.co/json';      fmt = 'json' },
+        @{ name = 'myip';     url = 'https://api.myip.com';          fmt = 'json' },
+        @{ name = 'cf-trace'; url = 'https://1.1.1.1/cdn-cgi/trace'; fmt = 'trace' }
+    )
+
+    function Get-Raw([string]$url) {
+        $raw = & $Curl -s --max-time 12 --socks5-hostname ("127.0.0.1:" + $port) $url 2>$null
+        if (-not $raw) { return '' }
+        return (($raw -join "`n").Trim())
     }
 
-    $a = Get-Json 'https://ipinfo.io/json'
-    $b = Get-Json 'https://api.myip.com'
-    $c2 = Get-Json 'https://ipapi.co/json/'
+    function Read-Geo($svc) {
+        # Возвращает @{ip;cc;country;city;org} или $null, если сервис не ответил.
+        $raw = Get-Raw $svc.url
+        if (-not $raw) { return $null }
+        $o = $null
+        if ($svc.fmt -eq 'trace') {
+            $map = @{}
+            foreach ($ln in ($raw -split "`n")) {
+                if ($ln -match '^([a-z_]+)=(.*)$') { $map[$Matches[1]] = $Matches[2].Trim() }
+            }
+            if (-not $map['ip']) { return $null }
+            return @{ ip = $map['ip']; cc = "$($map['loc'])".ToUpper(); country = "$($map['loc'])".ToUpper(); city = ''; org = $map['colo'] }
+        }
+        try { $o = $raw | ConvertFrom-Json } catch { return $null }
+        if (-not $o) { return $null }
+        $ip = "$($o.ip)"
+        if (-not $ip) { return $null }
 
-    $ip = ''
-    if ($a) { $ip = "$($a.ip)" } elseif ($c2) { $ip = "$($c2.ip)" } elseif ($b) { $ip = "$($b.ip)" }
+        $cc = ''
+        foreach ($f in @('country_code', 'cc', 'country_iso', 'countryCode')) {
+            $v = "$($o.$f)"
+            if ($v -match '^[A-Za-z]{2}$') { $cc = $v.ToUpper(); break }
+        }
+        if (-not $cc -and "$($o.country)" -match '^[A-Za-z]{2}$') { $cc = "$($o.country)".ToUpper() }
 
-    if (-not $ip) {
+        $cname = ''
+        foreach ($f in @('country_name', 'country', 'name')) {
+            $v = "$($o.$f)"
+            if ($v -and $v -notmatch '^[A-Za-z]{2}$') { $cname = $v; break }
+        }
+        if (-not $cname) { $cname = $cc }
+
+        $city = "$($o.city)"
+        $org = ''
+        foreach ($f in @('org', 'isp', 'asn_org', 'asn')) {
+            $v = "$($o.$f)"
+            if ($v) { $org = $v; break }
+        }
+        if (-not $org -and $o.connection) { $org = "$($o.connection.isp)"; if (-not $org) { $org = "$($o.connection.org)" } }
+        return @{ ip = $ip; cc = $cc; country = $cname; city = $city; org = $org }
+    }
+
+    $rows = @()
+    foreach ($svc in $services) {
+        $g = Read-Geo $svc
+        $rows += [pscustomobject]@{ Name = $svc.name; Geo = $g }
+    }
+
+    $ips = @($rows | Where-Object { $_.Geo } | ForEach-Object { $_.Geo.ip } | Where-Object { $_ } | Select-Object -Unique)
+    if ($ips.Count -eq 0) {
         Say '  Ни один сервис не ответил через туннель.' 'Red'
+        Say '  Значит туннель поднят, но наружу не выходит — проверь сервер (пункт 2).' 'DarkGray'
         exit 1
     }
 
     Write-Host ''
-    Write-Host ('  {0,-10} {1,-8} {2,-18} {3}' -f 'сервис', 'страна', 'город', 'провайдер') -ForegroundColor DarkGray
+    Write-Host ('  {0,-10} {1,-7} {2,-16} {3}' -f 'сервис', 'страна', 'город', 'провайдер') -ForegroundColor DarkGray
     $countries = @()
-    if ($a) {
-        $countries += "$($a.country)"
-        Write-Host ('  {0,-10} {1,-8} {2,-18} {3}' -f 'ipinfo', "$($a.country)", "$($a.city)", "$($a.org)") -ForegroundColor White
-    }
-    if ($b) {
-        $countries += "$($b.cc)"
-        Write-Host ('  {0,-10} {1,-8} {2,-18} {3}' -f 'myip', "$($b.cc)", '', "$($b.country)") -ForegroundColor White
-    }
-    if ($c2) {
-        $countries += "$($c2.country_code)"
-        Write-Host ('  {0,-10} {1,-8} {2,-18} {3}' -f 'ipapi', "$($c2.country_code)", "$($c2.city)", "$($c2.org)") -ForegroundColor White
+    foreach ($r in $rows) {
+        if (-not $r.Geo) {
+            Write-Host ('  {0,-10} {1}' -f $r.Name, 'нет ответа') -ForegroundColor DarkGray
+            continue
+        }
+        $g = $r.Geo
+        if ($g.cc) { $countries += $g.cc }
+        Write-Host ('  {0,-10} {1,-7} {2,-16} {3}' -f $r.Name, $g.cc, $g.city, $g.org) -ForegroundColor White
     }
     Write-Host ''
-    Say ('  Ваш IP через VPN: ' + $ip) 'Green'
+    Say ('  IP через VPN: ' + $ips[0]) 'Green'
 
+    $answered = @($rows | Where-Object { $_.Geo }).Count
+    $total = $rows.Count
     $uniq = @($countries | Where-Object { $_ } | Select-Object -Unique)
+    Write-Host ''
     if ($uniq.Count -gt 1) {
-        Say ('  Внимание: сервисы расходятся по стране (' + ($uniq -join ', ') + ').') 'Yellow'
+        Say ('  Сервисы расходятся по стране (' + ($uniq -join ', ') + '); ответили ' + $answered + ' из ' + $total + '.') 'Yellow'
         Say '  Значит IP-базы разные; Google пользуется своей и может показать третью страну.' 'Yellow'
     } elseif ($uniq.Count -eq 1) {
-        Say ('  Все сервисы согласны: ' + $uniq[0]) 'Green'
+        $agree = ('  Страна по всем ответившим: ' + $uniq[0] + ' — согласны ' + $answered + ' из ' + $total + ' сервисов.')
+        if ($answered -lt $total) {
+            Say $agree 'Green'
+            Say ('  Не ответили: ' + (($rows | Where-Object { -not $_.Geo } | ForEach-Object { $_.Name }) -join ', ') + ' — это нормально, часть сервисов блокирует VPN-адреса.') 'DarkGray'
+        } else {
+            Say $agree 'Green'
+        }
+    } else {
+        Say ('  Ответили ' + $answered + ' из ' + $total + ', но страну не сообщил никто.') 'Yellow'
     }
 } finally {
     if ($proc -and -not $proc.HasExited) {
