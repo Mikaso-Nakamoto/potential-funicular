@@ -9,7 +9,13 @@ $Root   = Split-Path -Parent $PSScriptRoot
 $Vpn    = Join-Path $Root 'vpn'
 $Cfg    = Join-Path $Vpn 'config.json'
 $CfgEnc = $Cfg + '.enc'
+$TmpDir = ''
 $TmpCfg = ''
+$KitLock = Enter-KitLock 0
+if (-not $KitLock) {
+    Write-Host '[X] Комплект уже работает в другом окне (сессия, проверка IP, пинг или чистка).' -ForegroundColor Red
+    exit 1
+}
 
 Write-Host ''
 Write-Host '=== Задержка до серверов (TCP, без браузера) ===' -ForegroundColor Cyan
@@ -19,7 +25,8 @@ if (Test-KitSecret $Vpn) {
     $pw = Read-KitPassword $Vpn
     if (-not $pw) { Write-Host '[X] Пароль не введён или неверный.' -ForegroundColor Red; exit 1 }
     if (Test-Path $CfgEnc) {
-        $TmpCfg = Join-Path ([IO.Path]::GetTempPath()) ('lwusb-ping-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.json')
+        $TmpDir = New-KitTempDir 'lwusb-ping'
+        $TmpCfg = Join-Path $TmpDir 'config.json'
         if (-not (Unprotect-KitFile $CfgEnc $TmpCfg $pw)) {
             Write-Host '[X] vpn\config.json.enc не расшифровался: файл повреждён или пароль от другой флешки.' -ForegroundColor Red
             exit 1
@@ -36,7 +43,7 @@ if (-not (Test-Path $Cfg)) {
 $obj = $null
 try { $obj = Get-Content $Cfg -Raw -Encoding UTF8 | ConvertFrom-Json }
 catch {
-    if ($TmpCfg) { Remove-Item $TmpCfg -Force -ErrorAction SilentlyContinue }
+    if ($TmpDir) { Remove-KitTempDir $TmpDir | Out-Null }
     Write-Host '[X] vpn\config.json повреждён — дома пересобери его (пункт 3 или 4).' -ForegroundColor Red
     exit 1
 }
@@ -51,7 +58,8 @@ foreach ($o in @($obj.outbounds)) {
     $targets += ("$($v.address):$($v.port)")
     $labels  += ("$($o.tag)  $($v.address):$($v.port)")
 }
-if ($TmpCfg) { Remove-Item $TmpCfg -Force -ErrorAction SilentlyContinue }
+if ($TmpDir) { Remove-KitTempDir $TmpDir | Out-Null }
+Exit-KitLock $KitLock
 
 if ($targets.Count -eq 0) {
     Write-Host '[X] В конфиге нет серверов вида proxy-N.' -ForegroundColor Red

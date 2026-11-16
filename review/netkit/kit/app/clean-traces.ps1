@@ -9,6 +9,7 @@ param(
     [switch]$Scrub
 )
 $ErrorActionPreference = 'SilentlyContinue'
+. (Join-Path $PSScriptRoot 'vless-lib.ps1')
 $App     = $PSScriptRoot
 $Root    = Split-Path -Parent $App
 $Vpn     = Join-Path $Root 'vpn'
@@ -16,6 +17,12 @@ $LogsDir = Join-Path $Vpn  'logs'
 $Profile = Join-Path $Root 'profile'
 $script:Removed = 0
 $script:Skipped = 0
+$KitLock = Enter-KitLock 0
+if (-not $KitLock) {
+    Write-Host '[X] Комплект уже работает в другом окне (сессия, проверка IP, пинг или чистка).' -ForegroundColor Red
+    exit 1
+}
+
 $Marker  = 'librewolf|xray|LibreWolf-USB|lwusb'
 
 function Rot13([string]$t) {
@@ -259,4 +266,5 @@ if (-not $Scrub) {
     Write-Host " - Профиль (история/куки) хранится на флешке и НЕ стёрт. Полное стирание: ЧИСТКА с -Scrub."
 }
 Write-Host ""
+Exit-KitLock $KitLock
 exit 0

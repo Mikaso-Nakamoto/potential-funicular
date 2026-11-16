@@ -61,8 +61,9 @@ foreach ($f in @(Get-ChildItem -Path $Root -Recurse -File -ErrorAction SilentlyC
     }
     if ($rel -like 'LibreWolf-USB-full-*.zip') { $skip = $true }
     # -NoSecrets: ни открытых ключей, ни шифртекста, ни соли с проверочным HMAC
-    if ($NoSecrets -and ($rel -match '^vpn[\\/](sub\.txt|config\.json)(\.enc|\.bak\.json(\.enc)?)?$')) { $skip = $true }
-    if ($NoSecrets -and ($rel -eq 'vpn\\secret.dat')) { $skip = $true }
+    # -NoSecrets: ни открытых ключей, ни шифртекста, ни соли с проверочным HMAC.
+    # secret.dat раньше сравнивался с двойной обратной косой и попадал в архив.
+    if ($NoSecrets -and ($rel -match '^vpn[\\/](sub\.txt|config\.json|secret\.dat)(\.enc|\.bak\.json(\.enc)?)?$')) { $skip = $true }
     if (-not $skip) { [void]$files.Add($f) }
 }
 

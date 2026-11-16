@@ -16,6 +16,12 @@ $CfgEnc = $OutFile + '.enc'
 
 
 # --- пароль флешки (если задан): без него не читаем sub.txt и не пишем config.json ---
+$KitLock = Enter-KitLock 0
+if (-not $KitLock) {
+    Write-Host '[X] Комплект уже работает в другом окне. Обновление подписки не запускаю.' -ForegroundColor Red
+    exit 1
+}
+
 $pw = ''
 if (Test-KitSecret $Vpn) {
     Write-Host '[i] Ключи на флешке зашифрованы — нужен пароль.' -ForegroundColor Cyan
@@ -26,13 +32,15 @@ if (Test-KitSecret $Vpn) {
 # --- параметры подписки (url / hwid / ua): из sub.txt или из его .enc ---
 $SubRead = $SubFile
 $SubTmp = ''
+$SubDir = ''
 if ($pw -and (Test-Path $SubEnc)) {
-    $SubTmp = Join-Path ([IO.Path]::GetTempPath()) ('lwusb-sub-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.txt')
+    $SubDir = New-KitTempDir 'lwusb-sub'
+    $SubTmp = Join-Path $SubDir 'sub.txt'
     if (-not (Unprotect-KitFile $SubEnc $SubTmp $pw)) { Fail 'vpn\sub.txt.enc не расшифровался: файл повреждён или пароль от другой флешки.' }
     $SubRead = $SubTmp
 }
 $p = Read-SubParams $SubRead
-if ($SubTmp) { Remove-Item $SubTmp -Force -ErrorAction SilentlyContinue }
+if ($SubDir) { Remove-KitTempDir $SubDir | Out-Null }
 if (-not $p) {
     $url  = Read-Host 'URL подписки (https://api.../sub/...)'
     $hwid = Read-Host 'x-hwid (GUID клиента; Enter — не отправлять)'

@@ -56,11 +56,14 @@ $script:FailCode = 0   # 0 = штатно; Fail() и перехват ошибо
 $script:XrayProc = $null
 $script:SessionCfg = ''
 
-# временный каталог сессии: сюда идут только сырые логи xray и сессионный конфиг
+# временный каталог сессии: сюда идут только сырые логи xray и сессионный конфиг.
+# Имя уникальное (GUID), уборка — общей функцией Remove-KitTempDir.
 $TmpRoot = $env:TEMP
 if (-not $TmpRoot) { $TmpRoot = [IO.Path]::GetTempPath() }
-$SessionDir = Join-Path $TmpRoot ('lwusb-' + $Ts)
+$SessionDir = New-KitTempDir 'lwusb'
 $script:SessionDir = $SessionDir
+$script:KitLock = $null
+$script:XrayPidFile = Join-Path $SessionDir 'xray.pid'
 
 $Curl     = Get-SystemExe 'curl.exe'
 $Taskkill = Get-SystemExe 'taskkill.exe'
@@ -292,9 +295,13 @@ function Start-XrayProc {
     $OutLog = Join-Path $SessionDir ('xray-out-' + $script:XraySeq + '.log')
     $ErrLog = Join-Path $SessionDir ('xray-err-' + $script:XraySeq + '.log')
     Log "запуск xray (попытка $($script:XraySeq))"
-    return (Start-Process -FilePath $Xray -ArgumentList @('-c', ('"' + $script:SessionCfg + '"')) `
+    $p = Start-Process -FilePath $Xray -ArgumentList @('-c', ('"' + $script:SessionCfg + '"')) `
         -WorkingDirectory $Vpn -WindowStyle Hidden -PassThru `
-        -RedirectStandardOutput $OutLog -RedirectStandardError $ErrLog)
+        -RedirectStandardOutput $OutLog -RedirectStandardError $ErrLog
+    # PID на диск: если это окно убьют, следующая сессия погасит именно этот процесс,
+    # а не все xray с тем же путём
+    try { [IO.File]::WriteAllText($script:XrayPidFile, "$($p.Id)") } catch { }
+    return $p
 }
 
 function Get-KitBrowserPids([string]$Dir) {
@@ -342,13 +349,14 @@ function Assert-SocksOk($status, [string]$context) {
 }
 
 function Stop-OurXray {
+    # Гасим ТОЛЬКО свой экземпляр: раньше здесь убивались все процессы xray с тем же
+    # путём, и второе окно могло снести туннель первого. Осиротевшие процессы убирает
+    # отдельная уборка при старте (по PID из файла сессии и по mutex).
     if ($script:XrayProc -and -not $script:XrayProc.HasExited) {
         Stop-Process -Id $script:XrayProc.Id -Force -ErrorAction SilentlyContinue
     }
-    foreach ($p in @(Get-Process -Name 'xray' -ErrorAction SilentlyContinue)) {
-        $path = ''
-        try { $path = $p.Path } catch {}
-        if ($path -and ($path -ieq $Xray)) { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+    if ($script:XrayPidFile -and (Test-Path $script:XrayPidFile)) {
+        Remove-Item $script:XrayPidFile -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -369,26 +377,31 @@ $script:BrowserPid = $null
 $script:Breach = ''
 
 try {
+    # один комплект — один активный процесс: сессия, проверка IP, пинг и чистка
+    # не должны работать одновременно (иначе одно окно гасит xray другого)
+    $script:KitLock = Enter-KitLock 0
+    if (-not $script:KitLock) {
+        Fail 'Комплект уже работает в другом окне (сессия, проверка IP, пинг или чистка). Закрой то окно и повтори.'
+    }
+
     # --- preflight: окружение, в котором скрипт заведомо не сработает ---
-    try {
-        $lm = "$($ExecutionContext.SessionState.LanguageMode)"
-        if ($lm -ne 'FullLanguage') {
-            Fail ("PowerShell в режиме " + $lm + " (запрет политикой ПК). В таком режиме kill-switch и проверки порта не работают — запускать нельзя.")
+    # Fail() бросает исключение, поэтому сами отказы стоят ВНЕ try/catch: иначе
+    # пустой catch их молча съедал и проверка политик не работала.
+    $lm = "$($ExecutionContext.SessionState.LanguageMode)"
+    if ($lm -ne 'FullLanguage') {
+        Fail ("PowerShell в режиме " + $lm + " (запрет политикой ПК). В таком режиме kill-switch и проверки порта не работают — запускать нельзя.")
+    }
+    $blocked = @()
+    foreach ($scope in @('MachinePolicy', 'UserPolicy')) {
+        $pol = $null
+        try { $pol = Get-ExecutionPolicy -Scope $scope -ErrorAction Stop } catch { }
+        if ($pol -and ("$pol" -eq 'Restricted' -or "$pol" -eq 'AllSigned')) {
+            $blocked += ($scope + '=' + $pol)
         }
-    } catch {}
-    try {
-        $blocked = @()
-        foreach ($scope in @('MachinePolicy', 'UserPolicy')) {
-            $pol = $null
-            try { $pol = Get-ExecutionPolicy -Scope $scope -ErrorAction Stop } catch {}
-            if ($pol -and ("$pol" -eq 'Restricted' -or "$pol" -eq 'AllSigned')) {
-                $blocked += ($scope + '=' + $pol)
-            }
-        }
-        if ($blocked.Count -gt 0) {
-            Fail ("Политика ПК запрещает запуск скриптов (" + ($blocked -join ', ') + '). -ExecutionPolicy Bypass такую политику не обходит.')
-        }
-    } catch {}
+    }
+    if ($blocked.Count -gt 0) {
+        Fail ("Политика ПК запрещает запуск скриптов (" + ($blocked -join ', ') + '). -ExecutionPolicy Bypass такую политику не обходит.')
+    }
 
     # --- политики Mozilla в реестре: могут подсунуть прокси или расширение ---
     if (-not $IgnorePolicies) {
@@ -534,14 +547,27 @@ try {
 
     # --- остатки прошлой сессии: свой xray гасим, чужой процесс на порту — повод отказа ---
     $orphans = 0
-    foreach ($p in @(Get-Process -Name 'xray' -ErrorAction SilentlyContinue)) {
-        $path = ''
-        try { $path = $p.Path } catch {}
-        if ($path -and ($path -ieq $Xray)) {
-            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
-            $orphans++
+    # осиротевший xray прошлой сессии: он писал свой PID в файл, пока был жив
+    try {
+        foreach ($pidFile in @(Get-ChildItem $TmpRoot -Directory -Filter 'lwusb-*' -ErrorAction SilentlyContinue)) {
+            $pf = Join-Path $pidFile.FullName 'xray.pid'
+            if (-not (Test-Path $pf)) { continue }
+            $oldPid = 0
+            try { $oldPid = [int]((Get-Content $pf -Raw -ErrorAction SilentlyContinue) + '').Trim() } catch { }
+            if ($oldPid -gt 0) {
+                $op = $null
+                try { $op = Get-Process -Id $oldPid -ErrorAction Stop } catch { }
+                $opath = ''
+                if ($op) { try { $opath = $op.Path } catch { } }
+                if ($opath -and ($opath -ieq $Xray)) {
+                    Stop-Process -Id $oldPid -Force -ErrorAction SilentlyContinue
+                    $orphans++
+                }
+            }
+            Remove-Item $pf -Force -ErrorAction SilentlyContinue
+            Remove-KitTempDir $pidFile.FullName | Out-Null
         }
-    }
+    } catch { }
     if ($orphans -gt 0) { Log ("погашен xray.exe от прошлой сессии: " + $orphans) }
 
     # --- порт на сессию: случайный, чтобы чужая «заготовка» на 10808 не получала трафик ---
@@ -968,6 +994,9 @@ while (-not $s.stop) {
     if (Ask-Cleanup) {
         Write-Host ''
         Log 'чистка следов по запросу после закрытия браузера'
+        # чистке нужен тот же mutex — отпускаем свой, иначе она откажет «уже работает»
+        Exit-KitLock $script:KitLock
+        $script:KitLock = $null
         & $psExe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $App 'clean-traces.ps1')
         $cleaned = $true
     }
@@ -1011,27 +1040,16 @@ finally {
     }
 
     # Секреты сессии лежали в %TEMP% открытым текстом: config.json с UUID узлов,
-    # sub.txt с токеном подписки, логи xray. Раньше каталог оставался после выхода —
-    # то есть на ПК лежала открытая копия того, что на флешке зашифровано.
-    if ($script:SessionDir -and (Test-Path $script:SessionDir)) {
-        try {
-            $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-            foreach ($f in @(Get-ChildItem $script:SessionDir -File -Force -ErrorAction SilentlyContinue)) {
-                try {
-                    $len = [int]$f.Length
-                    if ($len -gt 0 -and $len -le 5242880) {
-                        $rnd = New-Object byte[] $len
-                        $rng.GetBytes($rnd)
-                        [IO.File]::WriteAllBytes($f.FullName, $rnd)
-                    }
-                } catch { }
-            }
-            $rng.Dispose()
-        } catch { }
-        Remove-Item $script:SessionDir -Recurse -Force -ErrorAction SilentlyContinue
-        if (Test-Path $script:SessionDir) { Log ('не удалось удалить каталог сессии: ' + $script:SessionDir) }
-        else { Log 'открытые копии ключей и логи сессии затёрты и удалены из %TEMP%' }
+    # sub.txt с токеном подписки, логи xray. Затираем и удаляем (общая функция
+    # библиотеки — та же уборка у проверки IP и пинга).
+    if ($script:SessionDir) {
+        if (Remove-KitTempDir $script:SessionDir) {
+            Log 'открытые копии ключей и логи сессии затёрты и удалены из %TEMP%'
+        } else {
+            Log ('не удалось удалить каталог сессии: ' + $script:SessionDir)
+        }
     }
+    Exit-KitLock $script:KitLock
     if ($ProfileTemp -and $Profile -and (Test-Path $Profile)) {
         for ($i = 0; $i -lt 6; $i++) {
             try { Remove-Item $Profile -Recurse -Force -ErrorAction Stop; break } catch { Start-Sleep -Milliseconds 500 }

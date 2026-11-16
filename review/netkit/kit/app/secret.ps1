@@ -27,14 +27,40 @@ function New-KitRandom([int]$Len) {
     return ,$b
 }
 
-function Invoke-KitPbkdf2([string]$Password, [byte[]]$Salt, [int]$Iters, [int]$Len = 64) {
-    $kdf = New-Object System.Security.Cryptography.Rfc2898DeriveBytes($Password, $Salt, $Iters)
+$script:KitPrfOk = $null
+
+function Test-KitPrfSha256 {
+    # HashAlgorithmName в конструкторе Rfc2898DeriveBytes есть только с .NET 4.7.2.
+    # Проверяем один раз: если недоступно — пишем prf=sha1, чтобы файл читался здесь же.
+    if ($null -ne $script:KitPrfOk) { return $script:KitPrfOk }
+    try {
+        $probe = New-Object System.Security.Cryptography.Rfc2898DeriveBytes('probe', (New-Object byte[] 16), 1000, [System.Security.Cryptography.HashAlgorithmName]::SHA256)
+        $null = $probe.GetBytes(8)
+        $probe.Dispose()
+        $script:KitPrfOk = $true
+    } catch { $script:KitPrfOk = $false }
+    return $script:KitPrfOk
+}
+
+function Get-KitPrfTag {
+    if (Test-KitPrfSha256) { return 'sha256' }
+    return 'sha1'
+}
+
+function Invoke-KitPbkdf2([string]$Password, [byte[]]$Salt, [int]$Iters, [int]$Len = 64, [string]$Prf = 'sha256') {
+    if ("$Prf" -eq 'sha256') {
+        if (-not (Test-KitPrfSha256)) { throw 'PBKDF2-SHA256 недоступен: нужен .NET 4.7.2 или новее.' }
+        $kdf = New-Object System.Security.Cryptography.Rfc2898DeriveBytes($Password, $Salt, $Iters, [System.Security.Cryptography.HashAlgorithmName]::SHA256)
+    } else {
+        # старые контейнеры (без поля prf) считались на PBKDF2-HMAC-SHA1
+        $kdf = New-Object System.Security.Cryptography.Rfc2898DeriveBytes($Password, $Salt, $Iters)
+    }
     try { return ,$kdf.GetBytes($Len) } finally { $kdf.Dispose() }
 }
 
-function Get-KitKeys([string]$Password, [byte[]]$Salt, [int]$Iters) {
+function Get-KitKeys([string]$Password, [byte[]]$Salt, [int]$Iters, [string]$Prf = 'sha256') {
     # 64 байта -> @{Enc=32 байта; Mac=32 байта}
-    $all = Invoke-KitPbkdf2 $Password $Salt $Iters 64
+    $all = Invoke-KitPbkdf2 $Password $Salt $Iters 64 $Prf
     $enc = New-Object byte[] 32
     $mac = New-Object byte[] 32
     [Array]::Copy($all, 0, $enc, 0, 32)
@@ -78,11 +104,13 @@ function Set-KitPasswordValue([string]$Vpn, [string]$Password) {
     if ("$Password".Length -lt 10) { throw 'Пароль короче 10 символов.' }
     New-Item -ItemType Directory -Force -Path $Vpn | Out-Null
     $salt = New-KitRandom 16
-    $k = Get-KitKeys $Password $salt $script:KitSecretIters
+    $prf = Get-KitPrfTag
+    $k = Get-KitKeys $Password $salt $script:KitSecretIters $prf
     $check = Get-KitHmac $k.Mac ([Text.Encoding]::UTF8.GetBytes($script:KitSecretCheck))
     $txt = @(
         $script:KitSecretHead
         'iters=' + $script:KitSecretIters
+        'prf=' + $prf
         'salt=' + [Convert]::ToBase64String($salt)
         'check=' + [Convert]::ToBase64String($check)
     ) -join "`r`n"
@@ -133,7 +161,9 @@ function Test-KitPassword([string]$Vpn, [string]$Password) {
     $want = ConvertFrom-KitB64 $meta['check']
     $iters = 0
     if (-not [int]::TryParse("$($meta['iters'])", [ref]$iters) -or $iters -lt 1000) { return $false }
-    $k = Get-KitKeys $Password $salt $iters
+    $prf = 'sha1'
+    if ("$($meta['prf'])" -eq 'sha256') { $prf = 'sha256' }
+    $k = Get-KitKeys $Password $salt $iters $prf
     $got = Get-KitHmac $k.Mac ([Text.Encoding]::UTF8.GetBytes($script:KitSecretCheck))
     return (Test-KitMac $got $want)
 }
@@ -195,7 +225,8 @@ function Protect-KitFile([string]$Path, [string]$Password, [string]$Target = '',
     if (-not $out) { $out = $Path + '.enc' }
     $salt = New-KitRandom 16
     $iv = New-KitRandom 16
-    $k = Get-KitKeys $Password $salt $script:KitSecretIters
+    $prf = Get-KitPrfTag
+    $k = Get-KitKeys $Password $salt $script:KitSecretIters $prf
     $aes = [System.Security.Cryptography.Aes]::Create()
     try {
         $aes.Mode = [System.Security.Cryptography.CipherMode]::CBC
@@ -215,6 +246,7 @@ function Protect-KitFile([string]$Path, [string]$Password, [string]$Target = '',
     $txt = @(
         $script:KitEncHead
         'iters=' + $script:KitSecretIters
+        'prf=' + $prf
         'salt=' + [Convert]::ToBase64String($salt)
         'iv=' + [Convert]::ToBase64String($iv)
         'mac=' + [Convert]::ToBase64String($mac)
@@ -239,7 +271,9 @@ function Unprotect-KitFile([string]$EncPath, [string]$OutPath, [string]$Password
     $iters = 0
     if (-not [int]::TryParse("$($meta['iters'])", [ref]$iters) -or $iters -lt 1000) { return $null }
 
-    $k = Get-KitKeys $Password $salt $iters
+    $prf = 'sha1'
+    if ("$($meta['prf'])" -eq 'sha256') { $prf = 'sha256' }
+    $k = Get-KitKeys $Password $salt $iters $prf
     $both = New-Object byte[] ($iv.Length + $data.Length)
     [Array]::Copy($iv, 0, $both, 0, $iv.Length)
     [Array]::Copy($data, 0, $both, $iv.Length, $data.Length)

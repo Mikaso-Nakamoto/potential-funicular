@@ -50,6 +50,13 @@ Check 'узел без шифрования (security=none) отброшен' ($
 $stubNode = ConvertFrom-VlessLink ('vless://' + $uuid + '@0.0.0.0:443?type=tcp&security=tls&sni=x.example.com#stub') 3>$null
 Check 'узел-заглушка (адрес 0.0.0.0) отброшен' ($null -eq $stubNode)
 
+# регистр полей в ссылке бывает любой: TLS/WS не должны отбрасываться
+$up = ConvertFrom-VlessLink ('vless://' + $uuid + '@up.example.com:443?type=WS&security=TLS&sni=up.example.com#up')
+Check 'парсер: type=WS и security=TLS приводятся к нижнему регистру' ($up -and $up.net -eq 'ws' -and $up.sec -eq 'tls')
+
+$kcp = ConvertFrom-VlessLink ('vless://' + $uuid + '@kcp.example.com:443?type=kcp&security=tls&sni=k.example.com#k') 3>$null
+Check 'парсер: неподдерживаемый транспорт (kcp) отброшен' ($null -eq $kcp)
+
 $r = @($nodes | Where-Object { $_.address -eq 'r.example.com' })[0]
 Check 'reality: pbk сохранён' ($r.pbk -eq 'PUBKEY123')
 Check 'reality: shortId сохранён' ($r.sid -eq 'ab12')
@@ -136,6 +143,23 @@ $evilCfg.outbounds[0].streamSettings.security = 'none'
 $badEvil = @(Test-ConfigSafe $evilCfg)
 Check ('линтер ловит плохой конфиг (замечаний: ' + $badEvil.Count + ')') ($badEvil.Count -ge 2)
 
+# Правило может ссылаться на реальный vless-outbound, но не на выдуманный тег
+$t1 = $obj | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+$t1.routing.rules[0].outboundTag = 'proxy-99'
+Check 'линтер ловит неизвестный outboundTag' ((@(Test-ConfigSafe $t1) -join ' ') -match 'неизвестный outbound')
+
+$t2 = $obj | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+$t2.routing.rules[1].balancerTag = 'ghost'
+Check 'линтер ловит неизвестный balancerTag' ((@(Test-ConfigSafe $t2) -join ' ') -match 'неизвестный balancer')
+
+$t3 = $obj | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+$t3.outbounds[0].settings.vnext[0].address = '0.0.0.0'
+Check 'линтер ловит адрес-заглушку 0.0.0.0' ((@(Test-ConfigSafe $t3) -join ' ') -match 'заглушка')
+
+$t4 = $obj | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+$t4.routing.rules[0].outboundTag = 'freedom'
+Check 'линтер ловит прямой выход (freedom)' ((@(Test-ConfigSafe $t4) -join ' ') -match 'прямой выход')
+
 # ------------------------------------------------ кавычки в значениях (F-08)
 $evil = 'vless://' + $uuid + '@evil.example.com:443?type=ws&security=tls&path=%2Fa%22b%5Cc&sni=evil.example.com#evil'
 $en = ConvertFrom-VlessLink $evil
@@ -199,6 +223,18 @@ foreach ($line in ($logText -split "`n")) {
 }
 $seenCount = @($seen | Select-Object -Unique).Count
 Check ('в логах нет прямого IP (адреса через VPN не в счёт; внешних найдено: ' + $seenCount + ')') ($suspect.Count -eq 0) (($suspect | Select-Object -First 2) -join '; ')
+
+# ----------------------------------------------------------------- пароль на ключи
+. (Join-Path $PSScriptRoot 'secret.ps1')
+$scDir = New-KitTempDir 'lwusb-scheck'
+try {
+    Set-KitPasswordValue $scDir 'проверка-кдф-2026'
+    $scMeta = Read-KitHeaders (Get-KitSecretFile $scDir)
+    Check ('KDF: в secret.dat записан prf=' + "$($scMeta['prf'])") ("$($scMeta['prf'])" -eq (Get-KitPrfTag))
+    Check 'KDF: верный пароль проходит, неверный — нет' ((Test-KitPassword $scDir 'проверка-кдф-2026') -and (-not (Test-KitPassword $scDir 'другой-пароль-1')))
+} finally {
+    Remove-KitTempDir $scDir | Out-Null
+}
 
 # ----------------------------------------------------------------- итог
 Write-Host ''

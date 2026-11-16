@@ -12,11 +12,19 @@ $Cfg  = Join-Path $Vpn 'config.json'
 $CfgEnc = $Cfg + '.enc'
 $Xray = Join-Path $Vpn 'xray.exe'
 $CfgDec = ''   # расшифрованная копия, если ключи под паролем
+$TmpDir = ''
+$KitLock = $null
 
 $Curl = Get-SystemExe 'curl.exe'
 
 
 Head 'Проверка IP и страны'
+
+$KitLock = Enter-KitLock 0
+if (-not $KitLock) {
+    Say '  Комплект уже работает в другом окне (сессия, проверка IP, пинг или чистка).' 'Red'
+    exit 1
+}
 
 if (-not (Test-Path $Xray)) {
     Say '  Нет vpn\xray.exe — сначала пункт 4 (подготовка дома).' 'Red'
@@ -29,7 +37,8 @@ if (Test-KitSecret $Vpn) {
     $pw = Read-KitPassword $Vpn
     if (-not $pw) { Say '  Пароль не введён или неверный.' 'Red'; exit 1 }
     if (-not (Test-Path $Cfg) -and (Test-Path $CfgEnc)) {
-        $CfgDec = Join-Path ([IO.Path]::GetTempPath()) ('lwusb-ip-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.json')
+        $TmpDir = New-KitTempDir 'lwusb-ip'
+        $CfgDec = Join-Path $TmpDir 'config.json'
         if (-not (Unprotect-KitFile $CfgEnc $CfgDec $pw)) {
             Say '  vpn\config.json.enc не расшифровался: файл повреждён или пароль от другой флешки.' 'Red'
             exit 1
@@ -47,7 +56,8 @@ $port = Get-FreePort
 if ($port -le 0) { Say '  Не удалось выбрать свободный порт.' 'Red'; exit 1 }
 
 # копия конфига со своим портом, во временной папке
-$tmpCfg = Join-Path ([IO.Path]::GetTempPath()) ('lwusb-check-' + [guid]::NewGuid().ToString('N') + '.json')
+if (-not $TmpDir) { $TmpDir = New-KitTempDir 'lwusb-ip' }
+$tmpCfg = Join-Path $TmpDir 'config.session.json'
 $proc = $null
 try {
     $obj = Get-Content $Cfg -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -183,8 +193,8 @@ try {
     if ($proc -and -not $proc.HasExited) {
         try { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue } catch { }
     }
-    Remove-Item $tmpCfg -Force -ErrorAction SilentlyContinue
-    if ($CfgDec) { Remove-Item $CfgDec -Force -ErrorAction SilentlyContinue }
+    if ($TmpDir) { Remove-KitTempDir $TmpDir | Out-Null }
+    Exit-KitLock $KitLock
 }
 
 Head 'Почему Google может показывать другую страну'

@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-# update-sub.py — обновление серверов VPN из подписки (Happ / api.giont.ru).
+# update-sub.py — УСТАРЕВШИЙ вариант обновления подписки. Основной путь — update-sub.ps1
+# (меню, пункт 3): он умеет пароль на ключи (secret.dat, *.enc) и шифрует результат.
+#
+# Этот скрипт оставлен только для случая «Python есть, PowerShell нет» и работает
+# ТОЛЬКО с открытыми vpn\sub.txt / vpn\config.json. Если включён пароль
+# (есть vpn\secret.dat) — отказывается что-либо менять, чтобы не оставить открытую
+# копию ключей рядом с шифрованной.
+#
 # Полный паритет с update-sub.ps1: tcp (+ http header), ws, grpc, httpupgrade,
 # tls и reality (включая spiderX), flow, sni/host/path/alpn.
 # Конфиг собирается словарями и json.dumps — без ручной склейки строк (аудит F-08).
@@ -10,6 +17,7 @@
 import base64
 import json
 import os
+import re
 import sys
 import urllib.parse
 import urllib.request
@@ -84,12 +92,13 @@ def parse_link(line):
         return None
     qs = {k.lower(): v for k, v in urllib.parse.parse_qsl(p.query)}
 
+    # регистр в ссылке бывает любой: TLS, Reality, WS — приводим к нижнему
     node = {
         "uuid": p.username,
         "address": p.hostname,
         "port": port,
-        "net": qs.get("type", "tcp") or "tcp",
-        "sec": qs.get("security", "none") or "none",
+        "net": (qs.get("type", "tcp") or "tcp").strip().lower(),
+        "sec": (qs.get("security", "none") or "none").strip().lower(),
         "flow": qs.get("flow", ""),
         "sni": qs.get("sni", ""),
         "fp": qs.get("fp", ""),
@@ -102,9 +111,19 @@ def parse_link(line):
         "spx": qs.get("spx", ""),
         "header_type": qs.get("headertype", ""),
     }
-    # заглушка от панели: адрес 0.0.0.0 — сервер не выдан (нужен x-hwid или прямая ссылка)
-    if node["address"] in ("0.0.0.0", "::", "127.0.0.1", "localhost"):
-        print("[!] заглушка вместо адреса сервера (%s) — пропускаю" % node["address"])
+    # заглушка от панели и служебные адреса: такой «сервер» никуда не ведёт
+    if node["address"] in ("0.0.0.0", "::", "127.0.0.1", "localhost") \
+            or node["address"].startswith(("10.", "192.168.", "169.254.")) \
+            or re.match(r"^172\.(1[6-9]|2\d|3[01])\.", node["address"]):
+        print("[!] заглушка или локальный адрес (%s) — пропускаю" % node["address"])
+        return None
+    # UUID должен быть настоящим: с мусором xray не поднимется уже на чужом ПК
+    if not re.match(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", node["uuid"]):
+        print("[!] некорректный UUID — пропускаю узел %s:%s" % (node["address"], port))
+        return None
+    # транспорт, которого нет в xray, — узел бесполезен
+    if node["net"] not in ("tcp", "ws", "grpc", "httpupgrade"):
+        print("[!] неподдерживаемый транспорт (%s) — пропускаю: %s" % (node["net"], node["address"]))
         return None
     # только шифрованный транспорт: security=none — содержимое видно провайдеру
     if node["sec"] not in ("tls", "reality"):
@@ -224,7 +243,17 @@ def build_config(nodes):
     }
 
 
+def refuse_if_password_protected():
+    """Пароль на ключи (secret.dat) — этот скрипт с ним не работает.
+    Иначе он оставил бы открытые sub.txt/config.json рядом с зашифрованными."""
+    if os.path.exists(os.path.join(VPN, "secret.dat")):
+        sys.exit("[X] На флешке включён пароль на ключи (vpn\\secret.dat).\n"
+                 "    Этот скрипт не умеет шифровать и оставил бы ключи открытыми.\n"
+                 "    Обновляй подписку через меню, пункт 3 (app\\update-sub.ps1).")
+
+
 def main():
+    refuse_if_password_protected()
     params = load_sub_params()
     print("[..] Запрашиваю подписку...")
     try:

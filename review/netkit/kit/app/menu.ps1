@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-75'
+$Build = 'F-76'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -488,8 +488,13 @@ function Ask-Clean {
     Write-Host '   Профиль браузера на флешке не трогается.' -ForegroundColor DarkGray
     Write-Host '   > ' -ForegroundColor Green -NoNewline
     $extra = (Read-Host).Trim()
+    # принимать только пустой ввод или -Deep: раньше сюда можно было случайно
+    # вписать -Scrub и стереть весь профиль браузера
     if ($extra -eq '') { return @() }
-    return ($extra -split '\s+')
+    if ($extra -match '^(?i)-deep$') { return @('-Deep') }
+    Write-Host '   Принимается только -Deep (или Enter). Запускаю обычную чистку.' -ForegroundColor Yellow
+    Start-Sleep -Milliseconds 1200
+    return @()
 }
 
 # ---------------------------------------------------------------- цикл

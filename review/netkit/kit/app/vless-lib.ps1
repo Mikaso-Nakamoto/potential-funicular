@@ -28,6 +28,55 @@ function Say([string]$t, [string]$c = 'Gray') { Write-Host $t -ForegroundColor $
 
 function Head([string]$t) { Write-Host ''; Say ('=== ' + $t + ' ===') 'Cyan' }
 
+function Enter-KitLock([int]$WaitMs = 0) {
+    # Один общий mutex на комплект: не даёт двум окнам одновременно поднимать туннель,
+    # чистить следы и гасить xray друг друга. Возвращает объект или $null.
+    try {
+        $m = New-Object System.Threading.Mutex($false, 'LibreWolf-USB-Kit-Runtime')
+        if ($m.WaitOne($WaitMs)) { return $m }
+        try { $m.Dispose() } catch { }
+        return $null
+    } catch { return $null }   # mutex недоступен — работу не блокируем
+}
+
+function Exit-KitLock($Mutex) {
+    if (-not $Mutex) { return }
+    try { $Mutex.ReleaseMutex() } catch { }
+    try { $Mutex.Dispose() } catch { }
+}
+
+function New-KitTempDir([string]$Prefix = 'lwusb') {
+    # Уникальный каталог под расшифрованные секреты и логи: общий для всех пунктов,
+    # чтобы уборка была в одном месте и ничего не оставалось в %TEMP%.
+    $root = $env:TEMP
+    if (-not $root) { $root = [IO.Path]::GetTempPath() }
+    $dir = Join-Path $root ($Prefix + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
+    New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    return $dir
+}
+
+function Remove-KitTempDir([string]$Dir) {
+    # best-effort: затираем содержимое случайными байтами и удаляем каталог.
+    # На SSD/journaling это не гарантирует физического стирания — см. README.
+    if (-not $Dir -or -not (Test-Path $Dir)) { return $false }
+    try {
+        $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+        foreach ($f in @(Get-ChildItem $Dir -File -Recurse -Force -ErrorAction SilentlyContinue)) {
+            try {
+                $len = [int]$f.Length
+                if ($len -gt 0 -and $len -le 5242880) {
+                    $b = New-Object byte[] $len
+                    $rng.GetBytes($b)
+                    [IO.File]::WriteAllBytes($f.FullName, $b)
+                }
+            } catch { }
+        }
+        try { $rng.Dispose() } catch { }
+    } catch { }
+    Remove-Item $Dir -Recurse -Force -ErrorAction SilentlyContinue
+    return (-not (Test-Path $Dir))
+}
+
 function Get-FreePort {
     # свободный порт в диапазоне 20000-60000: слушаем и сразу отпускаем.
     # Если порт занят чужим процессом, TcpListener.Start() бросит — берём следующий.
@@ -80,8 +129,10 @@ function ConvertFrom-VlessLink([string]$Link) {
         if ($query.ContainsKey($k)) { return "$($query[$k])" }
         return ''
     }
-    $net = Q 'type';       if (-not $net) { $net = 'tcp' }
-    $sec = Q 'security';   if (-not $sec) { $sec = 'none' }
+    # регистр в ссылке бывает любой (TLS, Reality, WS): без нормализации узел
+    # отбрасывался как «незашифрованный», хотя он tls
+    $net = (Q 'type').Trim().ToLower();      if (-not $net) { $net = 'tcp' }
+    $sec = (Q 'security').Trim().ToLower();  if (-not $sec) { $sec = 'none' }
 
     $node = [pscustomobject]@{
         uuid = $uuid; address = $addr; port = $port; name = $name
@@ -96,7 +147,8 @@ function ConvertFrom-VlessLink([string]$Link) {
     # подставляет сам клиент Happ). С таким адресом xray не подключится ни при
     # каком TLS, поэтому отбрасываем раньше проверки security — иначе в консоли
     # будет видно «security=none», хотя настоящая причина в другом.
-    if ($addr -eq '0.0.0.0' -or $addr -eq '::' -or $addr -eq '127.0.0.1' -or $addr -eq 'localhost') {
+    if ($addr -eq '0.0.0.0' -or $addr -eq '::' -or $addr -eq '127.0.0.1' -or $addr -eq 'localhost' -or
+        $addr -match '^(10\.|192\.168\.|169\.254\.)' -or $addr -match '^172\.(1[6-9]|2\d|3[01])\.') {
         Write-Warning ("панель вернула заглушку: адрес сервера '{0}' вместо настоящего — пропускаю. Причина обычно в x-hwid (идентификатор устройства) или в том, что адрес подставляет клиент Happ." -f $addr)
         return $null
     }
@@ -104,6 +156,11 @@ function ConvertFrom-VlessLink([string]$Link) {
     # security=none — это VLESS без TLS: в чужой сети содержимое видно провайдеру.
     if ($sec -ne 'tls' -and $sec -ne 'reality') {
         Write-Warning "незашифрованный узел (security=$sec) — пропускаю: $addr. Разрешены только tls и reality."
+        return $null
+    }
+    # транспорт, которого нет в xray, даст конфиг, с которым он не запустится
+    if ($net -ne 'tcp' -and $net -ne 'ws' -and $net -ne 'grpc' -and $net -ne 'httpupgrade') {
+        Write-Warning ("неподдерживаемый транспорт (type=$net) — пропускаю: $addr")
         return $null
     }
     if ($sec -eq 'reality') {
@@ -362,16 +419,31 @@ function Get-SubBody([string]$Url, [string]$Hwid, [string]$Ua, [int]$ProxyPort =
     # и «option -K: found an unknown config option»). Проверено на живой машине.
     $script:LastSubError = ''
     if ($Url -notlike 'https://*') { Write-Warning 'URL подписки не https — отказываюсь'; return '' }
+
+    # curl -K читает файл построчно: CR/LF в значении превратились бы в новую директиву
+    # (например, output = ...). Управляющие символы запрещаем, кавычки и слэши экранируем.
+    function Esc([string]$v) {
+        if ("$v" -match '[\x00-\x1F\x7F]') { return $null }
+        return ("$v" -replace '\\', '\\\\' -replace '"', '\"')
+    }
+    $uEsc = Esc $Url
+    $uaEsc = Esc $Ua
+    $hEsc = ''
+    if ($Hwid) { $hEsc = Esc $Hwid }
+    if ($null -eq $uEsc -or $null -eq $uaEsc -or ($Hwid -and $null -eq $hEsc)) {
+        Write-Warning 'в URL/заголовках подписки есть управляющие символы — отказываюсь'
+        return ''
+    }
     $cfg = @(
-        ('url = "{0}"' -f $Url.Replace('"', '%22')),
+        ('url = "{0}"' -f $uEsc),
         'silent',
         'fail',
         'location',
         'proto = "=https"',
         'max-time = 20',
-        ('header = "User-Agent: {0}"' -f $Ua)
+        ('header = "User-Agent: {0}"' -f $uaEsc)
     )
-    if ($Hwid) { $cfg += ('header = "x-hwid: {0}"' -f $Hwid) }
+    if ($Hwid) { $cfg += ('header = "x-hwid: {0}"' -f $hEsc) }
     if ($ProxyPort -gt 0) { $cfg += ('socks5-hostname = "127.0.0.1:{0}"' -f $ProxyPort) }
 
     $curl = Get-SystemExe 'curl.exe'
@@ -440,9 +512,41 @@ function Test-ConfigSafe($Cfg) {
             $bad += "outbound '$($ob.tag)': security='$sec' (разрешены tls и reality)"
         }
     }
+    # Правило может ссылаться только на существующий vless-outbound или на объявленный
+    # balancer. Раньше запрещался любой outboundTag — из-за этого линтер отвергал
+    # собственный конфиг с фиксацией видео YouTube на proxy-1.
+    $vlessTags = @()
+    foreach ($ob in @($Cfg.outbounds)) {
+        if ("$($ob.protocol)" -eq 'vless') { $vlessTags += "$($ob.tag)" }
+        $addr = ''
+        $port = 0
+        try { $addr = "$(@($ob.settings.vnext)[0].address)"; $port = [int]@($ob.settings.vnext)[0].port } catch { }
+        if (-not $addr) { $bad += "outbound '$($ob.tag)': нет адреса сервера" }
+        if ($port -le 0 -or $port -gt 65535) { $bad += "outbound '$($ob.tag)': некорректный порт '$port'" }
+        if ("$addr" -match '^(0\.0\.0\.0|127\.|10\.|192\.168\.|::1)') { $bad += "outbound '$($ob.tag)': адрес-заглушка или локальный '$addr'" }
+    }
+    $balTags = @()
+    foreach ($b in @($Cfg.routing.balancers)) { $balTags += "$($b.tag)" }
+
     foreach ($r in @($Cfg.routing.rules)) {
-        if ($r.outboundTag) {
-            $bad += "routing: правило с outboundTag='$($r.outboundTag)' — трафик может уйти мимо балансировщика"
+        $tag = "$($r.outboundTag)"
+        $bal = "$($r.balancerTag)"
+        if ($tag) {
+            if ($tag -match '^(direct|freedom|block|blackhole)$') {
+                $bad += "routing: правило с outboundTag='$tag' — прямой выход наружу"
+            } elseif (-not ($vlessTags -contains $tag)) {
+                $bad += "routing: правило ссылается на неизвестный outbound '$tag'"
+            }
+        }
+        if ($bal -and -not ($balTags -contains $bal)) {
+            $bad += "routing: правило ссылается на неизвестный balancer '$bal'"
+        }
+    }
+    foreach ($b in @($Cfg.routing.balancers)) {
+        foreach ($sel in @($b.selector)) {
+            if (-not (@($Cfg.outbounds | Where-Object { "$($_.tag)".StartsWith("$sel") }).Count -gt 0)) {
+                $bad += "balancer '$($b.tag)': селектор '$sel' не совпадает ни с одним outbound"
+            }
         }
     }
     if (@($Cfg.routing.rules).Count -eq 0) { $bad += 'routing: нет ни одного правила (весь трафик уйдёт в первый outbound)' }
