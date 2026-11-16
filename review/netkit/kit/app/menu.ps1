@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-68'
+$Build = 'F-69'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -434,7 +434,8 @@ while ($true) {
             Pause-Menu
         }
         '3' {
-            [void](Run-PS (Join-Path $App 'start.ps1') @('-ForceUpdate'))
+            # только обновление конфига: браузер здесь не нужен и не должен запускаться
+            [void](Run-PS (Join-Path $App 'update-sub.ps1'))
             Pause-Menu
         }
         '4' {
