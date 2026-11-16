@@ -178,15 +178,30 @@ function Ask-Cleanup {
 }
 
 function Write-ServerPing {
-    # задержка до серверов одной строкой: раз в 30 секунд и по клавише p
+    # задержка до серверов одной строкой: раз в 30 секунд и по клавише p.
+    # Любая ошибка здесь — только пропущенный замер, сессия продолжаться должна.
     if (-not $script:PingTargets -or $script:PingTargets.Count -eq 0) { return }
-    $res = @(Measure-ServerPing $script:PingTargets 2500)
-    $parts = @()
-    for ($i = 0; $i -lt $res.Count; $i++) {
-        if ([int]$res[$i].Ms -ge 0) { $parts += ('{0}: {1} мс' -f ($i + 1), [int]$res[$i].Ms) }
-        else { $parts += ('{0}: нет ответа' -f ($i + 1)) }
+    try {
+        $res = @(Measure-ServerPing -Targets $script:PingTargets -TimeoutMs 2500)
+        $parts = @()
+        $i = 0
+        foreach ($x in $res) {
+            if ($x -is [array]) { foreach ($y in $x) { $i++; $parts += (Format-PingPart $i $y) }; continue }
+            $i++
+            $parts += (Format-PingPart $i $x)
+        }
+        if ($parts.Count -eq 0) { return }
+        Write-Host ('[пинг ' + (Get-Date -Format 'HH:mm:ss') + '] ' + ($parts -join '   ')) -ForegroundColor DarkCyan
+    } catch {
+        Write-Host ('[пинг] не удалось замерить: ' + $_.Exception.Message) -ForegroundColor DarkGray
     }
-    Write-Host ('[пинг ' + (Get-Date -Format 'HH:mm:ss') + '] ' + ($parts -join '   ')) -ForegroundColor DarkCyan
+}
+
+function Format-PingPart([int]$N, $Item) {
+    $ms = -1
+    try { if ($null -ne $Item -and $null -ne $Item.Ms) { $ms = [int]$Item.Ms } } catch { $ms = -1 }
+    if ($ms -ge 0) { return ('{0}: {1} мс' -f $N, $ms) }
+    return ('{0}: нет ответа' -f $N)
 }
 
 function Save-KitCopies {
@@ -847,7 +862,9 @@ while (-not $s.stop) {
             Log $ev
         }
         # задержка до серверов: раз в 30 секунд и в любой момент по клавише p
-        if (((Get-Date) - $script:LastPing).TotalSeconds -ge 30) {
+        $pingDue = $false
+        try { $pingDue = (((Get-Date) - [datetime]$script:LastPing).TotalSeconds -ge 30) } catch { $pingDue = $false }
+        if ($pingDue) {
             $script:LastPing = Get-Date
             Write-ServerPing
         }
@@ -896,6 +913,11 @@ catch {
     if ($msg -ne '__LWUSB_STOP__') {
         Write-Host ''
         Write-Host "[X] Непредвиденная ошибка: $msg" -ForegroundColor Red
+        try {
+            $where = $_.InvocationInfo.PositionMessage
+            if ($where) { Write-Host ($where.Trim()) -ForegroundColor DarkGray }
+            if ($_.ScriptStackTrace) { Write-Host ($_.ScriptStackTrace.Trim()) -ForegroundColor DarkGray }
+        } catch {}
         try { Add-Content -Path $LogFile -Value "[XX] $msg" -Encoding UTF8 } catch {}
         $script:FailCode = 1
     }

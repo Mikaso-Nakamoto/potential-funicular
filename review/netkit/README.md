@@ -34,13 +34,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\Invoke-LeakCheck.ps1
 
 ## Результат
 
-- Отчёт: `AUDIT-REPORT.md` (F-01…F-19 по первому кругу, F-20…F-32 по второму разбору из 12 пунктов, F-33…F-64 по дальнейшим правкам).
+- Отчёт: `AUDIT-REPORT.md` (F-01…F-19 по первому кругу, F-20…F-32 по второму разбору из 12 пунктов, F-33…F-65 по дальнейшим правкам).
 - Исправленный комплект собран отдельно от git (код автора в репозиторий не кладём):
-  `inbox/dist/LibreWolf-USB-fixed.zip`, 104 222 байт, md5 `df59e0630050b4c42330ff137950328b`.
-- Копия для скачивания: [LibreWolf-USB-fixed.zip](https://github.com/Mikaso-Nakamoto/potential-funicular/blob/kit-f64/review/netkit/dist/LibreWolf-USB-fixed.zip) (тег `kit-f64`).
+  `inbox/dist/LibreWolf-USB-fixed.zip`, 105 552 байт, md5 `cf4b4a6d4f221b2646bbabde690baf72`.
+- Копия для скачивания: [LibreWolf-USB-fixed.zip](https://github.com/Mikaso-Nakamoto/potential-funicular/blob/kit-f65/review/netkit/dist/LibreWolf-USB-fixed.zip) (тег `kit-f65`).
 - Что проверено статически и что требует живой машины — в §«Чего не проверял» отчёта.
 - В комплекте есть `ПРОВЕРКА.bat` → `app/self-check.ps1`: офлайн-прогон конвертера
-  и сборки JSON на 6 тестовых ключах (без сети, без Xray) — 52 проверки, включая
+  и сборки JSON на 6 тестовых ключах (без сети, без Xray) — 54 проверки, включая
   отбрасывание `security=none` и линтер конфига `Test-ConfigSafe`.
 - Сквозные прогоны исполнением: `tests/e2e-update-sub.sh` (8 сценариев) и
   `tests/e2e-start.sh` (7 сценариев — запуск `start.ps1` с поддельными `xray.exe`,

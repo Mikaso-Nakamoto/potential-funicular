@@ -1,4 +1,4 @@
-# ping-servers.ps1 — задержка до серверов из vpn\config.json.
+﻿# ping-servers.ps1 — задержка до серверов из vpn\config.json.
 # Замер — TCP-подключение к address:port (не ICMP): работает без прав администратора,
 # не зависит от блокировки ICMP в сети колледжа и не требует поднятого туннеля.
 $ErrorActionPreference = 'Stop'
@@ -59,11 +59,20 @@ if ($targets.Count -eq 0) {
 }
 
 Write-Host "[..] Проверяю $($targets.Count) сервер(ов)..." -ForegroundColor DarkGray
-$res = @(Measure-ServerPing $targets 3000)
+$res = @(Measure-ServerPing -Targets $targets -TimeoutMs 3000)
+# на всякий случай разворачиваем вложенные массивы: индексы должны совпадать с $labels
+$flat = @()
+foreach ($x in $res) {
+    if ($x -is [array]) { foreach ($y in $x) { $flat += $y } } else { $flat += $x }
+}
 
 $rows = @()
-for ($i = 0; $i -lt $res.Count; $i++) {
-    $rows += [pscustomobject]@{ N = ($i + 1); Label = $labels[$i]; Ms = [int]$res[$i].Ms }
+for ($i = 0; $i -lt $flat.Count; $i++) {
+    $ms = -1
+    try { if ($null -ne $flat[$i].Ms) { $ms = [int]$flat[$i].Ms } } catch { $ms = -1 }
+    $lbl = ''
+    if ($i -lt $labels.Count) { $lbl = $labels[$i] }
+    $rows += [pscustomobject]@{ N = ($i + 1); Label = $lbl; Ms = $ms }
 }
 $rows = @($rows | Sort-Object @{ Expression = { if ($_.Ms -lt 0) { 999999 } else { $_.Ms } } })
 

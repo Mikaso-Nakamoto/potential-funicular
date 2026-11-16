@@ -309,7 +309,9 @@ function Measure-ServerPing {
         try { $it.Client.Dispose() } catch { }
         $out += [pscustomobject]@{ Name = $it.Name; Ms = $it.Ms }
     }
-    return ,$out
+    # без запятой: запятая делала массив вложенным, и дальше ".Ms" приходил
+    # массивом — падало с «Cannot convert System.Object[] to System.Int32»
+    return $out
 }
 
 function Get-SubBody([string]$Url, [string]$Hwid, [string]$Ua, [int]$ProxyPort = 0) {

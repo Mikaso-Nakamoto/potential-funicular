@@ -153,6 +153,20 @@ Check ('подписка base64: узлов ' + $fromB64.Count) ($fromB64.Count 
 $fromTxt = @(ConvertTo-Nodes $body)
 Check ('подписка текстом: узлов ' + $fromTxt.Count) ($fromTxt.Count -eq $links.Count)
 
+# ------------------------------------------------------------- пинг серверов
+$pingRes = @(Measure-ServerPing -Targets @('127.0.0.1:1') -TimeoutMs 400)
+Check ('пинг закрытого порта: запись одна (' + $pingRes.Count + ')') ($pingRes.Count -eq 1)
+$pingMsOk = $false
+if ($pingRes.Count -ge 1) {
+    # Ms должен быть числом, а не массивом: из-за вложенного массива сессия
+    # падала с «Cannot convert System.Object[] to System.Int32» (F-65)
+    $pingMsOk = ($pingRes[0].Ms -is [int]) -or ($pingRes[0].Ms -is [long])
+}
+Check 'пинг: Ms — число, а не массив' $pingMsOk
+$pingFail = $false
+if ($pingRes.Count -ge 1) { $pingFail = ([int]$pingRes[0].Ms -eq -1) }
+Check 'пинг: закрытый порт помечен -1' $pingFail
+
 # ------------------------------------------------------------- секреты в логах
 $VpnDir = Join-Path (Split-Path -Parent $PSScriptRoot) 'vpn'
 $logDir = Join-Path $VpnDir 'logs'
