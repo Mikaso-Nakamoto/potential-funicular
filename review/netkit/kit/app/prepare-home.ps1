@@ -250,7 +250,12 @@ Write-Host "     Xray готов: $ver" -ForegroundColor Green
 Write-Host ""
 Write-Host "[3/3] Конфиг VPN..." -ForegroundColor Cyan
 $cfg = Join-Path $Vpn 'config.json'
-if (Test-Path $cfg) {
+$cfgEnc = $cfg + '.enc'
+if ((-not (Test-Path $cfg)) -and (Test-Path $cfgEnc)) {
+    # ключи уже на месте и зашифрованы: пересобирать их в открытый config.json нельзя
+    Write-Host "     vpn\config.json.enc уже есть (ключи под паролем) — пропускаю." -ForegroundColor Green
+    Write-Host "     Обновить сервера из подписки: ПОДГОТОВКА-ДОМА.bat → пункт 3 в меню." -ForegroundColor DarkGray
+} elseif (Test-Path $cfg) {
     Write-Host "     vpn\config.json уже есть — пропускаю." -ForegroundColor Green
     Write-Host "     Обновить сервера из подписки: powershell -ExecutionPolicy Bypass -File app\update-sub.ps1" -ForegroundColor DarkGray
 } else {
@@ -270,7 +275,7 @@ if (Test-Path $cfg) {
     }
     if ($conv) {
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$conv"
-        if (Test-Path $cfg) { Write-Host "     config.json создан" -ForegroundColor Green }
+        if ((Test-Path $cfg) -or (Test-Path $cfgEnc)) { Write-Host "     config.json создан" -ForegroundColor Green }
         else { Write-Host "     [!] Конфиг не создан — см. сообщения выше" -ForegroundColor Red }
     } else {
         Write-Host "     Пропущено. Потом дома (в консоли из папки комплекта):" -ForegroundColor Yellow

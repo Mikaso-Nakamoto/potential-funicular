@@ -68,6 +68,13 @@ if ($nodes.Count -eq 0) {
 
 # --- пишем конфиг (с бэкапом) ---
 $json = New-ConfigJson $nodes
+# под паролем открытого config.json нет — старый бэкап делаем из зашифрованного,
+# иначе «сохранён предыдущий конфиг» остаётся пустым обещанием
+if ($pw -and -not (Test-Path $OutFile) -and (Test-Path $CfgEnc) -and -not (Test-Path ($OutFile + '.bak.json'))) {
+    if (Unprotect-KitFile $CfgEnc ($OutFile + '.bak.json') $pw) {
+        Write-Host "[i] Старый конфиг — в config.json.bak.json" -ForegroundColor DarkGray
+    }
+}
 if (Test-Path $OutFile) {
     Copy-Item $OutFile ($OutFile + '.bak.json') -Force
     Write-Host "[i] Старый конфиг — в config.bak.json" -ForegroundColor DarkGray

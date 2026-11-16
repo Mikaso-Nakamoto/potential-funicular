@@ -3,12 +3,15 @@
 # через SOCKS и печатает ответы. Нужен, когда «VPN включён, а Google показывает не ту страну».
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'vless-lib.ps1')
+. (Join-Path $PSScriptRoot 'secret.ps1')
 
 $App  = $PSScriptRoot
 $Root = Split-Path -Parent $App
 $Vpn  = Join-Path $Root 'vpn'
 $Cfg  = Join-Path $Vpn 'config.json'
+$CfgEnc = $Cfg + '.enc'
 $Xray = Join-Path $Vpn 'xray.exe'
+$CfgDec = ''   # расшифрованная копия, если ключи под паролем
 
 $Curl = Get-SystemExe 'curl.exe'
 
@@ -19,6 +22,22 @@ if (-not (Test-Path $Xray)) {
     Say '  Нет vpn\xray.exe — сначала пункт 4 (подготовка дома).' 'Red'
     exit 1
 }
+# ключи под паролем: без пароля конфиг не прочитать (раньше пункт 9 писал «нет config.json»)
+$pw = ''
+if (Test-KitSecret $Vpn) {
+    Say '  Ключи на флешке зашифрованы — нужен пароль.' 'Cyan'
+    $pw = Read-KitPassword $Vpn
+    if (-not $pw) { Say '  Пароль не введён или неверный.' 'Red'; exit 1 }
+    if (-not (Test-Path $Cfg) -and (Test-Path $CfgEnc)) {
+        $CfgDec = Join-Path ([IO.Path]::GetTempPath()) ('lwusb-ip-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.json')
+        if (-not (Unprotect-KitFile $CfgEnc $CfgDec $pw)) {
+            Say '  vpn\config.json.enc не расшифровался: файл повреждён или пароль от другой флешки.' 'Red'
+            exit 1
+        }
+        $Cfg = $CfgDec
+    }
+}
+
 if (-not (Test-Path $Cfg)) {
     Say '  Нет vpn\config.json — сначала пункт 3 или 4.' 'Red'
     exit 1
@@ -165,6 +184,7 @@ try {
         try { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue } catch { }
     }
     Remove-Item $tmpCfg -Force -ErrorAction SilentlyContinue
+    if ($CfgDec) { Remove-Item $CfgDec -Force -ErrorAction SilentlyContinue }
 }
 
 Head 'Почему Google может показывать другую страну'

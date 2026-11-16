@@ -10,7 +10,7 @@ $Vpn     = Join-Path $Root 'vpn'
 $Cfg     = Join-Path $Vpn 'config.json'
 $SubFile = Join-Path $Vpn 'sub.txt'
 
-$Build = 'F-70'
+$Build = 'F-71'
 
 $psExe = 'powershell.exe'
 if (-not $env:SystemRoot) {
@@ -75,7 +75,14 @@ function Get-State {
         $s.Add(@('Подписка', 'нет', $false, 'пункт 4'))
     }
 
-    if ($hasSecret) { $s.Add(@('Пароль', 'задан', $true, '')) }
+    if ($hasSecret) {
+        if ($cfgOpen -or $subOpen) {
+            # пароль есть, но файлы не зашифрованы: так бывает после сбоя посреди первого запуска
+            $s.Add(@('Защита', 'пароль задан, ключи ещё открыты', $false, 'пункт 1'))
+        } else {
+            $s.Add(@('Пароль', 'задан', $true, ''))
+        }
+    }
     $s.Add(@('Профиль', $(if (Test-Path (Join-Path $Root 'profile')) { 'на флешке есть' } else { 'чистый' }), $true, ''))
     return $s
 }
@@ -199,7 +206,7 @@ function Show-Help([string]$num) {
                 'потом выключит VPN и снимет правила брандмауэра.',
                 '',
                 'Пароль: если ключи на флешке зашифрованы, при каждом запуске спрашивается',
-                'пароль (ввод не отображается, 3 попытки). Задаётся он один раз — при первом',
+                'пароль (ввод звёздочками, 3 попытки). Задаётся он один раз — при первом',
                 'запуске пункта 1: скрипт предложит поставить пароль и сразу зашифрует',
                 'config.json и sub.txt. Забыл пароль — ключи не восстановить.'
                 '',
@@ -234,6 +241,9 @@ function Show-Help([string]$num) {
                 'vpn\config.json. Требуется домашний интернет: в колледже запрос к серверу',
                 'подписки не пройдёт. Старый конфиг сохраняется как config.json.bak.json.',
                 '',
+                'Если ключи под паролем, пункт 3 сначала спросит пароль и в конце зашифрует',
+                'новый конфиг: на флешке останется config.json.enc, открытый удалится.',
+                '',
                 'Команда: powershell -ExecutionPolicy Bypass -File app\update-sub.ps1'
             )
         }
@@ -258,8 +268,8 @@ function Show-Help([string]$num) {
                 '',
                 'Упаковывает комплект в один zip: батник, скрипты, README и пример',
                 'конфига. Браузер, Xray и профиль в архив не попадают (они большие).',
-                'Ключ -NoSecrets исключает vpn\sub.txt и vpn\config.json — используй его,',
-                'если архив кому-то передаёшь.',
+                'Ключ -NoSecrets исключает ключи и подписку (в том числе *.enc и secret.dat) —',
+                'используй его, если архив кому-то передаёшь. В меню про это спросят.',
                 '',
                 'Команда: powershell -ExecutionPolicy Bypass -File app\make-bundle.ps1 -NoSecrets'
             )
@@ -270,8 +280,8 @@ function Show-Help([string]$num) {
                 '',
                 'Убирает историю PowerShell, временные файлы комплекта, кэш миниатюр,',
                 'списки недавних файлов, журналы ошибок и DNS-кэш. С -Deep дополнительно',
-                'чистит Prefetch (нужен администратор), с -Scrub стирает профиль браузера',
-                'на флешке.',
+                'чистит Prefetch (нужен администратор). Профиль браузера на флешке,',
+                'закладки и темы не трогаются — в меню про это не спрашивают.'
                 '',
                 'Кэш оперативной памяти скриптом не чистится — это ограничение Windows.',
                 '',
@@ -344,7 +354,7 @@ function Show-Help([string]$num) {
             $lines = @('Пункт 0 — выйти из меню. Сессия браузера при этом не закрывается.')
         }
         default {
-            $lines = @('Такого пункта нет. Введи ?1 … ?9 или ?0.')
+            $lines = @('Такого пункта нет. Введи ?1 … ?10 или ?0.')
         }
     }
     Write-Host ''
@@ -361,7 +371,13 @@ function Show-Help([string]$num) {
 
 # ---------------------------------------------------------------- действия
 function Run-PS([string]$Script, [string[]]$ScriptArgs = @()) {
-    $a = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $Script) + $ScriptArgs
+    if (-not (Test-Path $Script)) {
+        Write-Host ''
+        Write-Host ('   [!] Нет файла app\' + (Split-Path -Leaf $Script) + ' — комплект собран не полностью.') -ForegroundColor Red
+        Write-Host '       Распакуй архив сборки поверх папки комплекта и повтори.' -ForegroundColor DarkGray
+        return 1
+    }
+    $a = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $Script) + @($ScriptArgs)
     Write-Host ''
     # Out-Host: вывод идёт на экран, а функция возвращает только код
     & $psExe @a | Out-Host
@@ -369,6 +385,11 @@ function Run-PS([string]$Script, [string[]]$ScriptArgs = @()) {
     Write-Host ''
     Write-Host ('   [код возврата: ' + $code + ']') -ForegroundColor DarkGray
     return $code
+}
+
+function Clear-Screen {
+    # в переадресованном выводе (лог, >файл) Clear-Host падает — просто пропускаем
+    try { Clear-Host } catch { }
 }
 
 function Pause-Menu {
@@ -420,14 +441,16 @@ function Ask-Server {
     Write-Host '   > ' -ForegroundColor Green -NoNewline
     $extra = (Read-Host).Trim()
     if ($extra -ne '') { $args2 += ($extra -split '\s+') }
-    return ,$args2
+    # объект, а не массив: пустой массив в PowerShell считается «ложью»,
+    # и запуск без флагов молча не стартовал
+    return [pscustomobject]@{ Args = [string[]]$args2 }
 }
 
 function Ask-Clean {
     Write-Host ''
     Write-Host '   Обычная чистка — Enter.' -ForegroundColor Gray
     Write-Host '   -Deep  — плюс Prefetch, нужен администратор.' -ForegroundColor Gray
-    Write-Host '   -Scrub — плюс стереть профиль браузера на флешке.' -ForegroundColor Gray
+    Write-Host '   Профиль браузера на флешке не трогается.' -ForegroundColor DarkGray
     Write-Host '   > ' -ForegroundColor Green -NoNewline
     $extra = (Read-Host).Trim()
     if ($extra -eq '') { return @() }
@@ -436,7 +459,7 @@ function Ask-Clean {
 
 # ---------------------------------------------------------------- цикл
 while ($true) {
-    Clear-Host
+    Clear-Screen
     Show-Menu
     Write-Host '  Выбор > ' -ForegroundColor Green -NoNewline
     $choice = (Read-Host).Trim()
@@ -457,8 +480,8 @@ while ($true) {
                 # поэтому выбор делает сам start.ps1 (флаг -AskServer)
                 [void](Run-PS (Join-Path $App 'start.ps1') @('-AskServer'))
             } else {
-                $a = Ask-Server
-                if ($null -ne $a) { [void](Run-PS (Join-Path $App 'start.ps1') $a) }
+                $r = Ask-Server
+                if ($null -ne $r) { [void](Run-PS (Join-Path $App 'start.ps1') @($r.Args)) }
             }
             Pause-Menu
         }
@@ -472,7 +495,16 @@ while ($true) {
             Pause-Menu
         }
         '5' {
-            [void](Run-PS (Join-Path $App 'make-bundle.ps1'))
+            Write-Host ''
+            Write-Host '   Архив БЕЗ ключей и подписки (тогда его можно кому-то передать)?' -ForegroundColor Gray
+            Write-Host '   Y — без секретов,  Enter или N — с ключами (только для себя).' -ForegroundColor DarkGray
+            Write-Host '   > ' -ForegroundColor Green -NoNewline
+            $ans = (Read-Host).Trim()
+            if ($ans -match '^(y|Y|д|Д)$') {
+                [void](Run-PS (Join-Path $App 'make-bundle.ps1') @('-NoSecrets'))
+            } else {
+                [void](Run-PS (Join-Path $App 'make-bundle.ps1'))
+            }
             Pause-Menu
         }
         '6' {
@@ -507,7 +539,7 @@ while ($true) {
     if ($choice -eq '0') { break }
 }
 
-Clear-Host
+Clear-Screen
 Write-Host ''
 Write-Host '  Меню закрыто. Если браузер ещё открыт — он работает; VPN закроется вместе с ним.' -ForegroundColor Cyan
 Write-Host ''

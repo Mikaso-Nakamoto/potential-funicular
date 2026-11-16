@@ -26,10 +26,16 @@ else { Say '[!] Браузер не найден (app\LibreWolf\LibreWolf.exe) �
 if (Test-Path $xrayPath) { Say ('xray: ' + $xrayPath) }
 else { Say '[!] Xray не найден (vpn\xray.exe) — архив будет без него.' 'Yellow' }
 
-$hasSub = Test-Path (Join-Path $Root 'vpn\sub.txt')
-$hasCfg = Test-Path (Join-Path $Root 'vpn\config.json')
+$hasSub = (Test-Path (Join-Path $Root 'vpn\sub.txt')) -or (Test-Path (Join-Path $Root 'vpn\sub.txt.enc'))
+$hasCfg = (Test-Path (Join-Path $Root 'vpn\config.json')) -or (Test-Path (Join-Path $Root 'vpn\config.json.enc'))
+$hasSecret = Test-Path (Join-Path $Root 'vpn\secret.dat')
 if (($hasSub -or $hasCfg) -and $NoSecrets) {
-    Say '[-NoSecrets] vpn\sub.txt и vpn\config.json в архив НЕ попадут: на новой флешке ключ или подписку нужно будет ввести заново.' 'Yellow'
+    Say '[-NoSecrets] ключи, подписка и secret.dat в архив НЕ попадут (в том числе *.enc):' 'Yellow'
+    Say '    на новой флешке ключ или подписку нужно будет ввести заново.' 'Yellow'
+} elseif ($hasSecret) {
+    Say ''
+    Say '[i] Ключи зашифрованы: в архив попадут vpn\*.enc и vpn\secret.dat.' 'DarkGray'
+    Say '    Без пароля они бесполезны, но архив с ними — личный: никому не передавай.' 'DarkGray'
 } elseif ($hasSub -or $hasCfg) {
     Say ''
     Say '[!] В архив попадут vpn\sub.txt и vpn\config.json — это твоя подписка (URL с токеном)' 'Red'
@@ -54,7 +60,9 @@ foreach ($f in @(Get-ChildItem -Path $Root -Recurse -File -ErrorAction SilentlyC
         if ($p -like '_speedtest_*') { $skip = $true }
     }
     if ($rel -like 'LibreWolf-USB-full-*.zip') { $skip = $true }
-    if ($NoSecrets -and ($rel -match '^vpn[\\/](sub\.txt|config\.json)$')) { $skip = $true }
+    # -NoSecrets: ни открытых ключей, ни шифртекста, ни соли с проверочным HMAC
+    if ($NoSecrets -and ($rel -match '^vpn[\\/](sub\.txt|config\.json)(\.enc|\.bak\.json(\.enc)?)?$')) { $skip = $true }
+    if ($NoSecrets -and ($rel -eq 'vpn\\secret.dat')) { $skip = $true }
     if (-not $skip) { [void]$files.Add($f) }
 }
 
