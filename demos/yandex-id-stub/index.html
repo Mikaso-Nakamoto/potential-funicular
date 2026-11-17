@@ -110,7 +110,7 @@
   }
 
   .panel {
-    width: min(100%, 392px);
+    width: min(100%, 356px);
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -124,10 +124,10 @@
       0 1px 1px rgba(12, 20, 30, .10),
       0 10px 26px -10px rgba(12, 20, 30, .22),
       0 34px 70px -26px rgba(9, 18, 26, .45);
-    padding: 26px 22px 22px;
+    padding: 24px 20px 20px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
     min-height: 0;
   }
 
@@ -141,7 +141,7 @@
   }
   .brand__word {
     font-family: "YS Display", "YS Text", "Helvetica Neue", Arial, sans-serif;
-    font-size: 25px;
+    font-size: 23px;
     line-height: 1;
     font-weight: 500;
     letter-spacing: -.035em;
@@ -163,9 +163,9 @@
   }
 
   .card h1 {
-    margin: 2px 0 4px;
+    margin: 2px 0 6px;
     font-family: "YS Display", "YS Text", "Helvetica Neue", Arial, sans-serif;
-    font-size: 20px;
+    font-size: 19px;
     line-height: 1.2;
     font-weight: 500;
     letter-spacing: -.012em;
@@ -201,10 +201,10 @@
     appearance: none;
     border: 0;
     background: transparent;
-    padding: 11px 6px;
+    padding: 10px 6px;
     border-radius: 13px;
     font: inherit;
-    font-size: 15px;
+    font-size: 14.5px;
     font-weight: 500;
     letter-spacing: -.005em;
     color: #9b9ba3;
@@ -228,7 +228,8 @@
     background: #fff;
     border: 1.5px solid var(--line-strong);
     border-radius: var(--radius-field);
-    padding: 16px 16px;
+    padding: 15px 15px;
+    font-size: 15.5px;
     outline: none;
     transition: border-color .18s var(--ease), box-shadow .18s var(--ease), padding-left .18s var(--ease);
   }
@@ -238,14 +239,14 @@
 
   /* телефон: круглый флаг/глобус + тёмная рамка */
   .field--phone .field__input {
-    padding-left: 66px;
+    padding-left: 62px;
     padding-right: 48px;
     border-color: var(--field-border);
     border-width: 1.6px;
-    font-size: 17.5px;
+    font-size: 16.5px;
     font-weight: 500;
     letter-spacing: -.01em;
-    padding-block: 15px;
+    padding-block: 14px;
   }
   .field--phone .field__input::placeholder { color: #83869e; font-weight: 500; letter-spacing: -.005em; }
   .field--phone .field__input:hover { border-color: #4a4a5c; }
@@ -303,10 +304,10 @@
   /* код страны — часть оформления поля, а не значение input: его нельзя стереть/сломать */
   .field__prefix {
     position: absolute;
-    left: 66px;
+    left: 62px;
     top: 50%;
     translate: 0 -50%;
-    font-size: 17.5px;
+    font-size: 16.5px;
     font-weight: 500;
     letter-spacing: -.01em;
     color: var(--ink);
@@ -315,7 +316,7 @@
   }
   .field__prefix[hidden] { display: none; }
 
-  .field--phone.has-prefix .field__input { padding-left: 104px; }
+  .field--phone.has-prefix .field__input { padding-left: 100px; }
   .field--phone.has-prefix .field__prefix { display: block; }
 
   .field__clear {
@@ -352,10 +353,11 @@
     font: inherit;
     font-size: 15px;
     font-weight: 500;
-    letter-spacing: -.005em;
+    letter-spacing: 0;
+    line-height: 1.2;
     text-decoration: none;
-    border-radius: var(--radius-field);
-    padding: 15px 18px;
+    border-radius: 14px;
+    padding: 14px 18px;
     cursor: pointer;
     border: 1.5px solid transparent;
     background: #fff;
@@ -375,7 +377,8 @@
   .btn--ghost { border-color: var(--line-strong); }
   .btn--ghost:hover { border-color: #c9c9d1; background: #fafafb; }
 
-  .btn__icon { display: grid; place-items: center; flex: none; }
+  .btn__icon { display: grid; place-items: center; flex: none; width: 20px; height: 20px; }
+  .btn__icon svg { width: 19px; height: 19px; }
 
   .btn[disabled] { cursor: default; opacity: .68; }
   .btn.is-busy .btn__label { opacity: .55; }
@@ -717,7 +720,7 @@
       <section class="card" id="auth-card" aria-labelledby="auth-title">
         <!-- ------- основной экран ------- -->
         <div class="card__view" id="view-login">
-          <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;flex-direction:column;gap:14px;">
             <div class="brand" aria-label="Яндекс ID">
               <span class="brand__word">Яндекс</span>
               <span class="brand__id" aria-hidden="true">ID</span>
@@ -767,7 +770,7 @@
                 </div>
               </div>
 
-              <div style="display:grid;gap:10px;margin-top:16px;">
+              <div style="display:grid;gap:9px;margin-top:14px;">
                 <button class="btn btn--primary" type="submit" id="submit-btn">
                   <span class="spinner" aria-hidden="true"></span>
                   <span class="btn__label">Далее</span>
@@ -775,24 +778,22 @@
 
                 <button class="btn btn--ghost" type="button" data-error-action="face">
                   <span class="btn__icon" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
-                      <circle cx="12" cy="10" r="1.1" fill="currentColor" stroke="none"/>
-                      <path d="M9.2 14.4c.7.7 1.7 1.1 2.8 1.1s2.1-.4 2.8-1.1"/>
-                      <path d="M12 7.4v3.2"/>
-                    </svg>
+                    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8.06 6.5a.5.5 0 0 1 .5.5v.776a11.5 11.5 0 0 1-.552 3.519l-1.331 4.14a.5.5 0 0 1-.952-.305l1.33-4.141a10.5 10.5 0 0 0 .504-3.213V7a.5.5 0 0 1 .5-.5Z"/>
+  <path d="M6.06 7a2 2 0 1 1 4 0 .5.5 0 1 1-1 0 1 1 0 1 0-2 0v.332q0 .613-.066 1.221A.5.5 0 0 1 6 8.447q.06-.555.06-1.115zm3.509 1a.5.5 0 0 1 .487.513 11.5 11.5 0 0 1-.587 3.339l-1.266 3.8a.5.5 0 0 1-.949-.317l1.267-3.8a10.5 10.5 0 0 0 .535-3.048A.5.5 0 0 1 9.569 8m-3.356 2.115a.5.5 0 0 1 .33.626L5.24 14.939a.5.5 0 1 1-.955-.296l1.303-4.199a.5.5 0 0 1 .625-.329"/>
+  <path d="M4.759 5.833A3.501 3.501 0 0 1 11.559 7a.5.5 0 0 1-1 0 2.5 2.5 0 0 0-4.857-.833.5.5 0 1 1-.943-.334m.3 1.67a.5.5 0 0 1 .449.546 10.7 10.7 0 0 1-.4 2.031l-1.222 4.072a.5.5 0 1 1-.958-.287L4.15 9.793a9.7 9.7 0 0 0 .363-1.842.5.5 0 0 1 .546-.449Zm6 .647a.5.5 0 0 1 .5.5c0 1.28-.213 2.552-.632 3.762l-1.09 3.145a.5.5 0 0 1-.944-.327l1.089-3.145c.382-1.105.578-2.266.578-3.435a.5.5 0 0 1 .5-.5Z"/>
+  <path d="M3.902 4.222a5 5 0 0 1 5.202-2.113.5.5 0 0 1-.208.979 4 4 0 0 0-4.163 1.69.5.5 0 0 1-.831-.556m6.72-.955a.5.5 0 0 1 .705-.052A4.99 4.99 0 0 1 13.059 7v1.5a.5.5 0 1 1-1 0V7a3.99 3.99 0 0 0-1.386-3.028.5.5 0 0 1-.051-.705M3.68 5.842a.5.5 0 0 1 .422.568q-.044.289-.044.59c0 .71-.1 1.417-.298 2.1l-1.14 3.923a.5.5 0 1 1-.96-.279L2.8 8.821A6.5 6.5 0 0 0 3.058 7q0-.375.054-.736a.5.5 0 0 1 .568-.422m8.882 3.66a.5.5 0 0 1 .456.54c-.084 1-.298 1.986-.64 2.934l-.744 2.068a.5.5 0 0 1-.941-.338l.745-2.07a10.5 10.5 0 0 0 .584-2.678.5.5 0 0 1 .54-.456"/>
+  <path d="M4.81 1.37A6.5 6.5 0 0 1 14.56 7a.5.5 0 1 1-1 0 5.5 5.5 0 0 0-8.25-4.765.5.5 0 0 1-.5-.865m-.89 1.257a.5.5 0 0 1 .04.706A5.48 5.48 0 0 0 2.56 7a.5.5 0 0 1-1 0c0-1.664.626-3.184 1.655-4.333a.5.5 0 0 1 .706-.04ZM1.915 8.02a.5.5 0 0 1 .346.616l-.779 2.767a.5.5 0 1 1-.962-.27l.778-2.767a.5.5 0 0 1 .617-.346m12.15.481a.5.5 0 0 1 .49.51c-.03 1.499-.161 3.025-.727 4.533l-.07.187a.5.5 0 0 1-.936-.351l.07-.187c.506-1.35.634-2.74.663-4.202a.5.5 0 0 1 .51-.49"/></svg>
                   </span>
                   <span>По лицу или отпечатку</span>
                 </button>
 
-                <button class="btn btn--ghost" type="button" id="qr-open">
+              <button class="btn btn--ghost" type="button" id="qr-open">
                   <span class="btn__icon" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
-                      <rect x="3.5" y="3.5" width="6" height="6" rx="1.2"/>
-                      <rect x="14.5" y="3.5" width="6" height="6" rx="1.2"/>
-                      <rect x="3.5" y="14.5" width="6" height="6" rx="1.2"/>
-                      <path d="M14.5 14.5h2v2h-2zM19 14.5h1.5M20.5 18.5v2M14.5 19.5h3"/>
-                    </svg>
+                    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h2v2H2z"/>
+  <path d="M6 0v6H0V0zM5 1H1v4h4zM4 12H2v2h2z"/>
+  <path d="M6 10v6H0v-6zm-5 1v4h4v-4zm11-9h2v2h-2z"/>
+  <path d="M10 0v6h6V0zm5 1v4h-4V1zM8 1V0h1v2H8v2H7V1zm0 5V4h1v2zM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8zm0 0v1H2V8H1v1H0V7h3v1zm10 1h-1V7h1zm-1 0h-1v2h2v-1h-1zm-4 0h2v1h-1v1h-1zm2 3v-1h-1v1h-1v1H9v1h3v-2zm0 0h3v1h-2v1h-1zm-4-1v1h1v-2H7v1z"/>
+  <path d="M7 12h1v3h4v1H7zm9 2v2h-3v-1h2v-1z"/></svg>
                   </span>
                   <span>QR-код</span>
                 </button>
