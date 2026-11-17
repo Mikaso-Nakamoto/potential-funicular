@@ -25,6 +25,3 @@ outputs/
 *.p12
 *.pfx
 *.keystore
-
-# Single-file demo builds
-demos/yandex-id-stub/yandex-id-stub.html
