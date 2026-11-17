@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Яндекс ID — вход</title>
 <meta name="robots" content="noindex">
+<!-- Флаги: flag-icons (MIT, © Panayiotis Lipiridis) — локальные SVG в assets/flags/, лицензия рядом -->
 <style>
   /* ---------- fonts ---------- */
   @font-face {
@@ -241,21 +242,28 @@
 
   .flag {
     position: absolute;
-    left: 15px;
+    left: 14px;
     top: 50%;
     translate: 0 -50%;
-    width: 21px;
-    height: 15px;
-    border-radius: 3.5px;
+    width: 22px;
+    height: 16.5px;         /* тот же 4:3, что и у исходных SVG — без искажений */
+    border-radius: 2px;
     overflow: hidden;
     pointer-events: none;
-    box-shadow: 0 0 0 1px rgba(18, 26, 34, .12), 0 1px 2px rgba(18, 26, 34, .14);
+    box-shadow: 0 0 0 1px rgba(18, 26, 34, .14);
     display: grid;
-    background: #fff;
+    background: #e9e9ee;
     transition: opacity .18s var(--ease);
   }
   .flag[hidden] { display: none; }
-  .flag svg { width: 100%; height: 100%; display: block; }
+  .flag img {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;       /* все флаги 640×480, поэтому пропорции совпадают */
+    display: block;
+  }
+  .flag.is-swapping img { opacity: .35; }
+  .flag img { transition: opacity .12s var(--ease); }
 
   .field__clear {
     position: absolute;
@@ -609,83 +617,8 @@
   const resultIcon  = dialog.querySelector('.result__icon');
   const DEFAULT_TEXT = resultText.textContent.trim();
 
-  /* ================= flags (чистый SVG, без картинок и сети) ================= */
-  const svg = inner => `<svg viewBox="0 0 30 20" preserveAspectRatio="none" aria-hidden="true">${inner}</svg>`;
-  const hst = (...c) => svg(c.map((col, i) =>
-    `<rect y="${(20 / c.length * i).toFixed(3)}" width="30" height="${(20 / c.length).toFixed(3)}" fill="${col}"/>`).join(''));
-  const vst = (...c) => svg(c.map((col, i) =>
-    `<rect x="${(30 / c.length * i).toFixed(3)}" width="${(30 / c.length).toFixed(3)}" height="20" fill="${col}"/>`).join(''));
-  const star = (cx, cy, r, fill = '#fec50c', rot = -90) => {
-    const pts = Array.from({ length: 10 }, (_, i) => {
-      const rad = (i % 2 ? r * .45 : r);
-      const a = (rot + i * 36) * Math.PI / 180;
-      return `${(cx + Math.cos(a) * rad).toFixed(2)},${(cy + Math.sin(a) * rad).toFixed(2)}`;
-    }).join(' ');
-    return `<polygon points="${pts}" fill="${fill}"/>`;
-  };
-
-  const kzRays = Array.from({ length: 8 }, (_, i) => {
-    const a = i * Math.PI / 4;
-    return `<line x1="${(15 + Math.cos(a) * 3.7).toFixed(2)}" y1="${(10 + Math.sin(a) * 3.7).toFixed(2)}"
-                  x2="${(15 + Math.cos(a) * 5).toFixed(2)}" y2="${(10 + Math.sin(a) * 5).toFixed(2)}"
-                  stroke="#fec50c" stroke-width=".75"/>`;
-  }).join('');
-
-  const usStripes = (() => {
-    let s = '<rect width="30" height="20" fill="#fff"/>';
-    for (let i = 0; i < 7; i++) s += `<rect y="${(i * 2 * 20 / 13).toFixed(3)}" width="30" height="${(20 / 13).toFixed(3)}" fill="#b22234"/>`;
-    return s + '<rect width="12.5" height="10.77" fill="#3c3b6e"/>';
-  })();
-
-  const FLAGS = {
-    RU: hst('#ffffff', '#0039a6', '#d52b1e'),
-    KZ: svg(`<rect width="30" height="20" fill="#00afca"/>${kzRays}<circle cx="15" cy="10" r="2.7" fill="#fec50c"/>`),
-    BY: svg(`<rect width="30" height="13.4" fill="#c8313e"/><rect y="13.4" width="30" height="6.6" fill="#4aa657"/>
-             <rect width="5.5" height="20" fill="#fff"/>
-             <rect x="1.4" y="2" width="2.6" height="2.6" fill="#c8313e" transform="rotate(45 2.7 3.3)"/>
-             <rect x="1.4" y="8.7" width="2.6" height="2.6" fill="#c8313e" transform="rotate(45 2.7 10)"/>
-             <rect x="1.4" y="15.4" width="2.6" height="2.6" fill="#c8313e" transform="rotate(45 2.7 16.7)"/>`),
-    UA: hst('#0057b7', '#ffd700'),
-    UZ: svg(`<rect width="30" height="20" fill="#fff"/><rect width="30" height="7.4" fill="#0099b5"/>
-             <rect y="12.6" width="30" height="7.4" fill="#1eb53a"/>
-             <rect y="7" width="30" height=".9" fill="#ce1126"/><rect y="12.1" width="30" height=".9" fill="#ce1126"/>`),
-    KG: svg(`<rect width="30" height="20" fill="#e8112d"/><circle cx="15" cy="10" r="4" fill="#fec50c"/>
-             <circle cx="15" cy="10" r="3" fill="#e8112d"/>`),
-    AM: hst('#d90012', '#0033a0', '#f2a800'),
-    AZ: svg(`<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.7" fill="#00b5e2"/>
-             <rect y="13.3" width="30" height="6.7" fill="#509e2f"/>
-             <circle cx="14" cy="10" r="2.6" fill="#fff"/><circle cx="15" cy="10" r="2.2" fill="#ef3340"/>`),
-    GE: svg(`<rect width="30" height="20" fill="#fff"/>
-             <path d="M12 0h6v8h12v4H18v8h-6v-8H0V8h12z" fill="#e4002b"/>`),
-    MD: vst('#0046ae', '#ffd200', '#cc092f'),
-    US: svg(usStripes),
-    CA: svg(`<rect width="30" height="20" fill="#fff"/><rect width="7.5" height="20" fill="#d52b1e"/>
-             <rect x="22.5" width="7.5" height="20" fill="#d52b1e"/>
-             <path d="M15 3.6l1.5 3.3 2-.9-1 3.1 2.6-.2-1.6 1.6 3.3 1-3 .9.6 1.6-3.6-.6.1 4.2h-.8l.1-4.2-3.6.6.6-1.6-3-.9 3.3-1-1.6-1.6 2.6.2-1-3.1 2 .9z" fill="#d52b1e"/>`),
-    GB: svg(`<rect width="30" height="20" fill="#012169"/>
-             <path d="M0 0 30 20M30 0 0 20" stroke="#fff" stroke-width="4.4"/>
-             <path d="M0 0 30 20M30 0 0 20" stroke="#c8102e" stroke-width="2.1"/>
-             <path d="M15 0v20M0 10h30" stroke="#fff" stroke-width="6.6"/>
-             <path d="M15 0v20M0 10h30" stroke="#c8102e" stroke-width="3.8"/>`),
-    DE: hst('#000000', '#dd0000', '#ffce00'),
-    FR: vst('#002395', '#ffffff', '#ed2939'),
-    NL: hst('#ae1c28', '#ffffff', '#21468b'),
-    PL: hst('#ffffff', '#dc143c'),
-    IT: vst('#009246', '#ffffff', '#ce2b37'),
-    ES: svg(`<rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/>`),
-    TR: svg(`<rect width="30" height="20" fill="#e30a17"/><circle cx="12" cy="10" r="4" fill="#fff"/>
-             <circle cx="13.6" cy="10" r="3.2" fill="#e30a17"/>${star(18.5, 10, 2)}`),
-    AE: svg(`<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.7" fill="#00732f"/>
-             <rect y="13.3" width="30" height="6.7" fill="#000"/><rect width="9" height="20" fill="#ef3340"/>`),
-    IL: svg(`<rect width="30" height="20" fill="#fff"/><rect y="2.4" width="30" height="2.6" fill="#0038b8"/>
-             <rect y="15" width="30" height="2.6" fill="#0038b8"/>
-             <path d="M15 7.3 18.7 13.5H11.3z" fill="none" stroke="#0038b8" stroke-width="1"/>
-             <path d="M15 13 11.3 6.8h7.4z" fill="none" stroke="#0038b8" stroke-width="1"/>`),
-    CN: svg(`<rect width="30" height="20" fill="#de2910"/>${star(6, 5.6, 3.4)}${star(11.4, 2.9, 1.2)}${star(13, 5.6, 1.2)}${star(13, 8.6, 1.2)}${star(11.4, 11.1, 1.2)}`),
-    IN: svg(`<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.7" fill="#ff9933"/>
-             <rect y="13.3" width="30" height="6.7" fill="#138808"/>
-             <circle cx="15" cy="10" r="2.4" fill="none" stroke="#000080" stroke-width=".8"/>`)
-  };
+  /* ================= flags (flag-icons, MIT, локальные SVG 4:3) ================= */
+  const FLAG_SET = ['RU','KZ','BY','UA','UZ','KG','AM','AZ','GE','MD','US','CA','GB','DE','FR','NL','PL','ES','IT','TR','AE','IL','CN','IN'];
 
   /* ================= countries ================= */
   const C = {
@@ -780,9 +713,22 @@
     return { code: top[0].code };
   }
 
+  const FLAG_SRC = code => new URL('assets/flags/' + code.toLowerCase() + '.svg', location.href).href;
+
   function paintFlag() {
-    flagEl.innerHTML = FLAGS[state.country] || FLAGS.RU;
-    flagEl.title = state.country;
+    const code = FLAG_SET.includes(state.country) ? state.country : 'RU';
+    let img = flagEl.querySelector('img');
+    if (!img) {
+      img = document.createElement('img');
+      img.width = 22;
+      img.height = 16.5;
+      img.alt = '';
+      img.decoding = 'async';
+      flagEl.append(img);
+    }
+    const src = FLAG_SRC(code);
+    if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+    flagEl.title = code;
   }
 
   function paintClear() {
@@ -820,9 +766,8 @@
 
   /* ---------- phone formatting on the fly ---------- */
   function handlePhoneInput() {
-    let digits = input.value.replace(/\D/g, '');
-    // «8» в начале — российский междугородний префикс, приводим к +7
-    if (digits.length > 1 && digits[0] === '8') digits = '7' + digits.slice(1);
+    const digits = input.value.replace(/\D/g, '');
+    // ведущую «8» (местный префикс РФ/КЗ) разбирает decide(), не переписывая ввод
     const res = decide(digits, state.country);
 
     // страна ещё не определена — не трогаем то, что набрал человек
