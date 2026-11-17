@@ -1,0 +1,1450 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Яндекс ID — вход</title>
+<meta name="robots" content="noindex">
+<!-- Шрифт: YS Text / YS Display с CDN Яндекса, фолбэк — системный гротеск -->
+<!-- Флаги: flag-icons (MIT, © Panayiotis Lipiridis) — assets/flags-all/ -->
+<!-- Иконка глобуса: Bootstrap Icons (MIT, © The Bootstrap Authors) — assets/globe.svg -->
+<!-- Форматирование номеров: libphonenumber-js (MIT, © catamphetamine) — assets/libphonenumber.js -->
+<link rel="preconnect" href="https://yastatic.net" crossorigin>
+<style>
+  @font-face {
+    font-family: "YS Text";
+    src: url("https://yastatic.net/s3/home/fonts/ys/1/text-regular.woff2") format("woff2");
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "YS Text";
+    src: url("https://yastatic.net/s3/home/fonts/ys/1/text-medium.woff2") format("woff2");
+    font-weight: 500; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "YS Display";
+    src: url("https://yastatic.net/s3/home/fonts/ys/1/display-medium.woff2") format("woff2");
+    font-weight: 500; font-style: normal; font-display: swap;
+  }
+
+  :root {
+    --bg: #0d0a1a;
+    --card: #fff;
+    --ink: #1b1b1e;
+    --ink-2: #26262b;
+    --muted: #8a8a90;
+    --ph: #83869e;
+    --line: #e6e6e9;
+    --line-strong: #e3e3e8;
+    --field-border: #2b2b39;
+    --seg-track: #f1f1f3;
+    --radius-card: 30px;
+    --radius-field: 16px;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+    color-scheme: light;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: "YS Text", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ---------- фон ---------- */
+  .stage {
+    position: relative;
+    min-height: 100svh;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .stage__photo {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 48% 55%;
+    transition: opacity .6s var(--ease);
+  }
+  .stage__photo--alt {
+    opacity: 0;
+    z-index: -3;
+    object-position: 42% 45%;
+  }
+  .stage[data-scene="alt"] .stage__photo:not(.stage__photo--alt) { opacity: 0; }
+  .stage[data-scene="alt"] .stage__photo--alt { opacity: 1; z-index: -2; }
+
+  /* на «горной» сцене низ темнее — подписи под карточкой читаются лучше */
+  .stage[data-scene="alt"]::before {
+    background:
+      radial-gradient(58% 46% at 51% 42%, rgba(255,255,255,.22), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, rgba(18,30,45,.22) 0%, rgba(18,30,45,0) 30%, rgba(12,22,34,.10) 62%, rgba(10,20,32,.48) 100%);
+  }
+  .stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    transition: background .6s var(--ease), opacity .6s var(--ease);
+    background:
+      radial-gradient(58% 46% at 51% 42%, rgba(255,255,255,.26), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, rgba(9,26,18,.16) 0%, rgba(9,26,18,0) 22%, rgba(9,26,18,0) 74%, rgba(9,26,18,.32) 100%);
+  }
+
+  /* ---------- каркас ---------- */
+  .backdrop {
+    display: grid;
+    place-items: start center;
+    padding: clamp(20px, 6vh, 74px) 16px clamp(4px, 2vh, 18px);
+    overflow: auto;
+  }
+
+  .panel {
+    width: min(100%, 356px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card {
+    position: relative;
+    background: var(--card);
+    border-radius: var(--radius-card);
+    box-shadow:
+      0 1px 1px rgba(12, 20, 30, .10),
+      0 10px 26px -10px rgba(12, 20, 30, .22),
+      0 34px 70px -26px rgba(9, 18, 26, .45);
+    padding: 24px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+  }
+
+  /* ---------- бренд ---------- */
+  .brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    user-select: none;
+  }
+  .brand__word {
+    font-family: "YS Display", "YS Text", "Helvetica Neue", Arial, sans-serif;
+    font-size: 23px;
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: -.035em;
+    color: #17171a;
+  }
+  .brand__id {
+    display: inline-grid;
+    place-items: center;
+    padding: 3px 7px 4px;
+    border: 2px solid #17171a;
+    border-radius: 10px;
+    font-family: "YS Display", "YS Text", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1;
+    font-weight: 500;
+    letter-spacing: -.02em;
+    color: #17171a;
+    transform: translateY(1px);
+  }
+
+  .card h1 {
+    margin: 2px 0 6px;
+    font-family: "YS Display", "YS Text", "Helvetica Neue", Arial, sans-serif;
+    font-size: 19px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -.012em;
+    text-align: center;
+    color: var(--ink);
+  }
+
+  /* ---------- сегмент ---------- */
+  .segmented {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 3px;
+    border-radius: var(--radius-field);
+    background: var(--seg-track);
+  }
+  .segmented__thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: calc(50% - 3px);
+    height: calc(100% - 6px);
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 1px 1px rgba(16, 24, 32, .10), 0 3px 8px -3px rgba(16, 24, 32, .26);
+    transition: transform .26s var(--ease);
+  }
+  .segmented[data-active="phone"] .segmented__thumb { transform: translateX(100%); }
+
+  .segmented__btn {
+    position: relative;
+    z-index: 1;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 10px 6px;
+    border-radius: 13px;
+    font: inherit;
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: -.005em;
+    color: #9b9ba3;
+    cursor: pointer;
+    transition: color .2s var(--ease);
+  }
+  .segmented__btn:hover { color: #55555c; }
+  .segmented__btn[aria-pressed="true"] { color: var(--ink); }
+  .segmented__btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--seg-track), 0 0 0 3.5px var(--ink); }
+
+  /* ---------- поле ---------- */
+  .field { position: relative; }
+
+  .field__input {
+    width: 100%;
+    appearance: none;
+    font: inherit;
+    font-size: 16px;
+    letter-spacing: -.005em;
+    color: var(--ink);
+    background: #fff;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--radius-field);
+    padding: 15px 15px;
+    font-size: 15.5px;
+    outline: none;
+    transition: border-color .18s var(--ease), box-shadow .18s var(--ease), padding-left .18s var(--ease);
+  }
+  .field__input::placeholder { color: var(--ph); letter-spacing: .01em; }
+  .field__input:hover { border-color: #cfcfd6; }
+  .field__input:focus { border-color: var(--field-border); box-shadow: 0 0 0 1px var(--field-border); }
+
+  /* телефон: круглый флаг/глобус + тёмная рамка */
+  .field--phone .field__input {
+    padding-left: 62px;
+    padding-right: 48px;
+    border-color: var(--field-border);
+    border-width: 1.6px;
+    font-size: 16.5px;
+    font-weight: 500;
+    letter-spacing: -.01em;
+    padding-block: 14px;
+  }
+  .field--phone .field__input::placeholder { color: #83869e; font-weight: 500; letter-spacing: -.005em; }
+  .field--phone .field__input:hover { border-color: #4a4a5c; }
+  .field--phone .field__input:focus { border-color: #14141c; box-shadow: 0 0 0 1px #14141c; }
+
+  .cc {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 57px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    border-radius: var(--radius-field) 0 0 var(--radius-field);
+  }
+  .cc[hidden] { display: none; }
+  .cc:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ink); border-radius: 16px; }
+
+  /* подложка флага — мягкий прямоугольник, как в оригинале */
+  .cc__disc {
+    width: 46px;
+    height: 40px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    background: #f3f4f7;
+    border: 0;
+    overflow: hidden;
+    transition: background-color .16s var(--ease), transform .18s var(--ease);
+  }
+  .cc:active .cc__disc { transform: scale(.94); }
+  .cc:hover .cc__disc { background: #eceef2; }
+
+  .cc__disc img {
+    width: 27px;
+    height: 18px;
+    border-radius: 3px;
+    object-fit: cover;
+    display: block;
+    box-shadow: 0 0 0 1px rgba(18, 26, 34, .10);
+    animation: flag-in .22s var(--ease) both;
+  }
+  @keyframes flag-in { from { opacity: 0; transform: scale(.82); } to { opacity: 1; transform: none; } }
+  .cc__disc img[hidden] { display: none; }
+  .cc__disc .cc__globe {
+    width: 22px;
+    height: 22px;
+    color: #1b1b1e;
+    display: block;
+  }
+
+  /* код страны — часть оформления поля, а не значение input: его нельзя стереть/сломать */
+  .field__prefix {
+    position: absolute;
+    left: 62px;
+    top: 50%;
+    translate: 0 -50%;
+    font-size: 16.5px;
+    font-weight: 500;
+    letter-spacing: -.01em;
+    color: var(--ink);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .field--phone.has-prefix .field__input { padding-left: 100px; }
+  .field--phone.has-prefix .field__prefix { display: block; }
+  .field__prefix[hidden] { display: none; }
+
+  .field__clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    translate: 0 -50%;
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    border: 0; border-radius: 50%;
+    background: transparent; color: #5c5c64;
+    cursor: pointer;
+    opacity: 0; visibility: hidden;
+    transition: opacity .16s var(--ease), background-color .16s var(--ease), color .16s var(--ease);
+  }
+  .field__clear[data-visible="true"] { opacity: 1; visibility: visible; }
+  .field__clear svg { display: block; }
+  .field__clear:hover { background: #f1f1f3; color: var(--ink); }
+  .field__clear:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--ink); }
+
+  .field__error { display: none; margin: 8px 2px 0; font-size: 13px; line-height: 1.35; color: #d92d20; }
+  .field.is-invalid .field__input { border-color: #d92d20; box-shadow: 0 0 0 1px #d92d20; }
+  .field.is-invalid .field__error { display: block; }
+
+  /* ---------- кнопки ---------- */
+  .btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    appearance: none;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-decoration: none;
+    border-radius: 14px;
+    padding: 14px 18px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    background: #fff;
+    color: var(--ink);
+    transition: background-color .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease), transform .12s var(--ease);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { transform: translateY(1px) scale(.995); }
+  .btn--primary:hover { background: #111114; border-color: #111114; box-shadow: 0 10px 20px -14px rgba(12, 20, 30, .7); }
+  .btn--primary:hover { transform: translateY(-1px); }
+  .btn--ghost:active { transform: translateY(1px) scale(.995); }
+  .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ink); }
+
+  .btn--primary { background: var(--ink-2); border-color: var(--ink-2); color: #fff; }
+  .btn--primary:hover { background: #111114; border-color: #111114; }
+
+  .btn--ghost { border-color: var(--line-strong); }
+  .btn--ghost:hover { border-color: #c9c9d1; background: #fafafb; }
+
+  .btn__icon { display: grid; place-items: center; flex: none; width: 20px; height: 20px; }
+  .btn__icon svg { width: 19px; height: 19px; }
+
+  .btn[disabled] { cursor: default; opacity: .68; }
+  .btn.is-busy .btn__label { opacity: .55; }
+  .spinner {
+    position: absolute;
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.28);
+    border-top-color: #fff;
+    animation: spin .72s linear infinite;
+    display: none;
+  }
+  .btn.is-busy .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- подпись под карточкой ---------- */
+  .caption {
+    text-align: center;
+    color: #fff;
+    font-size: 15px;
+    line-height: 1.45;
+    letter-spacing: -.005em;
+    text-shadow: 0 1px 12px rgba(6, 16, 12, .55), 0 1px 2px rgba(6, 16, 12, .35);
+  }
+  .caption p { margin: 0; }
+  .caption a {
+    display: inline-block;
+    margin-top: 2px;
+    font-weight: 500;
+    color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 1px;
+    transition: border-color .18s var(--ease);
+  }
+  .caption a:hover { border-bottom-color: rgba(255,255,255,.85); }
+  .caption a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 2px; }
+
+  /* ---------- футер ---------- */
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px clamp(16px, 2.2vw, 26px) 14px;
+    color: rgba(255,255,255,.92);
+    font-size: 13px;
+    line-height: 1.3;
+    text-shadow: 0 1px 8px rgba(6, 16, 12, .55);
+  }
+  .footer__links { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+  .footer a { color: inherit; text-decoration: none; border-bottom: 1px solid transparent; }
+  .footer a:hover { border-bottom-color: currentColor; }
+  .footer a:focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 2px; }
+  .footer__copy { opacity: .85; }
+
+  /* ================= выпадающий выбор страны ================= */
+  .cc-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 12px);
+    z-index: 20;
+    max-height: min(58vh, 430px);
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border-radius: 22px;
+    box-shadow:
+      0 0 0 1px rgba(16, 24, 32, .05),
+      0 6px 16px -6px rgba(12, 20, 30, .20),
+      0 28px 50px -18px rgba(9, 18, 26, .34);
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-6px) scale(.99);
+    transform-origin: top center;
+    pointer-events: none;
+    transition: opacity .18s var(--ease), transform .18s var(--ease);
+  }
+  .cc-menu[data-open="true"] {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .cc-menu[data-open="true"] .cc-item { animation: item-in .22s var(--ease) both; }
+  @keyframes item-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .cc-menu__search {
+    position: relative;
+    margin: 12px;
+  }
+  .cc-menu__search input {
+    width: 100%;
+    appearance: none;
+    font: inherit;
+    font-size: 16px;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid #dcdce2;
+    border-radius: 14px;
+    padding: 15px 46px 15px 16px;
+    outline: none;
+    box-shadow: 0 1px 2px rgba(12, 20, 30, .04);
+    transition: border-color .16s var(--ease), box-shadow .16s var(--ease);
+  }
+  .cc-menu__search input::placeholder { color: #8a8a92; }
+  .cc-menu__search input:focus { border-color: #b9b9c3; box-shadow: 0 0 0 3px rgba(27, 27, 30, .05); }
+  .cc-menu__search svg {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    translate: 0 -50%;
+    color: #a2a2ab;
+    pointer-events: none;
+  }
+
+  .cc-menu__list {
+    overflow: auto;
+    padding: 2px 6px 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #d8d8de transparent;
+  }
+  .cc-menu__list::-webkit-scrollbar { width: 8px; }
+  .cc-menu__list::-webkit-scrollbar-thumb { background: #dcdce2; border-radius: 8px; }
+
+  .cc-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    appearance: none;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 16px;
+    color: var(--ink);
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color .12s var(--ease);
+  }
+  .cc-item:hover, .cc-item[data-active="true"] { background: #f4f4f6; }
+  .cc-item:focus-visible { outline: none; background: #f4f4f6; box-shadow: inset 0 0 0 2px var(--ink); }
+  .cc-item img {
+    width: 25px;
+    height: 18px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(18, 26, 34, .12);
+    flex: none;
+    background: #eee;
+  }
+  .cc-item span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cc-item i { font-style: normal; color: #8f8f97; font-size: 15px; }
+  .cc-empty { padding: 18px 16px 22px; text-align: center; color: var(--muted); font-size: 14px; }
+
+  /* ================= экран QR ================= */
+  /* высота карточки анимируется при переходе между экранами */
+  .card {
+    transition: height .34s var(--ease), border-radius .3s var(--ease);
+  }
+  /* обрезаем содержимое только на время смены экрана, чтобы не резать выпадающий список */
+  .card.is-switching { overflow: hidden; }
+  .card__view {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: view-in .3s var(--ease) both;
+  }
+  .card__view[hidden] { display: none; }
+  @keyframes view-in {
+    from { opacity: 0; transform: translateY(8px) scale(.995); }
+    to   { opacity: 1; transform: none; }
+  }
+  .card__view[data-leaving="true"] { animation: view-out .18s var(--ease) both; }
+  @keyframes view-out {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateY(-6px) scale(.995); }
+  }
+
+  .qr-card { gap: 14px; padding: 24px 24px 24px; }
+  .qr-card .card__view { gap: 16px; }
+  .qr-card__back {
+    position: absolute;
+    left: 22px;
+    top: 30px;
+    width: 34px; height: 34px;
+    display: grid; place-items: center;
+    border: 0;
+    background: transparent;
+    border-radius: 50%;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color .16s var(--ease);
+  }
+  .qr-card__back:hover { background: #f1f1f3; }
+  .qr-card__back:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--ink); }
+
+  .qr-text {
+    margin: 22px auto 0;
+    max-width: 264px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--ink);
+    letter-spacing: -.002em;
+  }
+  .qr-card .brand__word { font-size: 23px; }
+  .qr-card .brand__id { font-size: 15px; padding: 3px 6px 4px; }
+
+  .qr-text .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    background: #fc3f1d;
+    color: #fff;
+    font-style: normal;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    vertical-align: -2px;
+    margin: 0 1px;
+  }
+  .qr-text svg { vertical-align: -3px; margin: 0 1px; }
+
+  .qr-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    padding: 6px 16px 0;
+  }
+  .qr-wrap img { width: 100%; height: auto; display: block; }
+  .qr-card__view { gap: 18px; }
+  .qr-wrap__logo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    width: 56px; height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #fc3f1d;
+    color: #fff;
+    font-family: "YS Display", "YS Text", Arial, sans-serif;
+    font-size: 27px;
+    font-weight: 500;
+    line-height: 1;
+    box-shadow: 0 0 0 6px #fff;
+    pointer-events: none;
+  }
+
+  /* ================= модальные окна ================= */
+  dialog.result {
+    width: min(100% - 32px, 392px);
+    border: 0;
+    border-radius: 22px;
+    padding: 0;
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 40px 90px -30px rgba(0,0,0,.6);
+  }
+  dialog.result::backdrop { background: rgba(6, 12, 10, .48); backdrop-filter: blur(3px); }
+  dialog.result[open] { animation: pop .28s var(--ease) both; }
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(10px) scale(.97); }
+    to   { opacity: 1; transform: none; }
+  }
+  .result__inner { padding: 24px 22px 20px; }
+  .result__icon {
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    border-radius: 14px;
+    background: #fff4d1;
+    color: #7a5b00;
+    margin-bottom: 14px;
+  }
+  .result__title {
+    margin: 0 0 8px;
+    font-family: "YS Display", "YS Text", Arial, sans-serif;
+    font-size: 19px;
+    font-weight: 500;
+    letter-spacing: -.015em;
+  }
+  .result__text { margin: 0; font-size: 14.5px; line-height: 1.5; color: #5c5c64; }
+  .result__code {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f5f5f7;
+    border: 1px solid var(--line);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #4a4a52;
+    word-break: break-all;
+  }
+  .result__code b { color: var(--ink); font-weight: 500; }
+  .result__hint { margin: 10px 0 0; font-size: 13px; line-height: 1.45; color: #8a8a90; }
+  .result__hint a { color: #4a4a52; }
+  .result__actions { display: grid; gap: 8px; margin-top: 18px; }
+  dialog.result[data-tone="error"] .result__icon { background: #fdeceb; color: #b42318; }
+
+  /* ---------- адаптив ---------- */
+  @media (max-width: 560px) {
+    .panel { width: 100%; }
+    .card { padding: 22px 16px 18px; border-radius: 26px; }
+    .footer { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .footer__links { justify-content: flex-start; }
+    .brand__word { font-size: 23px; }
+    .cc-menu { max-height: 56vh; }
+  }
+  @media (max-height: 720px) {
+    .card { gap: 12px; padding-block: 18px; }
+    .card h1 { font-size: 18px; }
+    .brand__word { font-size: 22px; }
+    .btn { padding-block: 12px; }
+    .field__input { padding-block: 13px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<main class="stage">
+  <img class="stage__photo" src="assets/landscape-ai.jpg" alt="" aria-hidden="true" decoding="async">
+  <img class="stage__photo stage__photo--alt" src="assets/landscape-alt.jpg" alt="" aria-hidden="true" decoding="async">
+
+  <div class="backdrop">
+    <div class="panel">
+      <section class="card" id="auth-card" aria-labelledby="auth-title">
+        <!-- ------- основной экран ------- -->
+        <div class="card__view" id="view-login">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="brand" aria-label="Яндекс ID">
+              <span class="brand__word">Яндекс</span>
+              <span class="brand__id" aria-hidden="true">ID</span>
+            </div>
+
+            <h1 id="auth-title">Войдите с ID</h1>
+
+            <div class="segmented" data-active="email" role="group" aria-label="Способ входа">
+              <span class="segmented__thumb" aria-hidden="true"></span>
+              <button type="button" class="segmented__btn" id="tab-email" aria-pressed="true" data-mode="email">Почта</button>
+              <button type="button" class="segmented__btn" id="tab-phone" aria-pressed="false" data-mode="phone">Телефон</button>
+            </div>
+
+            <form id="login-form" novalidate autocomplete="off">
+              <div class="field" id="field" style="position:relative;">
+                <label for="login-input" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">Логин или email</label>
+
+                <button type="button" class="cc" id="cc-btn" hidden aria-haspopup="listbox" aria-expanded="false" aria-label="Выбрать страну">
+                  <span class="cc__disc" aria-hidden="true">
+                    <img id="cc-flag" alt="" hidden width="37" height="37">
+                    <svg class="cc__globe" id="cc-globe" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M2.04 4.326c.325 1.329 2.532 2.54 3.717 3.19.48.263.793.434.743.484q-.121.12-.242.234c-.416.396-.787.749-.758 1.266.035.634.618.824 1.214 1.017.577.188 1.168.38 1.286.983.082.417-.075.988-.22 1.52-.215.782-.406 1.48.22 1.48 1.5-.5 3.798-3.186 4-5 .138-1.243-2-2-3.5-2.5-.478-.16-.755.081-.99.284-.172.15-.322.279-.51.216-.445-.148-2.5-2-1.5-2.5.78-.39.952-.171 1.227.182.078.099.163.208.273.318.609.304.662-.132.723-.633.039-.322.081-.671.277-.867.434-.434 1.265-.791 2.028-1.12.712-.306 1.365-.587 1.579-.88A7 7 0 1 1 2.04 4.327Z"/></svg>
+                  </span>
+                </button>
+
+                <span class="field__prefix" id="prefix" hidden aria-hidden="true"></span>
+
+                <input class="field__input" id="login-input" name="login" type="text"
+                       placeholder="Логин или email" autocomplete="off" spellcheck="false"
+                       inputmode="email" enterkeyhint="go" aria-describedby="login-error">
+
+                <button class="field__clear" id="clear-btn" type="button" tabindex="-1" aria-label="Очистить поле" data-visible="false">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round">
+                    <path d="M6 6l12 12M18 6L6 18"/>
+                  </svg>
+                </button>
+                <p class="field__error" id="login-error" role="alert"></p>
+
+                <!-- выпадающий список стран -->
+                <div class="cc-menu" id="cc-menu" role="dialog" aria-label="Выбор страны">
+                  <div class="cc-menu__search">
+                    <input id="cc-search" type="text" placeholder="Страна или код" autocomplete="off" spellcheck="false" aria-label="Страна или код">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                      <circle cx="11" cy="11" r="7"/><path d="m16.2 16.2 4 4"/>
+                    </svg>
+                  </div>
+                  <div class="cc-menu__list" id="cc-list" role="listbox" aria-label="Страны"></div>
+                </div>
+              </div>
+
+              <div style="display:grid;gap:9px;margin-top:14px;">
+                <button class="btn btn--primary" type="submit" id="submit-btn">
+                  <span class="spinner" aria-hidden="true"></span>
+                  <span class="btn__label">Далее</span>
+                </button>
+
+                <button class="btn btn--ghost" type="button" data-error-action="face">
+                  <span class="btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8.06 6.5a.5.5 0 0 1 .5.5v.776a11.5 11.5 0 0 1-.552 3.519l-1.331 4.14a.5.5 0 0 1-.952-.305l1.33-4.141a10.5 10.5 0 0 0 .504-3.213V7a.5.5 0 0 1 .5-.5Z"/>
+  <path d="M6.06 7a2 2 0 1 1 4 0 .5.5 0 1 1-1 0 1 1 0 1 0-2 0v.332q0 .613-.066 1.221A.5.5 0 0 1 6 8.447q.06-.555.06-1.115zm3.509 1a.5.5 0 0 1 .487.513 11.5 11.5 0 0 1-.587 3.339l-1.266 3.8a.5.5 0 0 1-.949-.317l1.267-3.8a10.5 10.5 0 0 0 .535-3.048A.5.5 0 0 1 9.569 8m-3.356 2.115a.5.5 0 0 1 .33.626L5.24 14.939a.5.5 0 1 1-.955-.296l1.303-4.199a.5.5 0 0 1 .625-.329"/>
+  <path d="M4.759 5.833A3.501 3.501 0 0 1 11.559 7a.5.5 0 0 1-1 0 2.5 2.5 0 0 0-4.857-.833.5.5 0 1 1-.943-.334m.3 1.67a.5.5 0 0 1 .449.546 10.7 10.7 0 0 1-.4 2.031l-1.222 4.072a.5.5 0 1 1-.958-.287L4.15 9.793a9.7 9.7 0 0 0 .363-1.842.5.5 0 0 1 .546-.449Zm6 .647a.5.5 0 0 1 .5.5c0 1.28-.213 2.552-.632 3.762l-1.09 3.145a.5.5 0 0 1-.944-.327l1.089-3.145c.382-1.105.578-2.266.578-3.435a.5.5 0 0 1 .5-.5Z"/>
+  <path d="M3.902 4.222a5 5 0 0 1 5.202-2.113.5.5 0 0 1-.208.979 4 4 0 0 0-4.163 1.69.5.5 0 0 1-.831-.556m6.72-.955a.5.5 0 0 1 .705-.052A4.99 4.99 0 0 1 13.059 7v1.5a.5.5 0 1 1-1 0V7a3.99 3.99 0 0 0-1.386-3.028.5.5 0 0 1-.051-.705M3.68 5.842a.5.5 0 0 1 .422.568q-.044.289-.044.59c0 .71-.1 1.417-.298 2.1l-1.14 3.923a.5.5 0 1 1-.96-.279L2.8 8.821A6.5 6.5 0 0 0 3.058 7q0-.375.054-.736a.5.5 0 0 1 .568-.422m8.882 3.66a.5.5 0 0 1 .456.54c-.084 1-.298 1.986-.64 2.934l-.744 2.068a.5.5 0 0 1-.941-.338l.745-2.07a10.5 10.5 0 0 0 .584-2.678.5.5 0 0 1 .54-.456"/>
+  <path d="M4.81 1.37A6.5 6.5 0 0 1 14.56 7a.5.5 0 1 1-1 0 5.5 5.5 0 0 0-8.25-4.765.5.5 0 0 1-.5-.865m-.89 1.257a.5.5 0 0 1 .04.706A5.48 5.48 0 0 0 2.56 7a.5.5 0 0 1-1 0c0-1.664.626-3.184 1.655-4.333a.5.5 0 0 1 .706-.04ZM1.915 8.02a.5.5 0 0 1 .346.616l-.779 2.767a.5.5 0 1 1-.962-.27l.778-2.767a.5.5 0 0 1 .617-.346m12.15.481a.5.5 0 0 1 .49.51c-.03 1.499-.161 3.025-.727 4.533l-.07.187a.5.5 0 0 1-.936-.351l.07-.187c.506-1.35.634-2.74.663-4.202a.5.5 0 0 1 .51-.49"/></svg>
+                  </span>
+                  <span>По лицу или отпечатку</span>
+                </button>
+
+              <button class="btn btn--ghost" type="button" id="qr-open">
+                  <span class="btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h2v2H2z"/>
+  <path d="M6 0v6H0V0zM5 1H1v4h4zM4 12H2v2h2z"/>
+  <path d="M6 10v6H0v-6zm-5 1v4h4v-4zm11-9h2v2h-2z"/>
+  <path d="M10 0v6h6V0zm5 1v4h-4V1zM8 1V0h1v2H8v2H7V1zm0 5V4h1v2zM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8zm0 0v1H2V8H1v1H0V7h3v1zm10 1h-1V7h1zm-1 0h-1v2h2v-1h-1zm-4 0h2v1h-1v1h-1zm2 3v-1h-1v1h-1v1H9v1h3v-2zm0 0h3v1h-2v1h-1zm-4-1v1h1v-2H7v1z"/>
+  <path d="M7 12h1v3h4v1H7zm9 2v2h-3v-1h2v-1z"/></svg>
+                  </span>
+                  <span>QR-код</span>
+                </button>
+
+                <button class="btn btn--ghost" type="button" data-error-action="create">Создать ID</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ------- экран QR ------- -->
+        <div class="card__view" id="view-qr" hidden>
+          <button class="qr-card__back" type="button" id="qr-back" aria-label="Назад">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5"/><path d="m11 6-6 6 6 6"/>
+            </svg>
+          </button>
+
+          <div class="brand" aria-label="Яндекс ID">
+            <span class="brand__word">Яндекс</span>
+            <span class="brand__id" aria-hidden="true">ID</span>
+          </div>
+
+          <p class="qr-text">
+            Просканируйте QR любым удобным способом. Например, откройте приложение
+            Яндекс <i class="badge" aria-hidden="true">Я</i>, нажмите в поисковой строке значок
+            «Умная камера»
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
+              <circle cx="12" cy="12" r="2.6"/>
+            </svg>
+            и наведите камеру на QR-код:
+          </p>
+
+          <div class="qr-wrap">
+            <img src="assets/qr.png" alt="QR-код для входа" width="492" height="492">
+            <span class="qr-wrap__logo" aria-hidden="true">Я</span>
+          </div>
+
+          <button class="btn btn--ghost" type="button" id="qr-other" style="margin-top:6px;padding-block:16px;">Войти другим способом</button>
+        </div>
+      </section>
+
+      <div class="caption">
+        <p>Яндекс ID — ключ для всех сервисов</p>
+        <a href="https://yandex.ru/support/passport/" target="_blank" rel="noopener noreferrer">Узнать больше</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer__note">Используйте режим инкогнито на чужом компьютере</div>
+    <div class="footer__links">
+      <span>Ru</span>
+      <a href="https://yandex.ru/support/id/ru/troubleshooting/other-login-problems" target="_blank" rel="noopener noreferrer">Справка и поддержка</a>
+      <span class="footer__copy">© 2001–2026 Яндекс</span>
+    </div>
+  </footer>
+</main>
+
+<dialog class="result" id="result-dialog" aria-labelledby="result-title" aria-describedby="result-text">
+  <div class="result__inner">
+    <div class="result__icon" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3.5 21 19H3z"/>
+        <path d="M12 9.5v4"/>
+        <circle cx="12" cy="16.4" r=".9" fill="currentColor" stroke="none"/>
+      </svg>
+    </div>
+    <h2 class="result__title" id="result-title">Сервис временно недоступен</h2>
+    <p class="result__text" id="result-text">
+      Из-за серии атак на дата-центры часть сервисов может работать нестабильно.
+      Повторите попытку позже.
+    </p>
+    <div class="result__code" id="result-code" hidden></div>
+    <p class="result__hint" id="result-hint" hidden></p>
+    <div class="result__actions">
+      <button class="btn btn--primary" type="button" id="result-close">Понятно</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="assets/libphonenumber.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const { AsYouType, parsePhoneNumberFromString } = window.libphonenumber || {};
+
+  /* ================== данные ================== */
+  const COUNTRIES = [{"c":"AU","n":"Австралия","d":"+61","f":"au","l":null},{"c":"AT","n":"Австрия","d":"+43","f":"at","l":null},{"c":"AZ","n":"Азербайджан","d":"+994","f":"az","l":null},{"c":"AX","n":"Аландские острова","d":"+358","f":"ax","l":null},{"c":"AL","n":"Албания","d":"+355","f":"al","l":null},{"c":"DZ","n":"Алжир","d":"+213","f":"dz","l":null},{"c":"AS","n":"Американское Самоа","d":"+1","f":"as","l":null},{"c":"AI","n":"Ангилья","d":"+1","f":"ai","l":null},{"c":"GB","n":"Англия о.","d":"+44","f":"gb","l":null},{"c":"AO","n":"Ангола","d":"+244","f":"ao","l":null},{"c":"AD","n":"Андорра","d":"+376","f":"ad","l":null},{"c":"AG","n":"Антигуа и Барбуда","d":"+1","f":"ag","l":null},{"c":"AR","n":"Аргентина","d":"+54","f":"ar","l":null},{"c":"AM","n":"Армения","d":"+374","f":"am","l":null},{"c":"AW","n":"Аруба","d":"+297","f":"aw","l":null},{"c":"AF","n":"Афганистан","d":"+93","f":"af","l":null},{"c":"BS","n":"Багамы","d":"+1","f":"bs","l":null},{"c":"BD","n":"Бангладеш","d":"+880","f":"bd","l":null},{"c":"BB","n":"Барбадос","d":"+1","f":"bb","l":null},{"c":"BH","n":"Бахрейн","d":"+973","f":"bh","l":null},{"c":"BY","n":"Беларусь","d":"+375","f":"by","l":null},{"c":"BZ","n":"Белиз","d":"+501","f":"bz","l":null},{"c":"BE","n":"Бельгия","d":"+32","f":"be","l":null},{"c":"BJ","n":"Бенин","d":"+229","f":"bj","l":null},{"c":"BM","n":"Бермуды","d":"+1","f":"bm","l":null},{"c":"BG","n":"Болгария","d":"+359","f":"bg","l":null},{"c":"BO","n":"Боливия","d":"+591","f":"bo","l":null},{"c":"BQ","n":"Бонэйр, Синт-Эстатиус и Саба","d":"+599","f":"bq","l":null},{"c":"BA","n":"Босния и Герцеговина","d":"+387","f":"ba","l":null},{"c":"BW","n":"Ботсвана","d":"+267","f":"bw","l":null},{"c":"BR","n":"Бразилия","d":"+55","f":"br","l":null},{"c":"IO","n":"Британская территория в Индийском океане","d":"+246","f":"io","l":null},{"c":"BN","n":"Бруней","d":"+673","f":"bn","l":null},{"c":"BF","n":"Буркина-Фасо","d":"+226","f":"bf","l":null},{"c":"BI","n":"Бурунди","d":"+257","f":"bi","l":null},{"c":"BT","n":"Бутан","d":"+975","f":"bt","l":null},{"c":"VU","n":"Вануату","d":"+678","f":"vu","l":null},{"c":"VA","n":"Ватикан","d":"+39","f":"va","l":null},{"c":"HU","n":"Венгрия","d":"+36","f":"hu","l":null},{"c":"VE","n":"Венесуэла","d":"+58","f":"ve","l":null},{"c":"VG","n":"Виргинские Острова (Великобритания)","d":"+1","f":"vg","l":null},{"c":"VI","n":"Виргинские Острова (США)","d":"+1","f":"vi","l":null},{"c":"TL","n":"Восточный Тимор","d":"+670","f":"tl","l":null},{"c":"VN","n":"Вьетнам","d":"+84","f":"vn","l":null},{"c":"GA","n":"Габон","d":"+241","f":"ga","l":null},{"c":"HT","n":"Гаити","d":"+509","f":"ht","l":null},{"c":"GY","n":"Гайана","d":"+592","f":"gy","l":null},{"c":"GM","n":"Гамбия","d":"+220","f":"gm","l":null},{"c":"GH","n":"Гана","d":"+233","f":"gh","l":null},{"c":"GP","n":"Гваделупа","d":"+590","f":"gp","l":null},{"c":"GT","n":"Гватемала","d":"+502","f":"gt","l":null},{"c":"GF","n":"Гвиана","d":"+594","f":"gf","l":null},{"c":"GN","n":"Гвинея","d":"+224","f":"gn","l":null},{"c":"GW","n":"Гвинея-Бисау","d":"+245","f":"gw","l":null},{"c":"DE","n":"Германия","d":"+49","f":"de","l":null},{"c":"GG","n":"Гернси","d":"+44","f":"gg","l":null},{"c":"GI","n":"Гибралтар","d":"+350","f":"gi","l":null},{"c":"HN","n":"Гондурас","d":"+504","f":"hn","l":null},{"c":"HK","n":"Гонконг","d":"+852","f":"hk","l":null},{"c":"PS","n":"Государство Палестина","d":"+970","f":"ps","l":null},{"c":"GD","n":"Гренада","d":"+1","f":"gd","l":null},{"c":"GL","n":"Гренландия","d":"+299","f":"gl","l":null},{"c":"GR","n":"Греция","d":"+30","f":"gr","l":null},{"c":"GE","n":"Грузия","d":"+995","f":"ge","l":null},{"c":"GU","n":"Гуам","d":"+1","f":"gu","l":null},{"c":"DK","n":"Дания","d":"+45","f":"dk","l":null},{"c":"CD","n":"Демократическая Республика Конго","d":"+243","f":"cd","l":null},{"c":"JE","n":"Джерси","d":"+44","f":"je","l":null},{"c":"DJ","n":"Джибути","d":"+253","f":"dj","l":null},{"c":"DM","n":"Доминика","d":"+1","f":"dm","l":null},{"c":"DO","n":"Доминиканская Республика","d":"+1","f":"do","l":null},{"c":"EG","n":"Египет","d":"+20","f":"eg","l":null},{"c":"ZM","n":"Замбия","d":"+260","f":"zm","l":null},{"c":"ZW","n":"Зимбабве","d":"+263","f":"zw","l":null},{"c":"IL","n":"Израиль","d":"+972","f":"il","l":null},{"c":"IN","n":"Индия","d":"+91","f":"in","l":null},{"c":"ID","n":"Индонезия","d":"+62","f":"id","l":null},{"c":"JO","n":"Иордания","d":"+962","f":"jo","l":null},{"c":"IQ","n":"Ирак","d":"+964","f":"iq","l":null},{"c":"IR","n":"Иран","d":"+98","f":"ir","l":null},{"c":"IE","n":"Ирландия","d":"+353","f":"ie","l":null},{"c":"IS","n":"Исландия","d":"+354","f":"is","l":null},{"c":"ES","n":"Испания","d":"+34","f":"es","l":null},{"c":"IT","n":"Италия","d":"+39","f":"it","l":null},{"c":"YE","n":"Йемен","d":"+967","f":"ye","l":null},{"c":"CV","n":"Кабо-Верде","d":"+238","f":"cv","l":null},{"c":"KZ","n":"Казахстан","d":"+7","f":"kz","l":null},{"c":"KH","n":"Камбоджа","d":"+855","f":"kh","l":null},{"c":"CM","n":"Камерун","d":"+237","f":"cm","l":null},{"c":"CA","n":"Канада","d":"+1","f":"ca","l":null},{"c":"QA","n":"Катар","d":"+974","f":"qa","l":null},{"c":"KE","n":"Кения","d":"+254","f":"ke","l":null},{"c":"CY","n":"Кипр","d":"+357","f":"cy","l":null},{"c":"KG","n":"Киргизия","d":"+996","f":"kg","l":null},{"c":"KI","n":"Кирибати","d":"+686","f":"ki","l":null},{"c":"KP","n":"КНДР","d":"+850","f":"kp","l":null},{"c":"CN","n":"КНР (Китайская Народная Республика)","d":"+86","f":"cn","l":null},{"c":"CC","n":"Кокосовые острова","d":"+61","f":"cc","l":null},{"c":"CO","n":"Колумбия","d":"+57","f":"co","l":null},{"c":"KM","n":"Коморы","d":"+269","f":"km","l":null},{"c":"KR","n":"Корея","d":"+82","f":"kr","l":null},{"c":"XK","n":"Косово","d":"+383","f":"xk","l":null},{"c":"CR","n":"Коста-Рика","d":"+506","f":"cr","l":null},{"c":"CI","n":"Кот-д’Ивуар","d":"+225","f":"ci","l":null},{"c":"CU","n":"Куба","d":"+53","f":"cu","l":null},{"c":"KW","n":"Кувейт","d":"+965","f":"kw","l":null},{"c":"CW","n":"Кюрасао","d":"+599","f":"cw","l":null},{"c":"LA","n":"Лаос","d":"+856","f":"la","l":null},{"c":"LV","n":"Латвия","d":"+371","f":"lv","l":null},{"c":"LS","n":"Лесото","d":"+266","f":"ls","l":null},{"c":"LR","n":"Либерия","d":"+231","f":"lr","l":null},{"c":"LB","n":"Ливан","d":"+961","f":"lb","l":null},{"c":"LY","n":"Ливия","d":"+218","f":"ly","l":null},{"c":"LT","n":"Литва","d":"+370","f":"lt","l":null},{"c":"LI","n":"Лихтенштейн","d":"+423","f":"li","l":null},{"c":"LU","n":"Люксембург","d":"+352","f":"lu","l":null},{"c":"MU","n":"Маврикий","d":"+230","f":"mu","l":null},{"c":"MR","n":"Мавритания","d":"+222","f":"mr","l":null},{"c":"MG","n":"Мадагаскар","d":"+261","f":"mg","l":null},{"c":"YT","n":"Майотта","d":"+262","f":"yt","l":null},{"c":"MO","n":"Макао","d":"+853","f":"mo","l":null},{"c":"MW","n":"Малави","d":"+265","f":"mw","l":null},{"c":"MY","n":"Малайзия","d":"+60","f":"my","l":null},{"c":"ML","n":"Мали","d":"+223","f":"ml","l":null},{"c":"MV","n":"Мальдивы","d":"+960","f":"mv","l":null},{"c":"MT","n":"Мальта","d":"+356","f":"mt","l":null},{"c":"MA","n":"Марокко","d":"+212","f":"ma","l":null},{"c":"MQ","n":"Мартиника","d":"+596","f":"mq","l":null},{"c":"MH","n":"Маршалловы Острова","d":"+692","f":"mh","l":null},{"c":"MX","n":"Мексика","d":"+52","f":"mx","l":null},{"c":"FM","n":"Микронезия","d":"+691","f":"fm","l":null},{"c":"MZ","n":"Мозамбик","d":"+258","f":"mz","l":null},{"c":"MD","n":"Молдова","d":"+373","f":"md","l":null},{"c":"MC","n":"Монако","d":"+377","f":"mc","l":null},{"c":"MN","n":"Монголия","d":"+976","f":"mn","l":null},{"c":"MS","n":"Монтсеррат","d":"+1","f":"ms","l":null},{"c":"MM","n":"Мьянма","d":"+95","f":"mm","l":null},{"c":"NA","n":"Намибия","d":"+264","f":"na","l":null},{"c":"NR","n":"Науру","d":"+674","f":"nr","l":null},{"c":"NP","n":"Непал","d":"+977","f":"np","l":null},{"c":"NE","n":"Нигер","d":"+227","f":"ne","l":null},{"c":"NG","n":"Нигерия","d":"+234","f":"ng","l":null},{"c":"NL","n":"Нидерланды","d":"+31","f":"nl","l":null},{"c":"NI","n":"Никарагуа","d":"+505","f":"ni","l":null},{"c":"NU","n":"Ниуэ","d":"+683","f":"nu","l":null},{"c":"NZ","n":"Новая Зеландия","d":"+64","f":"nz","l":null},{"c":"NC","n":"Новая Каледония","d":"+687","f":"nc","l":null},{"c":"NO","n":"Норвегия","d":"+47","f":"no","l":null},{"c":"AE","n":"ОАЭ","d":"+971","f":"ae","l":null},{"c":"OM","n":"Оман","d":"+968","f":"om","l":null},{"c":"IM","n":"Остров Мэн","d":"+44","f":"im","l":null},{"c":"NF","n":"Остров Норфолк","d":"+672","f":"nf","l":null},{"c":"CX","n":"Остров Рождества","d":"+61","f":"cx","l":null},{"c":"KY","n":"Острова Кайман","d":"+1","f":"ky","l":null},{"c":"CK","n":"Острова Кука","d":"+682","f":"ck","l":null},{"c":"SH","n":"Острова Святой Елены, Вознесения и Тристан-да-Кунья","d":"+290","f":"sh","l":null},{"c":"PK","n":"Пакистан","d":"+92","f":"pk","l":null},{"c":"PW","n":"Палау","d":"+680","f":"pw","l":null},{"c":"PA","n":"Панама","d":"+507","f":"pa","l":null},{"c":"PG","n":"Папуа — Новая Гвинея","d":"+675","f":"pg","l":null},{"c":"PY","n":"Парагвай","d":"+595","f":"py","l":null},{"c":"PE","n":"Перу","d":"+51","f":"pe","l":null},{"c":"PL","n":"Польша","d":"+48","f":"pl","l":null},{"c":"PT","n":"Португалия","d":"+351","f":"pt","l":null},{"c":"PR","n":"Пуэрто-Рико","d":"+1","f":"pr","l":null},{"c":"CG","n":"Республика Конго","d":"+242","f":"cg","l":null},{"c":"RE","n":"Реюньон","d":"+262","f":"re","l":null},{"c":"RU","n":"Российская Федерация","d":"+7","f":"ru","l":null},{"c":"RW","n":"Руанда","d":"+250","f":"rw","l":null},{"c":"RO","n":"Румыния","d":"+40","f":"ro","l":null},{"c":"EH","n":"САДР","d":"+212","f":"eh","l":null},{"c":"SV","n":"Сальвадор","d":"+503","f":"sv","l":null},{"c":"WS","n":"Самоа","d":"+685","f":"ws","l":null},{"c":"SM","n":"Сан-Марино","d":"+378","f":"sm","l":null},{"c":"ST","n":"Сан-Томе и Принсипи","d":"+239","f":"st","l":null},{"c":"SA","n":"Саудовская Аравия","d":"+966","f":"sa","l":null},{"c":"MK","n":"Северная Македония","d":"+389","f":"mk","l":null},{"c":"MP","n":"Северные Марианские Острова","d":"+1","f":"mp","l":null},{"c":"SC","n":"Сейшельские Острова","d":"+248","f":"sc","l":null},{"c":"BL","n":"Сен-Бартелеми","d":"+590","f":"bl","l":null},{"c":"MF","n":"Сен-Мартен","d":"+590","f":"mf","l":null},{"c":"PM","n":"Сен-Пьер и Микелон","d":"+508","f":"pm","l":null},{"c":"SN","n":"Сенегал","d":"+221","f":"sn","l":null},{"c":"VC","n":"Сент-Винсент и Гренадины","d":"+1","f":"vc","l":null},{"c":"KN","n":"Сент-Китс и Невис","d":"+1","f":"kn","l":null},{"c":"LC","n":"Сент-Люсия","d":"+1","f":"lc","l":null},{"c":"RS","n":"Сербия","d":"+381","f":"rs","l":null},{"c":"SG","n":"Сингапур","d":"+65","f":"sg","l":null},{"c":"SX","n":"Синт-Мартен","d":"+1","f":"sx","l":null},{"c":"SY","n":"Сирия","d":"+963","f":"sy","l":null},{"c":"SK","n":"Словакия","d":"+421","f":"sk","l":null},{"c":"SI","n":"Словения","d":"+386","f":"si","l":null},{"c":"SB","n":"Соломоновы Острова","d":"+677","f":"sb","l":null},{"c":"SO","n":"Сомали","d":"+252","f":"so","l":null},{"c":"SD","n":"Судан","d":"+249","f":"sd","l":null},{"c":"SR","n":"Суринам","d":"+597","f":"sr","l":null},{"c":"US","n":"США","d":"+1","f":"us","l":null},{"c":"SL","n":"Сьерра-Леоне","d":"+232","f":"sl","l":null},{"c":"TJ","n":"Таджикистан","d":"+992","f":"tj","l":null},{"c":"TH","n":"Таиланд","d":"+66","f":"th","l":null},{"c":"TW","n":"Тайвань","d":"+886","f":"tw","l":null},{"c":"TZ","n":"Танзания","d":"+255","f":"tz","l":null},{"c":"TC","n":"Теркс и Кайкос","d":"+1","f":"tc","l":null},{"c":"TG","n":"Того","d":"+228","f":"tg","l":null},{"c":"TK","n":"Токелау","d":"+690","f":"tk","l":null},{"c":"TO","n":"Тонга","d":"+676","f":"to","l":null},{"c":"TT","n":"Тринидад и Тобаго","d":"+1","f":"tt","l":null},{"c":"TV","n":"Тувалу","d":"+688","f":"tv","l":null},{"c":"TN","n":"Тунис","d":"+216","f":"tn","l":null},{"c":"TM","n":"Туркмения","d":"+993","f":"tm","l":null},{"c":"TR","n":"Турция","d":"+90","f":"tr","l":null},{"c":"UG","n":"Уганда","d":"+256","f":"ug","l":null},{"c":"UZ","n":"Узбекистан","d":"+998","f":"uz","l":null},{"c":"UA","n":"Украина","d":"+380","f":"ua","l":null},{"c":"WF","n":"Уоллис и Футуна","d":"+681","f":"wf","l":null},{"c":"UY","n":"Уругвай","d":"+598","f":"uy","l":null},{"c":"FO","n":"Фареры","d":"+298","f":"fo","l":null},{"c":"FJ","n":"Фиджи","d":"+679","f":"fj","l":null},{"c":"PH","n":"Филиппины","d":"+63","f":"ph","l":null},{"c":"FI","n":"Финляндия","d":"+358","f":"fi","l":null},{"c":"FK","n":"Фолклендские острова","d":"+500","f":"fk","l":null},{"c":"FR","n":"Франция","d":"+33","f":"fr","l":null},{"c":"PF","n":"Французская Полинезия","d":"+689","f":"pf","l":null},{"c":"HR","n":"Хорватия","d":"+385","f":"hr","l":null},{"c":"CF","n":"ЦАР","d":"+236","f":"cf","l":null},{"c":"TD","n":"Чад","d":"+235","f":"td","l":null},{"c":"ME","n":"Черногория","d":"+382","f":"me","l":null},{"c":"CZ","n":"Чехия","d":"+420","f":"cz","l":null},{"c":"CL","n":"Чили","d":"+56","f":"cl","l":null},{"c":"CH","n":"Швейцария","d":"+41","f":"ch","l":null},{"c":"SE","n":"Швеция","d":"+46","f":"se","l":null},{"c":"SJ","n":"Шпицберген и Ян-Майен","d":"+47","f":"sj","l":null},{"c":"LK","n":"Шри-Ланка","d":"+94","f":"lk","l":null},{"c":"EC","n":"Эквадор","d":"+593","f":"ec","l":null},{"c":"GQ","n":"Экваториальная Гвинея","d":"+240","f":"gq","l":null},{"c":"ER","n":"Эритрея","d":"+291","f":"er","l":null},{"c":"SZ","n":"Эсватини","d":"+268","f":"sz","l":null},{"c":"EE","n":"Эстония","d":"+372","f":"ee","l":null},{"c":"ET","n":"Эфиопия","d":"+251","f":"et","l":null},{"c":"ZA","n":"ЮАР","d":"+27","f":"za","l":null},{"c":"SS","n":"Южный Судан","d":"+211","f":"ss","l":null},{"c":"JM","n":"Ямайка","d":"+1","f":"jm","l":null},{"c":"JP","n":"Япония","d":"+81","f":"jp","l":null},{"c":"AC","n":"AC","d":"+247","f":"un","l":null},{"c":"TA","n":"TA","d":"+290","f":"un","l":null}];
+
+  const ASSET = p => new URL(p, location.href).href;
+  const flagSrc = f => (window.__ASSETS && window.__ASSETS['flags/' + f + '.svg'])
+    || ASSET('assets/flags-all/' + f + '.svg');
+  const asset = (name) => (window.__ASSETS && window.__ASSETS[name]) || ASSET('assets/' + name);
+
+  const state = {
+    mode: 'email',
+    country: 'RU',
+    national: '',
+    menuOpen: false
+  };
+
+  /* ---------- элементы ---------- */
+  const card      = document.getElementById('auth-card');
+  const viewLogin = document.getElementById('view-login');
+  const viewQr    = document.getElementById('view-qr');
+  const form      = document.getElementById('login-form');
+  const field     = document.getElementById('field');
+  const input     = document.getElementById('login-input');
+  const errorEl   = document.getElementById('login-error');
+  const submit    = document.getElementById('submit-btn');
+  const tabs      = [...document.querySelectorAll('.segmented__btn')];
+  const seg       = document.querySelector('.segmented');
+  const ccBtn     = document.getElementById('cc-btn');
+  const prefixEl  = document.getElementById('prefix');
+  const ccFlag    = document.getElementById('cc-flag');
+  const ccGlobe   = document.getElementById('cc-globe');
+  const menu      = document.getElementById('cc-menu');
+  const list      = document.getElementById('cc-list');
+  const search    = document.getElementById('cc-search');
+  const clearBtn  = document.getElementById('clear-btn');
+  const dialog    = document.getElementById('result-dialog');
+  const codeEl    = document.getElementById('result-code');
+  const hintEl    = document.getElementById('result-hint');
+  const closeBtn  = document.getElementById('result-close');
+
+  /* ---------- справочник ---------- */
+  const byCode = new Map(COUNTRIES.map(c => [c.c, c]));
+
+  function countryOf(iso) { return byCode.get(iso) || byCode.get('RU'); }
+
+  /* ---------- флаг / глобус ---------- */
+
+  function paintCountry(showFlag) {
+    const c = countryOf(state.country);
+    if (showFlag && c.f !== 'un') {
+      ccFlag.src = flagSrc(c.f);
+      ccFlag.hidden = false;
+      ccGlobe.style.display = 'none';
+    } else {
+      ccFlag.hidden = true;
+      ccGlobe.style.display = '';
+    }
+    ccBtn.setAttribute('aria-label', 'Страна: ' + c.n + ', код ' + c.d + '. Изменить');
+  }
+
+  /* ---------- форматирование ---------- */
+  function formatNational(iso, digits) {
+    if (!digits) return '';
+    if (!AsYouType) return digits;
+    const c = countryOf(iso);
+    const dial = c.d.slice(1);
+    // форматируем как международный номер: иначе libphonenumber даёт «сырой» national для части стран
+    const intl = new AsYouType().input(c.d + digits);
+    const prefix = c.d + ' ';
+    return intl.startsWith(prefix) ? intl.slice(prefix.length) : digits;
+  }
+
+  // плейсхолдер-маска: «+7 (000) 000-00-00» — формат берём из libphonenumber,
+  // подставляя вместо цифр нули (как в оригинальном интерфейсе)
+  const MASK_CACHE = new Map();
+  const MASK_SAMPLES = ['9', '99', '999', '9999', '99999', '999999', '9999999',
+                        '99999999', '999999999', '9999999999', '99999999999', '999999999999'];
+
+  function maskFor(iso) {
+    if (MASK_CACHE.has(iso)) return MASK_CACHE.get(iso);
+    const c = countryOf(iso);
+    const dial = c.d;
+
+    // нули не группируются (это не валидные цифры), поэтому форматируем «пример»
+    // из девяток и заменяем все цифры на нули: «+7 (999) 123-45-67» → «+7 (000) 000-00-00»
+    const SAMPLE = '9999999999';
+    let best = '';
+    if (AsYouType) {
+      for (let len = 6; len <= SAMPLE.length; len++) {
+        const r = new AsYouType(iso).input(SAMPLE.slice(0, len));
+        if (r.length > best.length) best = r;
+      }
+    }
+
+    let body = best ? best.replace(/\d/g, '0') : '000 000 000 000';
+    // в поле хранится только национальная часть — код страны показываем отдельно
+    // «000 000-00-00» → «(000) 000-00-00» — так, как это показывает Яндекс
+    if (!body.includes('(')) {
+      const m = body.match(/^(\d{3})\s+(.*)$/);
+      if (m) body = '(' + m[1] + ') ' + m[2];
+    }
+    const mask = dial + ' ' + body;
+    MASK_CACHE.set(iso, mask);
+    return mask;
+  }
+
+  function placeholderFor() {
+    return maskFor(state.country);
+  }
+
+  function normalize(digits) {
+    // «8» в начале — местный префикс РФ/КЗ: 8XXXXXXXXXX → 7XXXXXXXXXX
+    if (digits.length >= 2 && digits[0] === '8' && /^[89]/.test(digits[1])) return '7' + digits.slice(1);
+    return digits;
+  }
+
+  /* длинные коды — первыми, чтобы +1 не перебивал +998 */
+  const DIAL_MAP = (() => {
+    const map = new Map();
+    for (const c of COUNTRIES) {
+      const dial = c.d.slice(1);
+      if (!map.has(dial)) map.set(dial, []);
+      map.get(dial).push(c.c);
+    }
+    return map;
+  })();
+
+
+  /* определяем страну по набранным цифрам: сначала самый длинный код страны,
+     затем — libphonenumber для стран с общим кодом (+1, +7) */
+  const KZ_MOBILE = /^(7(0[0-8]|4[7]|7[1678]))/;
+
+  /* Определяем страну по цифрам номера.
+     ВАЖНО: код страны в поле хранится отдельно (span), поэтому при разборе
+     сначала пробуем «код + номер», а при неудаче — только национальный номер. */
+  function detectCountry(digits, baseCountry = state.country) {
+    if (!digits) return null;
+
+    // 1) номер похож на национальный (10 цифр) — пробуем угадать по префиксу
+    if (digits.length === 10) {
+      if (KZ_MOBILE.test(digits)) return 'KZ';
+      if (/^[689]/.test(digits)) return 'RU';
+    }
+
+    // 2) страна выбрана в списке, а код в номере не набран → доверяем выбору
+    const base = countryOf(baseCountry);
+    const baseDial = base.d.slice(1);
+    if (!digits.startsWith(baseDial)) return baseCountry;
+
+    // 3) самый длинный подходящий код страны
+    let dial = null;
+    for (let len = Math.min(4, digits.length); len >= 1; len--) {
+      if (DIAL_MAP.has(digits.slice(0, len))) { dial = digits.slice(0, len); break; }
+    }
+    if (!dial) return baseCountry;
+
+    // номер короче кода страны — точно не код
+    if (digits.length < dial.length + 6) return baseCountry;
+
+    const list = DIAL_MAP.get(dial);
+    if (list.length === 1) return list[0];
+
+    if (dial === '7') {
+      const rest = digits.slice(1);
+      if (rest.length >= 3) return KZ_MOBILE.test(rest) ? 'KZ' : 'RU';
+      return baseCountry;
+    }
+
+    if (dial === '1') return list.includes(baseCountry) ? baseCountry : 'US';
+
+    if (parsePhoneNumberFromString) {
+      const p = parsePhoneNumberFromString('+' + digits);
+      if (p && p.country && list.includes(p.country)) return p.country;
+    }
+    return list.includes(baseCountry) ? baseCountry : list[0];
+  }
+
+  /* ---------- режимы поля ---------- */
+  function setMode(next) {
+    state.mode = next;
+    seg.dataset.active = next;
+    tabs.forEach(t => t.setAttribute('aria-pressed', String(t.dataset.mode === next)));
+    closeMenu();
+    clearError();
+    state.national = '';
+    input.value = '';
+
+    if (next === 'phone') {
+      ccBtn.hidden = false;
+      field.classList.add('field--phone');
+      input.type = 'tel';
+      input.setAttribute('inputmode', 'tel');
+      input.placeholder = maskFor(state.country).slice(countryOf(state.country).d.length).trim();
+      setPrefix(countryOf(state.country).d);
+      paintCountry(false);
+    } else {
+      ccBtn.hidden = true;
+      closeMenu();
+      setPrefix('');
+      field.classList.remove('field--phone', 'has-prefix');
+      input.value = '';
+      input.type = 'text';
+      input.setAttribute('inputmode', 'email');
+      input.placeholder = 'Логин или email';
+    }
+    paintClear();
+    input.focus({ preventScroll: true });
+  }
+
+  /* код страны живёт в отдельном span: в input остаются только цифры номера,
+     поэтому «+7» нельзя случайно стереть или сломать */
+  function setPrefix(text) {
+    field.classList.toggle('has-prefix', Boolean(text));
+    prefixEl.hidden = !text;
+    prefixEl.textContent = text || '';
+  }
+
+  function paintClear() {
+    const hasDigits = input.value.replace(/\D/g, '').length > 0;
+    clearBtn.dataset.visible = state.mode === 'phone' || hasDigits ? 'true' : 'false';
+  }
+
+  function handlePhoneInput() {
+    const raw = input.value.replace(/\D/g, '');
+    let digits = normalize(raw);
+
+    if (!digits) {
+      state.national = '';
+      setPrefix(countryOf(state.country).d);
+      input.placeholder = maskFor(state.country).slice(countryOf(state.country).d.length).trim();
+      paintCountry(false);
+      paintClear();
+      return;
+    }
+
+    const detected = detectCountry(digits, state.country);
+    if (detected) state.country = detected;
+
+    const c = countryOf(state.country);
+    const dial = c.d.slice(1);
+    // код страны в поле не хранится, но его могут набрать руками — тогда отрезаем
+    const national = (digits.length > 10 && digits.startsWith(dial) ? digits.slice(dial.length) : digits)
+      .slice(0, 13);
+
+    state.national = national;
+    setPrefix(national ? c.d : '');
+    input.placeholder = maskFor(state.country).slice(c.d.length).trim();
+    input.value = national ? formatNational(state.country, national) : '';
+    paintCountry(Boolean(national));
+    paintClear();
+
+    const pos = input.value.length;
+    input.setSelectionRange(pos, pos);
+  }
+
+  /* ---------- меню стран ---------- */
+  let menuIndex = -1;
+
+  function renderList(query = '') {
+    const q = query.trim().toLowerCase().replace(/\s+/g, ' ');
+    const digits = q.replace(/\D/g, '');
+    let items = COUNTRIES.filter(c => {
+      if (!q) return true;
+      if (digits && c.d.slice(1).startsWith(digits)) return true;
+      return c.n.toLowerCase().includes(q);
+    });
+    if (q) {
+      const score = c => {
+        const name = c.n.toLowerCase();
+        if (digits) return c.d.slice(1) === digits ? 0 : c.d.slice(1).startsWith(digits) ? 1 : 2;
+        if (name === q) return 0;
+        if (name.startsWith(q)) return 1;
+        if (name.includes(' ' + q)) return 2;
+        return 3;
+      };
+      items = items.slice().sort((a, b) => score(a) - score(b) || a.n.localeCompare(b.n, 'ru'));
+    }
+
+    list.innerHTML = items.length
+      ? items.map((c, i) => `
+          <button class="cc-item" type="button" role="option" data-iso="${c.c}"
+                  data-active="${i === menuIndex}" aria-selected="${c.c === state.country}">
+            <img src="${flagSrc(c.f)}" alt="" width="25" height="18" loading="lazy" decoding="async">
+            <span>${escapeHtml(c.n)}</span>
+            <i>${c.d}</i>
+          </button>`).join('')
+      : '<p class="cc-empty">Ничего не найдено</p>';
+
+    syncActive();
+  }
+
+  function syncActive() {
+    const all = [...list.querySelectorAll('.cc-item')];
+    all.forEach((el, i) => el.dataset.active = String(i === menuIndex));
+    if (all[menuIndex]) all[menuIndex].scrollIntoView({ block: 'nearest' });
+  }
+
+  function openMenu() {
+    if (state.mode !== 'phone') return;
+    state.menuOpen = true;
+    menuIndex = Math.max(0, COUNTRIES.findIndex(c => c.c === state.country));
+    search.value = '';
+    renderList('');
+    menu.dataset.open = 'true';
+    ccBtn.setAttribute('aria-expanded', 'true');
+    // на узких экранах не даём меню улететь за пределы экрана
+    requestAnimationFrame(() => {
+      const rect = menu.getBoundingClientRect();
+      const overflow = rect.bottom - window.innerHeight + 12;
+      if (overflow > 0) menu.scrollTop = 0;
+    });
+    search.focus({ preventScroll: true });
+  }
+
+  function closeMenu() {
+    state.menuOpen = false;
+    menu.dataset.open = 'false';
+    ccBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  function chooseCountry(iso) {
+    state.country = iso;
+    // выбранный код страны — это ещё не номер: очищаем поле и ждём ввод
+    state.national = '';
+    input.value = '';
+    setPrefix(countryOf(iso).d);
+    input.placeholder = maskFor(iso).slice(countryOf(iso).d.length).trim();
+    paintCountry(false);
+    paintClear();
+    closeMenu();
+    input.focus({ preventScroll: true });
+  }
+
+  ccBtn.addEventListener('click', () => (state.menuOpen ? closeMenu() : openMenu()));
+
+  search.addEventListener('input', () => { menuIndex = 0; renderList(search.value); });
+
+  search.addEventListener('keydown', e => {
+    const items = [...list.querySelectorAll('.cc-item')];
+    if (e.key === 'ArrowDown') { e.preventDefault(); menuIndex = Math.min(items.length - 1, menuIndex + 1); syncActive(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); menuIndex = Math.max(0, menuIndex - 1); syncActive(); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (items[menuIndex]) items[menuIndex].click(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeMenu(); ccBtn.focus(); }
+  });
+
+  list.addEventListener('click', e => {
+    const btn = e.target.closest('.cc-item');
+    if (btn) chooseCountry(btn.dataset.iso);
+  });
+
+  document.addEventListener('click', e => {
+    if (!state.menuOpen) return;
+    if (menu.contains(e.target) || ccBtn.contains(e.target)) return;
+    closeMenu();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && state.menuOpen) { closeMenu(); ccBtn.focus(); }
+  });
+
+  /* ---------- табы ---------- */
+  tabs.forEach(t => {
+    t.addEventListener('click', () => { if (t.dataset.mode !== state.mode) setMode(t.dataset.mode); });
+    t.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const next = state.mode === 'email' ? 'phone' : 'email';
+      document.getElementById(next === 'email' ? 'tab-email' : 'tab-phone').focus();
+      setMode(next);
+    });
+  });
+
+  input.addEventListener('input', () => {
+    if (field.classList.contains('is-invalid')) clearError();
+    if (state.mode === 'phone') handlePhoneInput();
+    else paintClear();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    state.national = '';
+    input.value = '';
+    if (state.mode === 'phone') {
+      setPrefix(countryOf(state.country).d);
+      input.placeholder = maskFor(state.country).slice(countryOf(state.country).d.length).trim();
+      paintCountry(false);
+    }
+    clearError();
+    paintClear();
+    input.focus({ preventScroll: true });
+  });
+
+  /* ---------- валидация ---------- */
+  function clearError() {
+    field.classList.remove('is-invalid');
+    input.removeAttribute('aria-invalid');
+    errorEl.textContent = '';
+  }
+
+  function showError(msg) {
+    field.classList.add('is-invalid');
+    input.setAttribute('aria-invalid', 'true');
+    errorEl.textContent = msg;
+    input.focus({ preventScroll: true });
+  }
+
+  function validate() {
+    const v = input.value.trim();
+    if (state.mode === 'phone') {
+      if (!state.national) return { ok: false, msg: 'Введите номер телефона' };
+      const c = countryOf(state.country);
+      if (state.national.length < 6) return { ok: false, msg: 'Номер слишком короткий' };
+      return { ok: true, value: c.d + ' ' + formatNational(state.country, state.national) };
+    }
+    if (!v) return { ok: false, msg: 'Введите логин или email' };
+    if (v.length < 3 || /\s{2,}/.test(v) || !/^[^\s@]+(@[^\s@]+)?$/.test(v)) {
+      return { ok: false, msg: 'Такой логин выглядит странно — проверьте написание' };
+    }
+    return { ok: true, value: v };
+  }
+
+  /* ---------- модалка ---------- */
+  const FAIL_TITLE = 'Сервис временно недоступен';
+  const FAIL_TEXT  = 'Из-за серии атак на дата-центры часть сервисов может работать нестабильно. Работу уже восстанавливают — повторите попытку позже.';
+  const FAIL_HINT  = 'Код ошибки DC-503. Почему это происходит и что делать — в справке Яндекса.';
+  const HINT_LINK = { href: 'https://yandex.ru/support/id/ru/troubleshooting/other-login-problems', label: 'Подробнее' };
+
+  function openDialog({ title, text, hint, tone, code }) {
+    dialog.dataset.tone = tone;
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-text').textContent = text;
+
+    if (hint) {
+      hintEl.innerHTML = escapeHtml(hint) + ' <a href="' + HINT_LINK.href + '" target="_blank" rel="noopener noreferrer">' + HINT_LINK.label + '</a>';
+      hintEl.hidden = false;
+    } else { hintEl.hidden = true; hintEl.textContent = ''; }
+
+    if (code) { codeEl.innerHTML = code; codeEl.hidden = false; }
+    else { codeEl.hidden = true; codeEl.innerHTML = ''; }
+
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+  }
+
+  const showFailure = () => openDialog({ title: FAIL_TITLE, text: FAIL_TEXT, hint: FAIL_HINT, tone: 'error' });
+
+  document.querySelectorAll('[data-error-action]').forEach(el =>
+    el.addEventListener('click', () => showFailure()));
+
+  closeBtn.addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', e => {
+    const r = dialog.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close();
+  });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    clearError();
+    const res = validate();
+    if (!res.ok) { showError(res.msg); return; }
+
+    submit.disabled = true;
+    submit.classList.add('is-busy');
+    submit.setAttribute('aria-busy', 'true');
+
+    setTimeout(() => {
+      submit.disabled = false;
+      submit.classList.remove('is-busy');
+      submit.removeAttribute('aria-busy');
+      openDialog({
+        tone: 'local',
+        title: 'Локальный режим',
+        text: 'Это демонстрация интерфейса: данные никуда не отправляются, запросов нет.',
+        code: '<b>способ:</b> ' + (state.mode === 'phone' ? 'телефон (' + state.country + ')' : 'почта') +
+              '<br><b>значение:</b> ' + escapeHtml(res.value) +
+              '<br><b>запросов отправлено:</b> 0'
+      });
+    }, 620);
+  });
+
+  /* ---------- переключение экранов (с анимацией высоты карточки) ---------- */
+  const reduceMotion = window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)')
+    : { matches: false };
+  let switching = false;
+
+  function swapViews(from, to, onDone) {
+    if (switching) return;
+    switching = true;
+
+    const fromH = from.offsetHeight;
+
+    // без поддержки анимаций или без layout — просто меняем экраны
+    if (reduceMotion.matches || !fromH) {
+      from.hidden = true;
+      to.hidden = false;
+      switching = false;
+      onDone?.();
+      return;
+    }
+
+    card.classList.add('is-switching');
+    card.style.height = fromH + 'px';
+
+    from.style.animation = 'view-out .18s cubic-bezier(.2,.8,.2,1) both';
+
+    setTimeout(() => {
+      from.hidden = true;
+      from.style.animation = '';
+      to.hidden = false;
+      void to.offsetHeight;                     // reflow, чтобы анимация проигралась заново
+      const toH = to.offsetHeight;
+      card.style.height = toH + 'px';
+
+      requestAnimationFrame(() => {
+        card.style.height = '';
+        setTimeout(() => {
+          card.classList.remove('is-switching');
+          switching = false;
+          onDone?.();
+        }, 360);
+      });
+    }, 170);
+  }
+
+  const stage = document.querySelector('.stage');
+
+  function showQr() {
+    closeMenu();
+    card.classList.add('qr-card');
+    // сцену не сбрасываем: какой фон выбран, таким и остаётся на всех экранах
+    swapViews(viewLogin, viewQr, () => {
+      viewLogin.style.animation = '';
+      document.getElementById('qr-back').focus({ preventScroll: true });
+    });
+  }
+
+  /* «Войти другим способом» под QR — возвращаем форму, но с другим фоном */
+  function showLogin({ altScene = false } = {}) {
+    card.classList.remove('qr-card');
+    if (altScene) stage.dataset.scene = 'alt';
+    swapViews(viewQr, viewLogin, () => {
+      viewQr.style.animation = '';
+      document.getElementById('qr-open').focus({ preventScroll: true });
+    });
+  }
+
+  document.getElementById('qr-open').addEventListener('click', showQr);
+  document.getElementById('qr-back').addEventListener('click', () => showLogin());
+  document.getElementById('qr-other').addEventListener('click', () => showLogin({ altScene: true }));
+
+  /* ---------- утилиты ---------- */
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+
+  /* ---------- стартовое состояние ---------- */
+  (function init() {
+    const langs = navigator.languages?.length ? navigator.languages : [navigator.language || ''];
+    for (const lang of langs) {
+      const region = String(lang).split('-')[1]?.toUpperCase();
+      if (region && byCode.has(region)) { state.country = region; break; }
+    }
+    setMode('email');
+  })();
+});
+</script>
+</body>
+</html>
