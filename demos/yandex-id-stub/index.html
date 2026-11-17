@@ -256,11 +256,13 @@
     background: #f4f5f7;
     border: 1px solid rgba(18, 26, 34, .10);
     overflow: hidden;
-    transition: background-color .16s var(--ease);
+    transition: background-color .16s var(--ease), transform .18s var(--ease);
   }
+  .cc:active .cc__disc { transform: scale(.94); }
   .cc:hover .cc__disc { background: #eceef2; }
 
-  .cc__disc img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cc__disc img { width: 100%; height: 100%; object-fit: cover; display: block; animation: flag-in .22s var(--ease) both; }
+  @keyframes flag-in { from { opacity: 0; transform: scale(.82); } to { opacity: 1; transform: none; } }
   .cc__disc img[hidden] { display: none; }
   .cc__disc .cc__globe {
     width: 21px;
@@ -313,7 +315,10 @@
     transition: background-color .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease), transform .12s var(--ease);
     -webkit-tap-highlight-color: transparent;
   }
-  .btn:active { transform: translateY(1px) scale(.996); }
+  .btn:active { transform: translateY(1px) scale(.995); }
+  .btn--primary:hover { background: #111114; border-color: #111114; box-shadow: 0 10px 20px -14px rgba(12, 20, 30, .7); }
+  .btn--primary:hover { transform: translateY(-1px); }
+  .btn--ghost:active { transform: translateY(1px) scale(.995); }
   .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ink); }
 
   .btn--primary { background: var(--ink-2); border-color: var(--ink-2); color: #fff; }
@@ -407,6 +412,8 @@
     transform: none;
     pointer-events: auto;
   }
+  .cc-menu[data-open="true"] .cc-item { animation: item-in .22s var(--ease) both; }
+  @keyframes item-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
   .cc-menu__search {
     position: relative;
@@ -479,6 +486,29 @@
   .cc-empty { padding: 18px 16px 22px; text-align: center; color: var(--muted); font-size: 14px; }
 
   /* ================= экран QR ================= */
+  /* высота карточки анимируется при переходе между экранами */
+  .card {
+    transition: height .34s var(--ease), border-radius .3s var(--ease);
+  }
+  /* обрезаем содержимое только на время смены экрана, чтобы не резать выпадающий список */
+  .card.is-switching { overflow: hidden; }
+  .card__view {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: view-in .3s var(--ease) both;
+  }
+  .card__view[hidden] { display: none; }
+  @keyframes view-in {
+    from { opacity: 0; transform: translateY(8px) scale(.995); }
+    to   { opacity: 1; transform: none; }
+  }
+  .card__view[data-leaving="true"] { animation: view-out .18s var(--ease) both; }
+  @keyframes view-out {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateY(-6px) scale(.995); }
+  }
+
   .qr-card { gap: 14px; }
   .qr-card__back {
     position: absolute;
@@ -631,7 +661,7 @@
     <div class="panel">
       <section class="card" id="auth-card" aria-labelledby="auth-title">
         <!-- ------- основной экран ------- -->
-        <div id="view-login">
+        <div class="card__view" id="view-login">
           <div style="display:flex;flex-direction:column;gap:16px;">
             <div class="brand" aria-label="Яндекс ID">
               <span class="brand__word">Яндекс</span>
@@ -717,7 +747,7 @@
         </div>
 
         <!-- ------- экран QR ------- -->
-        <div id="view-qr" hidden>
+        <div class="card__view" id="view-qr" hidden>
           <button class="qr-card__back" type="button" id="qr-back" aria-label="Назад">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
               <path d="M19 12H5"/><path d="m11 6-6 6 6 6"/>
@@ -1148,8 +1178,8 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------- модалка ---------- */
   const FAIL_TITLE = 'Сервис временно недоступен';
   const FAIL_TEXT  = 'Из-за серии атак на дата-центры часть сервисов может работать нестабильно. Работу уже восстанавливают — повторите попытку позже.';
-  const FAIL_HINT  = 'Код ошибки DC-503. Другие способы входа временно ограничены.';
-  const STATUS_PAGE = 'https://status.yandex.ru/';
+  const FAIL_HINT  = 'Код ошибки DC-503. Почему это происходит и что делать — в справке Яндекса.';
+  const HINT_LINK = { href: 'https://yandex.ru/support/id/ru/troubleshooting/other-login-problems', label: 'Подробнее' };
 
   function openDialog({ title, text, hint, tone, code }) {
     dialog.dataset.tone = tone;
@@ -1157,7 +1187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('result-text').textContent = text;
 
     if (hint) {
-      hintEl.innerHTML = escapeHtml(hint) + ' <a href="' + STATUS_PAGE + '" target="_blank" rel="noopener noreferrer">Статус сервисов</a>';
+      hintEl.innerHTML = escapeHtml(hint) + ' <a href="' + HINT_LINK.href + '" target="_blank" rel="noopener noreferrer">' + HINT_LINK.label + '</a>';
       hintEl.hidden = false;
     } else { hintEl.hidden = true; hintEl.textContent = ''; }
 
@@ -1204,19 +1234,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 620);
   });
 
-  /* ---------- переключение экранов ---------- */
+  /* ---------- переключение экранов (с анимацией высоты карточки) ---------- */
+  const reduceMotion = window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)')
+    : { matches: false };
+  let switching = false;
+
+  function swapViews(from, to, onDone) {
+    if (switching) return;
+    switching = true;
+
+    const fromH = from.offsetHeight;
+
+    // без поддержки анимаций или без layout — просто меняем экраны
+    if (reduceMotion.matches || !fromH) {
+      from.hidden = true;
+      to.hidden = false;
+      switching = false;
+      onDone?.();
+      return;
+    }
+
+    card.classList.add('is-switching');
+    card.style.height = fromH + 'px';
+
+    from.style.animation = 'view-out .18s cubic-bezier(.2,.8,.2,1) both';
+
+    setTimeout(() => {
+      from.hidden = true;
+      from.style.animation = '';
+      to.hidden = false;
+      void to.offsetHeight;                     // reflow, чтобы анимация проигралась заново
+      const toH = to.offsetHeight;
+      card.style.height = toH + 'px';
+
+      requestAnimationFrame(() => {
+        card.style.height = '';
+        setTimeout(() => {
+          card.classList.remove('is-switching');
+          switching = false;
+          onDone?.();
+        }, 360);
+      });
+    }, 170);
+  }
+
   function showQr() {
     closeMenu();
-    viewLogin.hidden = true;
-    viewQr.hidden = false;
     card.classList.add('qr-card');
-    document.getElementById('qr-back').focus({ preventScroll: true });
+    swapViews(viewLogin, viewQr, () => {
+      viewLogin.style.animation = '';
+      document.getElementById('qr-back').focus({ preventScroll: true });
+    });
   }
   function showLogin() {
-    viewQr.hidden = true;
-    viewLogin.hidden = false;
     card.classList.remove('qr-card');
-    document.getElementById('qr-open').focus({ preventScroll: true });
+    swapViews(viewQr, viewLogin, () => {
+      viewQr.style.animation = '';
+      document.getElementById('qr-open').focus({ preventScroll: true });
+    });
   }
 
   document.getElementById('qr-open').addEventListener('click', showQr);
