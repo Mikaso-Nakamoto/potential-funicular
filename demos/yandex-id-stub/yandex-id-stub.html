@@ -540,12 +540,12 @@
     to   { opacity: 0; transform: translateY(-6px) scale(.995); }
   }
 
-  .qr-card { gap: 14px; }
-  .qr-card .card__view { gap: 14px; }
+  .qr-card { gap: 14px; padding: 24px 24px 24px; }
+  .qr-card .card__view { gap: 16px; }
   .qr-card__back {
     position: absolute;
-    left: 16px;
-    top: 24px;
+    left: 22px;
+    top: 30px;
     width: 34px; height: 34px;
     display: grid; place-items: center;
     border: 0;
@@ -559,13 +559,17 @@
   .qr-card__back:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--ink); }
 
   .qr-text {
-    margin: 16px 10px 2px;
-    font-size: 15px;
-    line-height: 1.55;
+    margin: 22px auto 0;
+    max-width: 264px;
+    font-size: 14.5px;
+    line-height: 1.5;
     text-align: center;
     color: var(--ink);
     letter-spacing: -.002em;
   }
+  .qr-card .brand__word { font-size: 23px; }
+  .qr-card .brand__id { font-size: 15px; padding: 3px 6px 4px; }
+
   .qr-text .badge {
     display: inline-flex;
     align-items: center;
@@ -589,7 +593,7 @@
     aspect-ratio: 1;
     display: grid;
     place-items: center;
-    padding: 2px 6px 0;
+    padding: 6px 16px 0;
   }
   .qr-wrap img { width: 100%; height: auto; display: block; }
   .qr-card__view { gap: 18px; }
@@ -598,7 +602,7 @@
     left: 50%;
     top: 50%;
     translate: -50% -50%;
-    width: 54px; height: 54px;
+    width: 56px; height: 56px;
     display: grid;
     place-items: center;
     border-radius: 50%;
@@ -809,7 +813,7 @@
             <span class="qr-wrap__logo" aria-hidden="true">Я</span>
           </div>
 
-          <button class="btn btn--ghost" type="button" id="qr-other" style="margin-top:2px;">Войти другим способом</button>
+          <button class="btn btn--ghost" type="button" id="qr-other" style="margin-top:6px;padding-block:16px;">Войти другим способом</button>
         </div>
       </section>
 
@@ -1381,7 +1385,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function showQr() {
     closeMenu();
     card.classList.add('qr-card');
-    stage.dataset.scene = 'qr';
+    // сцену не сбрасываем: какой фон выбран, таким и остаётся на всех экранах
     swapViews(viewLogin, viewQr, () => {
       viewLogin.style.animation = '';
       document.getElementById('qr-back').focus({ preventScroll: true });
@@ -1391,7 +1395,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* «Войти другим способом» под QR — возвращаем форму, но с другим фоном */
   function showLogin({ altScene = false } = {}) {
     card.classList.remove('qr-card');
-    stage.dataset.scene = altScene ? 'alt' : 'qr';
+    if (altScene) stage.dataset.scene = 'alt';
     swapViews(viewQr, viewLogin, () => {
       viewQr.style.animation = '';
       document.getElementById('qr-open').focus({ preventScroll: true });
@@ -1399,7 +1403,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.getElementById('qr-open').addEventListener('click', showQr);
-  document.getElementById('qr-back').addEventListener('click', () => showLogin({ altScene: false }));
+  document.getElementById('qr-back').addEventListener('click', () => showLogin());
   document.getElementById('qr-other').addEventListener('click', () => showLogin({ altScene: true }));
 
   /* ---------- утилиты ---------- */
