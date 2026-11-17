@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Яндекс ID — вход (заглушка)</title>
+<title>Яндекс ID — вход</title>
 <meta name="robots" content="noindex">
 <style>
   /* ---------- fonts ---------- */
@@ -71,7 +71,6 @@
     object-position: 48% 55%;
   }
 
-  /* тёплое свечение + мягкая вуаль, чтобы белая карточка читалась как на референсе */
   .stage::before {
     content: "";
     position: absolute;
@@ -82,7 +81,6 @@
       linear-gradient(180deg, rgba(9,26,18,.20) 0%, rgba(9,26,18,0) 22%, rgba(9,26,18,0) 74%, rgba(9,26,18,.34) 100%);
   }
 
-  /* ---------- top framing (тёмные рамки как в оригинале) ---------- */
   .stage__frame {
     position: absolute;
     inset: 0;
@@ -171,7 +169,6 @@
     padding: 3px;
     border-radius: var(--radius-field);
     background: var(--seg-track);
-    border: 1px solid transparent;
   }
 
   .segmented__thumb {
@@ -208,6 +205,7 @@
   }
   .segmented__btn:hover { color: #4a4a52; }
   .segmented__btn[aria-pressed="true"] { color: var(--ink); }
+  .segmented__btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--seg-track), 0 0 0 3.5px var(--ink); }
 
   /* ---------- field ---------- */
   .field { position: relative; }
@@ -234,6 +232,54 @@
   }
   .field__input:focus::placeholder { color: #b0b0b7; }
 
+  /* phone variant: flag + input + clear */
+  .field--phone { position: relative; }
+  .field--phone .field__input {
+    padding-left: 48px;
+    padding-right: 44px;
+  }
+
+  .flag {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    translate: 0 -50%;
+    width: 21px;
+    height: 15px;
+    border-radius: 3.5px;
+    overflow: hidden;
+    pointer-events: none;
+    box-shadow: 0 0 0 1px rgba(18, 26, 34, .12), 0 1px 2px rgba(18, 26, 34, .14);
+    display: grid;
+    background: #fff;
+    transition: opacity .18s var(--ease);
+  }
+  .flag[hidden] { display: none; }
+  .flag svg { width: 100%; height: 100%; display: block; }
+
+  .field__clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    translate: 0 -50%;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #5c5c64;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .16s var(--ease), background-color .16s var(--ease), color .16s var(--ease);
+  }
+  .field__clear[data-visible="true"] { opacity: 1; visibility: visible; }
+  .field__clear:hover { background: #f1f1f3; color: var(--ink); }
+  .field__clear:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--ink); }
+  .field__clear svg { display: block; }
+
   .field__error {
     display: none;
     margin: 7px 2px 0;
@@ -257,6 +303,7 @@
     font-size: 14.5px;
     font-weight: 500;
     letter-spacing: -.005em;
+    text-decoration: none;
     border-radius: var(--radius-field);
     padding: 14px 18px;
     cursor: pointer;
@@ -281,7 +328,6 @@
     background: var(--ink-2);
     border-color: var(--ink-2);
     color: #fff;
-    padding-block: 14px;
   }
   .btn--primary:hover { background: #101013; border-color: #101013; }
 
@@ -357,39 +403,7 @@
   .footer__lang { opacity: .95; }
   .footer__copy { opacity: .85; }
 
-  /* ---------- stub notice ---------- */
-  .stub-note {
-    position: fixed;
-    left: 50%;
-    top: 13px;
-    translate: -50% 0;
-    z-index: 30;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    max-width: calc(100% - 24px);
-    padding: 8px 14px 8px 12px;
-    border-radius: 999px;
-    background: rgba(14, 16, 20, .74);
-    border: 1px solid rgba(255,255,255,.16);
-    backdrop-filter: blur(12px) saturate(140%);
-    -webkit-backdrop-filter: blur(12px) saturate(140%);
-    color: rgba(255,255,255,.92);
-    font-size: 12px;
-    line-height: 1.25;
-    box-shadow: 0 10px 26px -10px rgba(0,0,0,.6);
-    pointer-events: none;
-    animation: note-in .5s var(--ease) both;
-  }
-  .stub-note__dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: #ffd60a;
-    box-shadow: 0 0 0 3px rgba(255, 214, 10, .18);
-    flex: none;
-  }
-  @keyframes note-in { from { opacity: 0; translate: -50% -8px; } to { opacity: 1; translate: -50% 0; } }
-
-  /* ---------- modal (result of the fake submit) ---------- */
+  /* ---------- modal ---------- */
   dialog.result {
     width: min(100% - 32px, 392px);
     border: 0;
@@ -417,7 +431,6 @@
     color: #7a5b00;
     margin-bottom: 14px;
   }
-  .result__icon[data-tone="neutral"] { background: #f1f1f3; color: #5c5c64; }
   .result__title {
     margin: 0 0 8px;
     font-family: "YS Display", "YS Text", Arial, sans-serif;
@@ -446,7 +459,6 @@
     .footer { flex-direction: column; align-items: flex-start; gap: 8px; }
     .footer__links { justify-content: flex-start; }
     .brand__word { font-size: 21px; }
-    .stub-note { top: 8px; font-size: 11.5px; }
   }
   @media (max-height: 700px) {
     .card { gap: 11px; padding-block: 17px; }
@@ -490,10 +502,18 @@
 
         <form id="login-form" novalidate autocomplete="off">
           <div class="field" id="field">
-            <label for="login-input" class="visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">Логин или email</label>
+            <label for="login-input" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">Логин или email</label>
+            <span class="flag" id="flag" aria-hidden="true" hidden></span>
             <input class="field__input" id="login-input" name="login" type="text"
                    placeholder="Логин или email" autocomplete="off" spellcheck="false"
                    inputmode="email" enterkeyhint="go" aria-describedby="login-error">
+            <button class="field__clear" id="clear-btn" type="button" tabindex="-1"
+                    aria-label="Очистить поле" data-visible="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2.1" stroke-linecap="round">
+                <path d="M6 6l12 12M18 6L6 18"/>
+              </svg>
+            </button>
             <p class="field__error" id="login-error" role="alert"></p>
           </div>
 
@@ -503,7 +523,8 @@
               <span class="btn__label">Далее</span>
             </button>
 
-            <button class="btn btn--ghost" type="button" data-stub-action="face">
+            <a class="btn btn--ghost" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+               target="_blank" rel="noopener noreferrer">
               <span class="btn__icon" aria-hidden="true">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
@@ -513,9 +534,10 @@
                 </svg>
               </span>
               <span>По лицу или отпечатку</span>
-            </button>
+            </a>
 
-            <button class="btn btn--ghost" type="button" data-stub-action="qr">
+            <a class="btn btn--ghost" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+               target="_blank" rel="noopener noreferrer">
               <span class="btn__icon" aria-hidden="true">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
                   <rect x="3.5" y="3.5" width="6" height="6" rx="1.2"/>
@@ -525,7 +547,7 @@
                 </svg>
               </span>
               <span>QR-код</span>
-            </button>
+            </a>
 
             <button class="btn btn--ghost" type="button" data-stub-action="create">Создать ID</button>
           </div>
@@ -549,11 +571,6 @@
   </footer>
 </main>
 
-<p class="stub-note" role="note">
-  <span class="stub-note__dot" aria-hidden="true"></span>
-  Демо-заглушка: данные никуда не отправляются
-</p>
-
 <dialog class="result" id="result-dialog" aria-labelledby="result-title">
   <div class="result__inner">
     <div class="result__icon" aria-hidden="true">
@@ -563,10 +580,10 @@
         <circle cx="12" cy="16.4" r=".9" fill="currentColor" stroke="none"/>
       </svg>
     </div>
-    <h2 class="result__title" id="result-title">Это заглушка</h2>
+    <h2 class="result__title" id="result-title">Локальный режим</h2>
     <p class="result__text">
-      Настоящей авторизации здесь нет: ни логин, ни телефон никуда не уходят.
-      Ниже — то, что «увидел» бы интерфейс.
+      Это демонстрация интерфейса: данные никуда не отправляются, запросов нет.
+      Ниже — то, что «увидела» форма.
     </p>
     <div class="result__code" id="result-code"></div>
     <button class="btn btn--primary" type="button" id="result-close">Понятно</button>
@@ -582,37 +599,255 @@
   const submit  = document.getElementById('submit-btn');
   const tabs    = [...document.querySelectorAll('.segmented__btn')];
   const seg     = document.querySelector('.segmented');
+  const flagEl  = document.getElementById('flag');
+  const clearBtn= document.getElementById('clear-btn');
   const dialog  = document.getElementById('result-dialog');
   const codeEl  = document.getElementById('result-code');
   const closeBtn= document.getElementById('result-close');
   const resultTitle = dialog.querySelector('.result__title');
   const resultText  = dialog.querySelector('.result__text');
   const resultIcon  = dialog.querySelector('.result__icon');
-  const DEFAULT_TITLE = 'Это заглушка';
-  const DEFAULT_TEXT  = resultText.textContent.trim();
+  const DEFAULT_TEXT = resultText.textContent.trim();
 
-  let mode = 'email';
-
-  const COPY = {
-    email: { placeholder: 'Логин или email', inputmode: 'email',  empty: 'Введите логин или email', bad: 'Такой логин выглядит странно — проверьте написание' },
-    phone: { placeholder: 'Телефон',        inputmode: 'tel',    empty: 'Введите номер телефона',  bad: 'Нужен номер из цифр — можно с +7 или 8' }
+  /* ================= flags (чистый SVG, без картинок и сети) ================= */
+  const svg = inner => `<svg viewBox="0 0 30 20" preserveAspectRatio="none" aria-hidden="true">${inner}</svg>`;
+  const hst = (...c) => svg(c.map((col, i) =>
+    `<rect y="${(20 / c.length * i).toFixed(3)}" width="30" height="${(20 / c.length).toFixed(3)}" fill="${col}"/>`).join(''));
+  const vst = (...c) => svg(c.map((col, i) =>
+    `<rect x="${(30 / c.length * i).toFixed(3)}" width="${(30 / c.length).toFixed(3)}" height="20" fill="${col}"/>`).join(''));
+  const star = (cx, cy, r, fill = '#fec50c', rot = -90) => {
+    const pts = Array.from({ length: 10 }, (_, i) => {
+      const rad = (i % 2 ? r * .45 : r);
+      const a = (rot + i * 36) * Math.PI / 180;
+      return `${(cx + Math.cos(a) * rad).toFixed(2)},${(cy + Math.sin(a) * rad).toFixed(2)}`;
+    }).join(' ');
+    return `<polygon points="${pts}" fill="${fill}"/>`;
   };
 
-  function applyMode(next) {
-    mode = next;
+  const kzRays = Array.from({ length: 8 }, (_, i) => {
+    const a = i * Math.PI / 4;
+    return `<line x1="${(15 + Math.cos(a) * 3.7).toFixed(2)}" y1="${(10 + Math.sin(a) * 3.7).toFixed(2)}"
+                  x2="${(15 + Math.cos(a) * 5).toFixed(2)}" y2="${(10 + Math.sin(a) * 5).toFixed(2)}"
+                  stroke="#fec50c" stroke-width=".75"/>`;
+  }).join('');
+
+  const usStripes = (() => {
+    let s = '<rect width="30" height="20" fill="#fff"/>';
+    for (let i = 0; i < 7; i++) s += `<rect y="${(i * 2 * 20 / 13).toFixed(3)}" width="30" height="${(20 / 13).toFixed(3)}" fill="#b22234"/>`;
+    return s + '<rect width="12.5" height="10.77" fill="#3c3b6e"/>';
+  })();
+
+  const FLAGS = {
+    RU: hst('#ffffff', '#0039a6', '#d52b1e'),
+    KZ: svg(`<rect width="30" height="20" fill="#00afca"/>${kzRays}<circle cx="15" cy="10" r="2.7" fill="#fec50c"/>`),
+    BY: svg(`<rect width="30" height="13.4" fill="#c8313e"/><rect y="13.4" width="30" height="6.6" fill="#4aa657"/>
+             <rect width="5.5" height="20" fill="#fff"/>
+             <rect x="1.4" y="2" width="2.6" height="2.6" fill="#c8313e" transform="rotate(45 2.7 3.3)"/>
+             <rect x="1.4" y="8.7" width="2.6" height="2.6" fill="#c8313e" transform="rotate(45 2.7 10)"/>
+             <rect x="1.4" y="15.4" width="2.6" height="2.6" fill="#c8313e" transform="rotate(45 2.7 16.7)"/>`),
+    UA: hst('#0057b7', '#ffd700'),
+    UZ: svg(`<rect width="30" height="20" fill="#fff"/><rect width="30" height="7.4" fill="#0099b5"/>
+             <rect y="12.6" width="30" height="7.4" fill="#1eb53a"/>
+             <rect y="7" width="30" height=".9" fill="#ce1126"/><rect y="12.1" width="30" height=".9" fill="#ce1126"/>`),
+    KG: svg(`<rect width="30" height="20" fill="#e8112d"/><circle cx="15" cy="10" r="4" fill="#fec50c"/>
+             <circle cx="15" cy="10" r="3" fill="#e8112d"/>`),
+    AM: hst('#d90012', '#0033a0', '#f2a800'),
+    AZ: svg(`<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.7" fill="#00b5e2"/>
+             <rect y="13.3" width="30" height="6.7" fill="#509e2f"/>
+             <circle cx="14" cy="10" r="2.6" fill="#fff"/><circle cx="15" cy="10" r="2.2" fill="#ef3340"/>`),
+    GE: svg(`<rect width="30" height="20" fill="#fff"/>
+             <path d="M12 0h6v8h12v4H18v8h-6v-8H0V8h12z" fill="#e4002b"/>`),
+    MD: vst('#0046ae', '#ffd200', '#cc092f'),
+    US: svg(usStripes),
+    CA: svg(`<rect width="30" height="20" fill="#fff"/><rect width="7.5" height="20" fill="#d52b1e"/>
+             <rect x="22.5" width="7.5" height="20" fill="#d52b1e"/>
+             <path d="M15 3.6l1.5 3.3 2-.9-1 3.1 2.6-.2-1.6 1.6 3.3 1-3 .9.6 1.6-3.6-.6.1 4.2h-.8l.1-4.2-3.6.6.6-1.6-3-.9 3.3-1-1.6-1.6 2.6.2-1-3.1 2 .9z" fill="#d52b1e"/>`),
+    GB: svg(`<rect width="30" height="20" fill="#012169"/>
+             <path d="M0 0 30 20M30 0 0 20" stroke="#fff" stroke-width="4.4"/>
+             <path d="M0 0 30 20M30 0 0 20" stroke="#c8102e" stroke-width="2.1"/>
+             <path d="M15 0v20M0 10h30" stroke="#fff" stroke-width="6.6"/>
+             <path d="M15 0v20M0 10h30" stroke="#c8102e" stroke-width="3.8"/>`),
+    DE: hst('#000000', '#dd0000', '#ffce00'),
+    FR: vst('#002395', '#ffffff', '#ed2939'),
+    NL: hst('#ae1c28', '#ffffff', '#21468b'),
+    PL: hst('#ffffff', '#dc143c'),
+    IT: vst('#009246', '#ffffff', '#ce2b37'),
+    ES: svg(`<rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/>`),
+    TR: svg(`<rect width="30" height="20" fill="#e30a17"/><circle cx="12" cy="10" r="4" fill="#fff"/>
+             <circle cx="13.6" cy="10" r="3.2" fill="#e30a17"/>${star(18.5, 10, 2)}`),
+    AE: svg(`<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.7" fill="#00732f"/>
+             <rect y="13.3" width="30" height="6.7" fill="#000"/><rect width="9" height="20" fill="#ef3340"/>`),
+    IL: svg(`<rect width="30" height="20" fill="#fff"/><rect y="2.4" width="30" height="2.6" fill="#0038b8"/>
+             <rect y="15" width="30" height="2.6" fill="#0038b8"/>
+             <path d="M15 7.3 18.7 13.5H11.3z" fill="none" stroke="#0038b8" stroke-width="1"/>
+             <path d="M15 13 11.3 6.8h7.4z" fill="none" stroke="#0038b8" stroke-width="1"/>`),
+    CN: svg(`<rect width="30" height="20" fill="#de2910"/>${star(6, 5.6, 3.4)}${star(11.4, 2.9, 1.2)}${star(13, 5.6, 1.2)}${star(13, 8.6, 1.2)}${star(11.4, 11.1, 1.2)}`),
+    IN: svg(`<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.7" fill="#ff9933"/>
+             <rect y="13.3" width="30" height="6.7" fill="#138808"/>
+             <circle cx="15" cy="10" r="2.4" fill="none" stroke="#000080" stroke-width=".8"/>`)
+  };
+
+  /* ================= countries ================= */
+  const C = {
+    RU: { dial: '7',   len: 10, mask: '(###) ###-##-##', ex: '9991234567'  },
+    KZ: { dial: '7',   len: 10, mask: '(###) ###-##-##', ex: '7788000000'  },
+    BY: { dial: '375', len: 9,  mask: '(##) ###-##-##',  ex: '291234567'   },
+    UA: { dial: '380', len: 9,  mask: '(##) ###-##-##',  ex: '501234567'   },
+    UZ: { dial: '998', len: 9,  mask: '(##) ###-##-##',  ex: '901234567'   },
+    KG: { dial: '996', len: 9,  mask: '(###) ###-###',   ex: '700123456'   },
+    AM: { dial: '374', len: 8,  mask: '(##) ###-###',    ex: '77123456'    },
+    AZ: { dial: '994', len: 9,  mask: '(##) ###-##-##',  ex: '501234567'   },
+    GE: { dial: '995', len: 9,  mask: '(###) ###-###',   ex: '555123456'   },
+    MD: { dial: '373', len: 8,  mask: '(###) ##-###',    ex: '69123456'    },
+    US: { dial: '1',   len: 10, mask: '(###) ###-####',  ex: '2025550123'  },
+    CA: { dial: '1',   len: 10, mask: '(###) ###-####',  ex: '4165550123'  },
+    GB: { dial: '44',  len: 10, mask: '#### ######',     ex: '7400123456'  },
+    DE: { dial: '49',  len: 11, mask: '#### #######',    ex: '15112345678' },
+    FR: { dial: '33',  len: 9,  mask: '# ## ## ## ##',   ex: '612345678'   },
+    NL: { dial: '31',  len: 9,  mask: '# ## ## ## ##',   ex: '612345678'   },
+    PL: { dial: '48',  len: 9,  mask: '### ### ###',     ex: '512345678'   },
+    ES: { dial: '34',  len: 9,  mask: '### ## ## ##',    ex: '612345678'   },
+    IT: { dial: '39',  len: 10, mask: '### ### ####',    ex: '3123456789'  },
+    TR: { dial: '90',  len: 10, mask: '(###) ### ## ##', ex: '5321234567'  },
+    AE: { dial: '971', len: 9,  mask: '## ### ####',     ex: '501234567'   },
+    IL: { dial: '972', len: 9,  mask: '##-###-####',     ex: '501234567'   },
+    CN: { dial: '86',  len: 11, mask: '### #### ####',   ex: '13812345678' },
+    IN: { dial: '91',  len: 10, mask: '##### #####',     ex: '9876543210'  }
+  };
+
+  const DIALS = Object.keys(C)
+    .map(code => ({ code, dial: C[code].dial }))
+    .sort((a, b) => b.dial.length - a.dial.length);
+
+  const state = { mode: 'email', country: 'RU', national: '' };
+
+  /* ---------- helpers ---------- */
+  function formatNational(digits, mask) {
+    let i = 0, out = '';
+    for (const ch of mask) {
+      if (i >= digits.length) break;
+      if (ch === '#') { out += digits[i++]; }
+      else { out += ch; }
+    }
+    return out;
+  }
+
+  function fullNumber(code, national) {
+    const c = C[code];
+    if (!national) return '';
+    return '+' + c.dial + ' ' + formatNational(national, c.mask);
+  }
+
+  function placeholderFor(code) {
+    const c = C[code];
+    return '+' + c.dial + ' ' + formatNational(c.ex, c.mask);
+  }
+
+  // мобильные префиксы Казахстана (всё остальное на +7 считаем Россией)
+  const KZ_PREFIX = ['700','701','702','703','704','705','706','707','708','747','771','776','777','778'];
+
+  /* decide(): определяет страну по набранным цифрам.
+     {pending:true} — рано решать, {code, trunk} — страна найдена */
+  function decide(digits, fallback = 'RU') {
+    if (!digits) return { pending: true };
+
+    const cands = DIALS.filter(d => digits.startsWith(d.dial));
+    if (!cands.length) {
+      if (DIALS.some(d => d.dial.startsWith(digits))) return { pending: true };
+      if (digits[0] === '8') return { code: 'RU', trunk: true };
+      // набрали просто местный номер — считаем его номером текущей страны
+      if (digits.length >= 2) return { code: fallback, local: true };
+      return { pending: true };
+    }
+
+    const maxLen = Math.max(...cands.map(c => c.dial.length));
+    const top = cands.filter(c => c.dial.length === maxLen);
+
+    // однозначные коды (7 и 1) раскрываем только по второй цифре
+    if (maxLen === 1 && digits.length < 2) return { pending: true };
+
+    if (top.some(t => t.dial === '7')) {
+      const national = digits.slice(1);
+      if (national.length >= 3 && KZ_PREFIX.includes(national.slice(0, 3))) return { code: 'KZ' };
+      if (national.length >= 3) return { code: 'RU' };
+      // 2 цифры: 7/6 -> Казахстан, иначе ждём третий знак, чтобы не дёргать флаг
+      if (national.length === 2) {
+        if (national[0] === '7' || national[0] === '6') return { code: 'KZ' };
+        return { code: 'RU' };
+      }
+      return { pending: true };
+    }
+    return { code: top[0].code };
+  }
+
+  function paintFlag() {
+    flagEl.innerHTML = FLAGS[state.country] || FLAGS.RU;
+    flagEl.title = state.country;
+  }
+
+  function paintClear() {
+    clearBtn.dataset.visible = input.value.replace(/\D/g, '').length > 0 ? 'true' : 'false';
+  }
+
+  function setMode(next) {
+    state.mode = next;
     seg.dataset.active = next;
-    tabs.forEach(t => {
-      const on = t.dataset.mode === next;
-      t.setAttribute('aria-pressed', String(on));
-    });
-    const c = COPY[next];
-    input.placeholder = c.placeholder;
-    input.setAttribute('inputmode', c.inputmode);
-    input.value = '';
+    tabs.forEach(t => t.setAttribute('aria-pressed', String(t.dataset.mode === next)));
+
     clearError();
+    if (next === 'phone') {
+      flagEl.hidden = false;
+      field.classList.add('field--phone');
+      state.national = '';
+      input.value = '';
+      input.type = 'tel';
+      input.setAttribute('inputmode', 'tel');
+      input.placeholder = placeholderFor(state.country);
+      paintFlag();
+      paintClear();
+    } else {
+      flagEl.hidden = true;
+      field.classList.remove('field--phone');
+      state.national = '';
+      input.value = '';
+      input.type = 'text';
+      input.setAttribute('inputmode', 'email');
+      input.placeholder = 'Логин или email';
+      paintClear();
+    }
     input.focus({ preventScroll: true });
   }
 
+  /* ---------- phone formatting on the fly ---------- */
+  function handlePhoneInput() {
+    let digits = input.value.replace(/\D/g, '');
+    // «8» в начале — российский междугородний префикс, приводим к +7
+    if (digits.length > 1 && digits[0] === '8') digits = '7' + digits.slice(1);
+    const res = decide(digits, state.country);
+
+    // страна ещё не определена — не трогаем то, что набрал человек
+    if (!res || res.pending) {
+      state.national = '';
+      paintClear();
+      return;
+    }
+
+    const code = res.code;
+    const dial = C[code].dial;
+    const national = (res.local ? digits : res.trunk ? digits.slice(1) : digits.slice(dial.length))
+      .slice(0, C[code].len);
+
+    state.country = code;
+    state.national = national;
+    input.value = national ? fullNumber(code, national) : '+' + dial;
+    input.placeholder = placeholderFor(code);
+    paintFlag();
+    paintClear();
+    const end = input.value.length;
+    input.setSelectionRange(end, end);
+  }
+
+  /* ---------- validation ---------- */
   function clearError() {
     field.classList.remove('is-invalid');
     input.removeAttribute('aria-invalid');
@@ -626,38 +861,57 @@
     input.focus({ preventScroll: true });
   }
 
-  tabs.forEach(t => {
-    t.addEventListener('click', () => { if (t.dataset.mode !== mode) applyMode(t.dataset.mode); });
-    t.addEventListener('keydown', e => {
-      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-      e.preventDefault();
-      const next = mode === 'email' ? 'phone' : 'email';
-      document.getElementById(next === 'email' ? 'tab-email' : 'tab-phone').focus();
-      applyMode(next);
-    });
-  });
-
-  input.addEventListener('input', () => { if (field.classList.contains('is-invalid')) clearError(); });
-
-  function validate(value) {
-    const v = value.trim();
-    if (!v) return { ok: false, msg: COPY[mode].empty };
-    if (mode === 'phone') {
-      const digits = v.replace(/\D/g, '');
-      if (digits.length < 10 || !/^[\d\s()+-]+$/.test(v)) return { ok: false, msg: COPY.phone.bad };
-    } else {
-      if (v.length < 3 || /\s{2,}/.test(v) || !/^[^\s@]+(@[^\s@]+)?$/.test(v)) {
-        return { ok: false, msg: COPY.email.bad };
+  function validate() {
+    const v = input.value.trim();
+    if (state.mode === 'phone') {
+      if (!state.national) return { ok: false, msg: 'Введите номер телефона' };
+      if (state.national.length < C[state.country].len) {
+        return { ok: false, msg: 'Номер слишком короткий — нужно ' + C[state.country].len + ' цифр' };
       }
+      return { ok: true, value: fullNumber(state.country, state.national) };
+    }
+    if (!v) return { ok: false, msg: 'Введите логин или email' };
+    if (v.length < 3 || /\s{2,}/.test(v) || !/^[^\s@]+(@[^\s@]+)?$/.test(v)) {
+      return { ok: false, msg: 'Такой логин выглядит странно — проверьте написание' };
     }
     return { ok: true, value: v };
   }
 
-  // полностью локальная «отправка»: без сети, без fetch, без навигации
+  /* ---------- wiring ---------- */
+  tabs.forEach(t => {
+    t.addEventListener('click', () => { if (t.dataset.mode !== state.mode) setMode(t.dataset.mode); });
+    t.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault();
+      const next = state.mode === 'email' ? 'phone' : 'email';
+      document.getElementById(next === 'email' ? 'tab-email' : 'tab-phone').focus();
+      setMode(next);
+    });
+  });
+
+  input.addEventListener('input', () => {
+    if (field.classList.contains('is-invalid')) clearError();
+    if (state.mode === 'phone') handlePhoneInput();
+  });
+
+  input.addEventListener('focus', () => {
+    if (state.mode === 'phone' && !state.national) {
+      input.placeholder = placeholderFor(state.country);
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    state.national = '';
+    input.value = '';
+    clearError();
+    paintClear();
+    input.focus({ preventScroll: true });
+  });
+
   form.addEventListener('submit', e => {
     e.preventDefault();
     clearError();
-    const res = validate(input.value);
+    const res = validate();
     if (!res.ok) { showError(res.msg); return; }
 
     submit.disabled = true;
@@ -670,10 +924,15 @@
       submit.removeAttribute('aria-busy');
 
       codeEl.innerHTML =
-        '<b>способ:</b> ' + (mode === 'email' ? 'почта' : 'телефон') +
+        '<b>способ:</b> ' + (state.mode === 'phone' ? 'телефон (' + state.country + ')' : 'почта') +
         '<br><b>значение:</b> ' + escapeHtml(res.value) +
-        '<br><b>отправлено:</b> никуда (0 запросов)';
+        '<br><b>запросов отправлено:</b> 0';
 
+      resultTitle.textContent = 'Локальный режим';
+      resultText.textContent = DEFAULT_TEXT;
+      resultIcon.style.background = '#fff4d1';
+      resultIcon.style.color = '#7a5b00';
+      codeEl.hidden = false;
       dialog.showModal();
     }, 620);
   });
@@ -684,43 +943,38 @@
 
   closeBtn.addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', e => {
-    // закрытие по клику на backdrop
     const r = dialog.getBoundingClientRect();
     const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
     if (outside) dialog.close();
   });
 
-  // все «второстепенные» ссылки — тоже заглушки
   document.querySelectorAll('[data-stub-action]').forEach(el => {
     el.addEventListener('click', e => {
       e.preventDefault();
-      const action = el.dataset.stubAction;
-      const titles = {
-        face:  ['Вход по лицу или отпечатку', 'Биометрия в этой заглушке не подключена — экран намеренно не открывается.'],
-        qr:    ['Вход по QR-коду', 'Генерация QR-кода отключена: это косметическое демо без сети.'],
-        create:['Создание Яндекс ID', 'Регистрация отключена — форма только показывает внешний вид.'],
-        about: ['Яндекс ID', 'Единый аккаунт для сервисов Яндекса. Здесь — статичная демонстрация интерфейса.'],
-        help:  ['Справка и поддержка', 'Ссылка не ведёт в интернет — это заглушка.']
-      }[action] || ['Заглушка', 'Этот раздел не реализован.'];
+      const copy = {
+        create: ['Создание Яндекс ID', 'Экран регистрации здесь не реализован — это статичный макет.'],
+        about:  ['Яндекс ID', 'Единый аккаунт для сервисов Яндекса. Здесь — демонстрация интерфейса.'],
+        help:   ['Справка и поддержка', 'Раздел не подключён.']
+      }[el.dataset.stubAction] || ['Раздел', 'Ничего не подключено.'];
 
-      resultTitle.textContent = titles[0];
-      resultText.textContent = titles[1];
-      resultIcon.dataset.tone = 'neutral';
+      resultTitle.textContent = copy[0];
+      resultText.textContent = copy[1];
+      resultIcon.style.background = '#f1f1f3';
+      resultIcon.style.color = '#5c5c64';
       codeEl.hidden = true;
       dialog.showModal();
     });
   });
 
-  // сброс оформления диалога при следующем открытии из формы
-  dialog.addEventListener('close', () => {
-    codeEl.hidden = false;
-    resultTitle.textContent = DEFAULT_TITLE;
-    resultText.textContent = DEFAULT_TEXT;
-    resultIcon.dataset.tone = 'warn';
-  });
-
-  // подсказка о том, что форма декоративная
-  console.info('%cЯндекс ID — заглушка. Сетевых запросов нет.', 'color:#8a8a90');
+  /* ---------- автоопределение страны по локали системы ---------- */
+  (function guessCountry() {
+    const langs = navigator.languages?.length ? navigator.languages : [navigator.language || ''];
+    for (const lang of langs) {
+      const region = String(lang).split('-')[1]?.toUpperCase();
+      if (region && C[region]) { state.country = region; break; }
+    }
+    paintFlag();
+  })();
 })();
 </script>
 </body>
