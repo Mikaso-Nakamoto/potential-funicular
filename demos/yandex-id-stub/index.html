@@ -461,6 +461,33 @@
   }
   .result__code b { color: var(--ink); font-weight: 500; }
 
+  dialog.result[data-tone="error"] .result__icon { background: #fdeceb; color: #b42318; }
+  .result__hint {
+    margin: 10px 0 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #8a8a90;
+  }
+  .result__hint a { color: #4a4a52; }
+  .result__actions { display: grid; gap: 8px; margin-top: 18px; }
+
+  .video-frame {
+    position: relative;
+    margin-top: 14px;
+    aspect-ratio: 16 / 9;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #0d0d10;
+    box-shadow: 0 1px 1px rgba(12,20,30,.12), 0 8px 20px -10px rgba(12,20,30,.5);
+  }
+  .video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
   /* ---------- responsive ---------- */
   @media (max-width: 560px) {
     .card { padding: 20px 15px 17px; border-radius: 24px; }
@@ -531,8 +558,7 @@
               <span class="btn__label">Далее</span>
             </button>
 
-            <a class="btn btn--ghost" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-               target="_blank" rel="noopener noreferrer">
+            <button class="btn btn--ghost" type="button" data-error-action="face">
               <span class="btn__icon" aria-hidden="true">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
@@ -542,10 +568,9 @@
                 </svg>
               </span>
               <span>По лицу или отпечатку</span>
-            </a>
+            </button>
 
-            <a class="btn btn--ghost" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-               target="_blank" rel="noopener noreferrer">
+            <button class="btn btn--ghost" type="button" data-video-action>
               <span class="btn__icon" aria-hidden="true">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
                   <rect x="3.5" y="3.5" width="6" height="6" rx="1.2"/>
@@ -555,16 +580,16 @@
                 </svg>
               </span>
               <span>QR-код</span>
-            </a>
+            </button>
 
-            <button class="btn btn--ghost" type="button" data-stub-action="create">Создать ID</button>
+            <button class="btn btn--ghost" type="button" data-error-action="create">Создать ID</button>
           </div>
         </form>
       </section>
 
       <div class="caption">
         <p>Яндекс ID — ключ для всех сервисов</p>
-        <a href="#" data-stub-action="about">Узнать больше</a>
+        <a href="https://yandex.ru/legal/id_termsofuse/" target="_blank" rel="noopener noreferrer">Узнать больше</a>
       </div>
     </div>
   </div>
@@ -579,7 +604,7 @@
   </footer>
 </main>
 
-<dialog class="result" id="result-dialog" aria-labelledby="result-title">
+<dialog class="result" id="result-dialog" aria-labelledby="result-title" aria-describedby="result-text">
   <div class="result__inner">
     <div class="result__icon" aria-hidden="true">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
@@ -588,13 +613,31 @@
         <circle cx="12" cy="16.4" r=".9" fill="currentColor" stroke="none"/>
       </svg>
     </div>
-    <h2 class="result__title" id="result-title">Локальный режим</h2>
-    <p class="result__text">
-      Это демонстрация интерфейса: данные никуда не отправляются, запросов нет.
-      Ниже — то, что «увидела» форма.
+    <h2 class="result__title" id="result-title">Сервис временно недоступен</h2>
+    <p class="result__text" id="result-text">
+      Из-за серии атак на дата-центры часть сервисов может работать нестабильно.
+      Повторите попытку позже.
     </p>
-    <div class="result__code" id="result-code"></div>
-    <button class="btn btn--primary" type="button" id="result-close">Понятно</button>
+    <div class="result__code" id="result-code" hidden></div>
+    <p class="result__hint" id="result-hint" hidden></p>
+    <div class="result__actions">
+      <button class="btn btn--primary" type="button" id="result-close">Понятно</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="result video-dialog" id="video-dialog" aria-labelledby="video-title">
+  <div class="result__inner">
+    <h2 class="result__title" id="video-title">Вход по QR-коду</h2>
+    <p class="result__text">Отсканируйте код… а пока — вот что за ним.</p>
+    <div class="video-frame">
+      <iframe id="video-iframe" title="Видео" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    <div class="result__actions">
+      <a class="btn btn--ghost" id="video-link" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+         target="_blank" rel="noopener noreferrer">Открыть на YouTube</a>
+      <button class="btn btn--primary" type="button" id="video-close">Закрыть</button>
+    </div>
   </div>
 </dialog>
 
@@ -614,8 +657,63 @@
   const closeBtn= document.getElementById('result-close');
   const resultTitle = dialog.querySelector('.result__title');
   const resultText  = dialog.querySelector('.result__text');
-  const resultIcon  = dialog.querySelector('.result__icon');
-  const DEFAULT_TEXT = resultText.textContent.trim();
+  const resultHint  = document.getElementById('result-hint');
+  const resultActions = dialog.querySelector('.result__actions');
+
+  const FAIL_TITLE = 'Сервис временно недоступен';
+  const FAIL_TEXT  = 'Из-за серии атак на дата-центры часть сервисов может работать нестабильно. Работу уже восстанавливают — повторите попытку позже.';
+  const FAIL_HINT  = 'Код ошибки DC-503. Другие способы входа временно ограничены.';
+  const ATTACK_NEWS = 'https://yandex.ru/support/';
+
+  /* одно окно на два сценария: системная ошибка и «локальный режим» после «Далее» */
+  function openDialog({ title, text, hint, tone, code }) {
+    dialog.dataset.tone = tone;
+    resultTitle.textContent = title;
+    resultText.textContent = text;
+
+    if (hint) {
+      resultHint.innerHTML = escapeHtml(hint) + ' <a href="' + ATTACK_NEWS +
+        '" target="_blank" rel="noopener noreferrer">Подробнее</a>';
+      resultHint.hidden = false;
+    } else {
+      resultHint.hidden = true;
+      resultHint.textContent = '';
+    }
+
+    if (code) { codeEl.innerHTML = code; codeEl.hidden = false; }
+    else { codeEl.hidden = true; codeEl.innerHTML = ''; }
+
+    if (dialog.open) dialog.close();
+    dialog.showModal();
+  }
+
+  function showFailure() {
+    openDialog({ title: FAIL_TITLE, text: FAIL_TEXT, hint: FAIL_HINT, tone: 'error' });
+  }
+
+  /* ---------- QR-код → встроенный плеер (работает и в песочнице, и локально) ---------- */
+  const videoDialog = document.getElementById('video-dialog');
+  const videoIframe = document.getElementById('video-iframe');
+  const videoClose  = document.getElementById('video-close');
+  const YT_ID = 'dQw4w9WgXcQ';
+
+  document.querySelectorAll('[data-video-action]').forEach(el => {
+    el.addEventListener('click', () => {
+      // src ставим при открытии и убираем при закрытии — иначе плеер играет в фоне
+      videoIframe.src = 'https://www.youtube-nocookie.com/embed/' + YT_ID +
+        '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+      videoDialog.showModal();
+    });
+  });
+
+  function closeVideo() { videoIframe.src = ''; videoDialog.close(); }
+  videoClose.addEventListener('click', closeVideo);
+  videoDialog.addEventListener('close', () => { videoIframe.src = ''; });
+  videoDialog.addEventListener('click', e => {
+    const r = videoDialog.getBoundingClientRect();
+    const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    if (outside) closeVideo();
+  });
 
   /* ================= flags (flag-icons, MIT, локальные SVG 4:3) ================= */
   const FLAG_SET = ['RU','KZ','BY','UA','UZ','KG','AM','AZ','GE','MD','US','CA','GB','DE','FR','NL','PL','ES','IT','TR','AE','IL','CN','IN'];
@@ -713,7 +811,9 @@
     return { code: top[0].code };
   }
 
-  const FLAG_SRC = code => new URL('assets/flags/' + code.toLowerCase() + '.svg', location.href).href;
+  // в обычной версии флаги лежат в assets/flags/, в single-file сборке — в window.__FLAG_DATA
+  const FLAG_SRC = code => (window.__FLAG_DATA && window.__FLAG_DATA[code.toLowerCase()])
+    || new URL('assets/flags/' + code.toLowerCase() + '.svg', location.href).href;
 
   function paintFlag() {
     const code = FLAG_SET.includes(state.country) ? state.country : 'RU';
@@ -868,17 +968,14 @@
       submit.classList.remove('is-busy');
       submit.removeAttribute('aria-busy');
 
-      codeEl.innerHTML =
-        '<b>способ:</b> ' + (state.mode === 'phone' ? 'телефон (' + state.country + ')' : 'почта') +
-        '<br><b>значение:</b> ' + escapeHtml(res.value) +
-        '<br><b>запросов отправлено:</b> 0';
-
-      resultTitle.textContent = 'Локальный режим';
-      resultText.textContent = DEFAULT_TEXT;
-      resultIcon.style.background = '#fff4d1';
-      resultIcon.style.color = '#7a5b00';
-      codeEl.hidden = false;
-      dialog.showModal();
+      openDialog({
+        tone: 'local',
+        title: 'Локальный режим',
+        text: 'Это демонстрация интерфейса: данные никуда не отправляются, запросов нет. Ниже — то, что «увидела» форма.',
+        code: '<b>способ:</b> ' + (state.mode === 'phone' ? 'телефон (' + state.country + ')' : 'почта') +
+              '<br><b>значение:</b> ' + escapeHtml(res.value) +
+              '<br><b>запросов отправлено:</b> 0'
+      });
     }, 620);
   });
 
@@ -893,22 +990,14 @@
     if (outside) dialog.close();
   });
 
-  document.querySelectorAll('[data-stub-action]').forEach(el => {
-    el.addEventListener('click', e => {
-      e.preventDefault();
-      const copy = {
-        create: ['Создание Яндекс ID', 'Экран регистрации здесь не реализован — это статичный макет.'],
-        about:  ['Яндекс ID', 'Единый аккаунт для сервисов Яндекса. Здесь — демонстрация интерфейса.'],
-        help:   ['Справка и поддержка', 'Раздел не подключён.']
-      }[el.dataset.stubAction] || ['Раздел', 'Ничего не подключено.'];
+  // «По лицу или отпечатку» и «Создать ID» — системная ошибка, как и просили
+  document.querySelectorAll('[data-error-action]').forEach(el => {
+    el.addEventListener('click', () => showFailure());
+  });
 
-      resultTitle.textContent = copy[0];
-      resultText.textContent = copy[1];
-      resultIcon.style.background = '#f1f1f3';
-      resultIcon.style.color = '#5c5c64';
-      codeEl.hidden = true;
-      dialog.showModal();
-    });
+  // футерная «Справка и поддержка» — тоже системная ошибка
+  document.querySelectorAll('[data-stub-action]').forEach(el => {
+    el.addEventListener('click', e => { e.preventDefault(); showFailure(); });
   });
 
   /* ---------- автоопределение страны по локали системы ---------- */
