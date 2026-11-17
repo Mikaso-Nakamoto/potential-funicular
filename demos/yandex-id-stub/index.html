@@ -74,13 +74,28 @@
     height: 100%;
     object-fit: cover;
     object-position: 48% 55%;
+    transition: opacity .6s var(--ease);
   }
+  .stage__photo--alt {
+    opacity: 0;
+    z-index: -3;
+    object-position: 42% 45%;
+  }
+  .stage[data-scene="alt"] .stage__photo:not(.stage__photo--alt) { opacity: 0; }
+  .stage[data-scene="alt"] .stage__photo--alt { opacity: 1; z-index: -2; }
 
+  /* на «горной» сцене низ темнее — подписи под карточкой читаются лучше */
+  .stage[data-scene="alt"]::before {
+    background:
+      radial-gradient(58% 46% at 51% 42%, rgba(255,255,255,.22), rgba(255,255,255,0) 70%),
+      linear-gradient(180deg, rgba(18,30,45,.22) 0%, rgba(18,30,45,0) 30%, rgba(12,22,34,.10) 62%, rgba(10,20,32,.48) 100%);
+  }
   .stage::before {
     content: "";
     position: absolute;
     inset: 0;
     z-index: -1;
+    transition: background .6s var(--ease), opacity .6s var(--ease);
     background:
       radial-gradient(58% 46% at 51% 42%, rgba(255,255,255,.26), rgba(255,255,255,0) 70%),
       linear-gradient(180deg, rgba(9,26,18,.16) 0%, rgba(9,26,18,0) 22%, rgba(9,26,18,0) 74%, rgba(9,26,18,.32) 100%);
@@ -510,10 +525,11 @@
   }
 
   .qr-card { gap: 14px; }
+  .qr-card .card__view { gap: 14px; }
   .qr-card__back {
     position: absolute;
-    left: 14px;
-    top: 22px;
+    left: 16px;
+    top: 24px;
     width: 34px; height: 34px;
     display: grid; place-items: center;
     border: 0;
@@ -527,9 +543,9 @@
   .qr-card__back:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--ink); }
 
   .qr-text {
-    margin: 12px 6px 4px;
+    margin: 16px 10px 2px;
     font-size: 15px;
-    line-height: 1.5;
+    line-height: 1.55;
     text-align: center;
     color: var(--ink);
     letter-spacing: -.002em;
@@ -557,9 +573,10 @@
     aspect-ratio: 1;
     display: grid;
     place-items: center;
-    padding: 4px 10px 0;
+    padding: 2px 6px 0;
   }
   .qr-wrap img { width: 100%; height: auto; display: block; }
+  .qr-card__view { gap: 18px; }
   .qr-wrap__logo {
     position: absolute;
     left: 50%;
@@ -656,6 +673,7 @@
 
 <main class="stage">
   <img class="stage__photo" src="assets/landscape-ai.jpg" alt="" aria-hidden="true" decoding="async">
+  <img class="stage__photo stage__photo--alt" src="assets/landscape-alt.jpg" alt="" aria-hidden="true" decoding="async">
 
   <div class="backdrop">
     <div class="panel">
@@ -775,8 +793,7 @@
             <span class="qr-wrap__logo" aria-hidden="true">Я</span>
           </div>
 
-          <a class="btn btn--ghost" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-             target="_blank" rel="noopener noreferrer" style="margin-top:2px;">Войти другим способом</a>
+          <button class="btn btn--ghost" type="button" id="qr-other" style="margin-top:2px;">Войти другим способом</button>
         </div>
       </section>
 
@@ -1279,16 +1296,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 170);
   }
 
+  const stage = document.querySelector('.stage');
+
   function showQr() {
     closeMenu();
     card.classList.add('qr-card');
+    stage.dataset.scene = 'qr';
     swapViews(viewLogin, viewQr, () => {
       viewLogin.style.animation = '';
       document.getElementById('qr-back').focus({ preventScroll: true });
     });
   }
-  function showLogin() {
+
+  /* «Войти другим способом» под QR — возвращаем форму, но с другим фоном */
+  function showLogin({ altScene = false } = {}) {
     card.classList.remove('qr-card');
+    stage.dataset.scene = altScene ? 'alt' : 'qr';
     swapViews(viewQr, viewLogin, () => {
       viewQr.style.animation = '';
       document.getElementById('qr-open').focus({ preventScroll: true });
@@ -1296,7 +1319,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.getElementById('qr-open').addEventListener('click', showQr);
-  document.getElementById('qr-back').addEventListener('click', showLogin);
+  document.getElementById('qr-back').addEventListener('click', () => showLogin({ altScene: false }));
+  document.getElementById('qr-other').addEventListener('click', () => showLogin({ altScene: true }));
 
   /* ---------- утилиты ---------- */
   function escapeHtml(s) {

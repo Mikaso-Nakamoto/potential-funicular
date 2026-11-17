@@ -42,6 +42,7 @@ let html = await readFile(path.join(dir, 'index.html'), 'utf8');
 // которые String.replace иначе трактует как спец-шаблоны
 html = html
   .replace('src="assets/landscape-ai.jpg"', () => `src="${dataUri('assets/landscape-ai.jpg')}"`)
+  .replace('src="assets/landscape-alt.jpg"', () => `src="${dataUri('assets/landscape-alt.jpg')}"`)
   .replace('src="assets/qr.png"', () => `src="${assets['qr.png']}"`)
   .replace(
     '<script src="assets/libphonenumber.js" defer></script>',
