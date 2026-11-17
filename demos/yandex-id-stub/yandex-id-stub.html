@@ -236,34 +236,58 @@
   /* phone variant: flag + input + clear */
   .field--phone { position: relative; }
   .field--phone .field__input {
-    padding-left: 48px;
+    padding-left: 50px;
     padding-right: 44px;
+    letter-spacing: -.005em;
   }
 
+  /* круглый флаг с тонкой «пиксельной» обводкой-кольцом, как в оригинале */
   .flag {
     position: absolute;
-    left: 14px;
+    left: 13px;
     top: 50%;
     translate: 0 -50%;
-    width: 22px;
-    height: 16.5px;         /* тот же 4:3, что и у исходных SVG — без искажений */
-    border-radius: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     overflow: hidden;
     pointer-events: none;
-    box-shadow: 0 0 0 1px rgba(18, 26, 34, .14);
     display: grid;
-    background: #e9e9ee;
-    transition: opacity .18s var(--ease);
+    place-items: center;
+    background: #f4f4f6;
+    border: 1px solid rgba(18, 26, 34, .13);
+    transition: opacity .18s var(--ease), background-color .18s var(--ease);
+  }
+
+  /* еле заметное кольцо в несколько пикселей поверх флага */
+  .flag::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: 50%;
+    box-shadow:
+      inset 0 0 0 1px rgba(18, 26, 34, .16),
+      inset 0 0 0 3px rgba(18, 26, 34, .05);
   }
   .flag[hidden] { display: none; }
   .flag img {
     width: 100%;
     height: 100%;
-    object-fit: fill;       /* все флаги 640×480, поэтому пропорции совпадают */
+    object-fit: cover;      /* 4:3 → квадрат по центру, без сплющивания */
     display: block;
+    transition: opacity .12s var(--ease);
   }
-  .flag.is-swapping img { opacity: .35; }
-  .flag img { transition: opacity .12s var(--ease); }
+
+  /* пока страна не определена — «глобус» вместо флага */
+  .flag[data-pending="true"] img { opacity: 0; visibility: hidden; }
+  .flag[data-pending="true"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: no-repeat center / 15px 15px
+      url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231b1b1e' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.6'/%3E%3Cellipse cx='12' cy='12' rx='4' ry='8.6'/%3E%3Cpath d='M3.7 9.2h16.6M3.7 14.8h16.6'/%3E%3C/svg%3E");
+  }
 
   .field__clear {
     position: absolute;
@@ -770,7 +794,11 @@
     return '+' + c.dial + ' ' + formatNational(national, c.mask);
   }
 
+  // пока номер не начали вводить — нейтральный шаблон «+000 000 000 00 00»
+  const GENERIC_PLACEHOLDER = '+000 000 000 00 00';
+
   function placeholderFor(code) {
+    if (!state.national) return GENERIC_PLACEHOLDER;
     const c = C[code];
     return '+' + c.dial + ' ' + formatNational(c.ex, c.mask);
   }
@@ -816,7 +844,7 @@
   const FLAG_SRC = code => (window.__FLAG_DATA && window.__FLAG_DATA[code.toLowerCase()])
     || new URL('assets/flags/' + code.toLowerCase() + '.svg', location.href).href;
 
-  function paintFlag() {
+  function paintFlag(pending = false) {
     const code = FLAG_SET.includes(state.country) ? state.country : 'RU';
     let img = flagEl.querySelector('img');
     if (!img) {
@@ -829,7 +857,8 @@
     }
     const src = FLAG_SRC(code);
     if (img.getAttribute('src') !== src) img.setAttribute('src', src);
-    flagEl.title = code;
+    flagEl.dataset.pending = pending ? 'true' : 'false';
+    flagEl.title = pending ? '' : code;
   }
 
   function paintClear() {
@@ -849,8 +878,8 @@
       input.value = '';
       input.type = 'tel';
       input.setAttribute('inputmode', 'tel');
-      input.placeholder = placeholderFor(state.country);
-      paintFlag();
+      input.placeholder = GENERIC_PLACEHOLDER;
+      paintFlag(true);
       paintClear();
     } else {
       flagEl.hidden = true;
@@ -871,9 +900,11 @@
     // ведущую «8» (местный префикс РФ/КЗ) разбирает decide(), не переписывая ввод
     const res = decide(digits, state.country);
 
-    // страна ещё не определена — не трогаем то, что набрал человек
+    // страна ещё не определена — не трогаем ввод и держим «глобус» вместо флага
     if (!res || res.pending) {
       state.national = '';
+      input.placeholder = GENERIC_PLACEHOLDER;
+      paintFlag(true);
       paintClear();
       return;
     }
@@ -887,7 +918,7 @@
     state.national = national;
     input.value = national ? fullNumber(code, national) : '+' + dial;
     input.placeholder = placeholderFor(code);
-    paintFlag();
+    paintFlag(false);
     paintClear();
     const end = input.value.length;
     input.setSelectionRange(end, end);
@@ -942,13 +973,17 @@
 
   input.addEventListener('focus', () => {
     if (state.mode === 'phone' && !state.national) {
-      input.placeholder = placeholderFor(state.country);
+      input.placeholder = GENERIC_PLACEHOLDER;
     }
   });
 
   clearBtn.addEventListener('click', () => {
     state.national = '';
     input.value = '';
+    if (state.mode === 'phone') {
+      input.placeholder = GENERIC_PLACEHOLDER;
+      paintFlag(true);
+    }
     clearError();
     paintClear();
     input.focus({ preventScroll: true });
@@ -1008,7 +1043,7 @@
       const region = String(lang).split('-')[1]?.toUpperCase();
       if (region && C[region]) { state.country = region; break; }
     }
-    paintFlag();
+    paintFlag(true);
   })();
 })();
 </script>
