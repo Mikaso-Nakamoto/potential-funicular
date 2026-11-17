@@ -238,11 +238,17 @@
 
   /* телефон: круглый флаг/глобус + тёмная рамка */
   .field--phone .field__input {
-    padding-left: 66px;
-    padding-right: 46px;
+    padding-left: 70px;
+    padding-right: 48px;
     border-color: var(--field-border);
     border-width: 1.6px;
+    font-size: 17.5px;
+    font-weight: 500;
+    letter-spacing: -.01em;
+    padding-block: 15px;
   }
+  /* «+7» — тёмный и плотный, нули в маске — серые */
+  .field--phone .field__input::placeholder { color: #83869e; font-weight: 500; letter-spacing: -.005em; }
   .field--phone .field__input:hover { border-color: #4a4a5c; }
   .field--phone .field__input:focus { border-color: #14141c; box-shadow: 0 0 0 1px #14141c; }
 
@@ -262,33 +268,42 @@
   }
   .cc:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ink); border-radius: 16px; }
 
+  /* подложка флага — мягкий прямоугольник, как в оригинале */
   .cc__disc {
-    width: 37px;
-    height: 37px;
-    border-radius: 50%;
+    width: 46px;
+    height: 40px;
+    border-radius: 13px;
     display: grid;
     place-items: center;
-    background: #f4f5f7;
-    border: 1px solid rgba(18, 26, 34, .10);
+    background: #f3f4f7;
+    border: 0;
     overflow: hidden;
     transition: background-color .16s var(--ease), transform .18s var(--ease);
   }
   .cc:active .cc__disc { transform: scale(.94); }
   .cc:hover .cc__disc { background: #eceef2; }
 
-  .cc__disc img { width: 100%; height: 100%; object-fit: cover; display: block; animation: flag-in .22s var(--ease) both; }
+  .cc__disc img {
+    width: 27px;
+    height: 18px;
+    border-radius: 3px;
+    object-fit: cover;
+    display: block;
+    box-shadow: 0 0 0 1px rgba(18, 26, 34, .10);
+    animation: flag-in .22s var(--ease) both;
+  }
   @keyframes flag-in { from { opacity: 0; transform: scale(.82); } to { opacity: 1; transform: none; } }
   .cc__disc img[hidden] { display: none; }
   .cc__disc .cc__globe {
-    width: 21px;
-    height: 21px;
+    width: 22px;
+    height: 22px;
     color: #1b1b1e;
     display: block;
   }
 
   .field__clear {
     position: absolute;
-    right: 12px;
+    right: 10px;
     top: 50%;
     translate: 0 -50%;
     width: 28px; height: 28px;
@@ -300,6 +315,7 @@
     transition: opacity .16s var(--ease), background-color .16s var(--ease), color .16s var(--ease);
   }
   .field__clear[data-visible="true"] { opacity: 1; visibility: visible; }
+  .field__clear svg { display: block; }
   .field__clear:hover { background: #f1f1f3; color: var(--ink); }
   .field__clear:focus-visible { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--ink); }
 
@@ -911,9 +927,41 @@ document.addEventListener('DOMContentLoaded', () => {
     return intl.startsWith(prefix) ? intl.slice(prefix.length) : digits;
   }
 
-  // как в оригинале: «+000 000 000 000», пока номер не начали вводить
+  // плейсхолдер-маска: «+7 (000) 000-00-00» — формат берём из libphonenumber,
+  // подставляя вместо цифр нули (как в оригинальном интерфейсе)
+  const MASK_CACHE = new Map();
+  const MASK_SAMPLES = ['9', '99', '999', '9999', '99999', '999999', '9999999',
+                        '99999999', '999999999', '9999999999', '99999999999', '999999999999'];
+
+  function maskFor(iso) {
+    if (MASK_CACHE.has(iso)) return MASK_CACHE.get(iso);
+    const c = countryOf(iso);
+    const dial = c.d;
+
+    // нули не группируются (это не валидные цифры), поэтому форматируем «пример»
+    // из девяток и заменяем все цифры на нули: «+7 (999) 123-45-67» → «+7 (000) 000-00-00»
+    const SAMPLE = '9999999999';
+    let best = '';
+    if (AsYouType) {
+      for (let len = 6; len <= SAMPLE.length; len++) {
+        const r = new AsYouType(iso).input(SAMPLE.slice(0, len));
+        if (r.length > best.length) best = r;
+      }
+    }
+
+    let body = best ? best.replace(/\d/g, '0') : '000 000 000 000';
+    // «000 000-00-00» → «(000) 000-00-00» — так, как это показывает Яндекс
+    if (!body.includes('(')) {
+      const m = body.match(/^(\d{3})\s+(.*)$/);
+      if (m) body = '(' + m[1] + ') ' + m[2];
+    }
+    const mask = dial + ' ' + body;
+    MASK_CACHE.set(iso, mask);
+    return mask;
+  }
+
   function placeholderFor() {
-    return '+000 000 000 000';
+    return maskFor(state.country);
   }
 
   function normalize(digits) {
@@ -939,6 +987,14 @@ document.addEventListener('DOMContentLoaded', () => {
      затем — libphonenumber для стран с общим кодом (+1, +7) */
   function detectCountry(digits) {
     if (!digits) return null;
+
+    // 1) номер без кода страны — национальный набор из 10 цифр.
+    //    «7…» пропускаем: это может быть код +7, его разберём ниже
+    if (digits.length === 10 && digits[0] !== '7') {
+      if (/^[689]/.test(digits)) return 'RU';
+    }
+
+    // 2) самый длинный подходящий код страны
     let dial = null;
     for (let len = Math.min(4, digits.length); len >= 1; len--) {
       if (DIAL_MAP.has(digits.slice(0, len))) { dial = digits.slice(0, len); break; }
@@ -950,17 +1006,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (dial === '7') {
       const rest = digits.slice(1);
+      // 10 цифр с ведущей 7 — это либо национальный номер КЗ, либо РФ без кода
+      if (digits.length === 10) return KZ_MOBILE.test(digits) ? 'KZ' : 'RU';
       if (rest.length >= 3) return KZ_MOBILE.test(rest) ? 'KZ' : 'RU';
       if (rest.length === 2) return /^[67]/.test(rest) ? 'KZ' : 'RU';
       return list.includes(state.country) ? state.country : 'RU';
     }
+
+    if (dial === '1') return list.includes(state.country) ? state.country : 'US';
 
     if (parsePhoneNumberFromString) {
       const p = parsePhoneNumberFromString('+' + digits);
       if (p && p.country && list.includes(p.country)) return p.country;
     }
     if (list.includes(state.country)) return state.country;
-    return dial === '1' ? 'US' : list[0];
+    return list[0];
   }
 
   /* ---------- режимы поля ---------- */
@@ -978,7 +1038,7 @@ document.addEventListener('DOMContentLoaded', () => {
       field.classList.add('field--phone');
       input.type = 'tel';
       input.setAttribute('inputmode', 'tel');
-      input.placeholder = placeholderFor(state.country);
+      input.placeholder = maskFor(state.country);
       paintCountry(false);
     } else {
       ccBtn.hidden = true;
@@ -992,7 +1052,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function paintClear() {
-    clearBtn.dataset.visible = input.value.replace(/\D/g, '').length > 0 ? 'true' : 'false';
+    const hasDigits = input.value.replace(/\D/g, '').length > 0;
+    clearBtn.dataset.visible = state.mode === 'phone' || hasDigits ? 'true' : 'false';
   }
 
   function handlePhoneInput() {
@@ -1013,7 +1074,10 @@ document.addEventListener('DOMContentLoaded', () => {
       state.country = detected;
       c = countryOf(detected);
       const dial = c.d.slice(1);
-      const national = (digits.startsWith(dial) ? digits.slice(dial.length) : digits).slice(0, 13);
+      // национальная часть: отрезаем код страны, если он реально набран
+      // (для 10 цифр при +7/1 номер считается национальным)
+      const bare = dial.length === 1 && digits.length === 10;
+      const national = (bare || !digits.startsWith(dial) ? digits : digits.slice(dial.length)).slice(0, 13);
       state.national = national;
       input.value = national ? c.d + ' ' + formatNational(state.country, national) : c.d;
       paintCountry(true);
@@ -1046,11 +1110,22 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderList(query = '') {
     const q = query.trim().toLowerCase().replace(/\s+/g, ' ');
     const digits = q.replace(/\D/g, '');
-    const items = COUNTRIES.filter(c => {
+    let items = COUNTRIES.filter(c => {
       if (!q) return true;
       if (digits && c.d.slice(1).startsWith(digits)) return true;
       return c.n.toLowerCase().includes(q);
     });
+    if (q) {
+      const score = c => {
+        const name = c.n.toLowerCase();
+        if (digits) return c.d.slice(1) === digits ? 0 : c.d.slice(1).startsWith(digits) ? 1 : 2;
+        if (name === q) return 0;
+        if (name.startsWith(q)) return 1;
+        if (name.includes(' ' + q)) return 2;
+        return 3;
+      };
+      items = items.slice().sort((a, b) => score(a) - score(b) || a.n.localeCompare(b.n, 'ru'));
+    }
 
     list.innerHTML = items.length
       ? items.map((c, i) => `
@@ -1155,7 +1230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.national = '';
     input.value = '';
     if (state.mode === 'phone') {
-      input.placeholder = placeholderFor(state.country);
+      input.placeholder = maskFor(state.country);
       paintCountry(false);
     }
     clearError();
