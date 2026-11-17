@@ -266,6 +266,7 @@
     cursor: pointer;
     border-radius: var(--radius-field) 0 0 var(--radius-field);
   }
+  .cc[hidden] { display: none; }
   .cc:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ink); border-radius: 16px; }
 
   /* подложка флага — мягкий прямоугольник, как в оригинале */
@@ -314,10 +315,9 @@
     pointer-events: none;
     white-space: nowrap;
   }
-  .field__prefix[hidden] { display: none; }
-
   .field--phone.has-prefix .field__input { padding-left: 100px; }
   .field--phone.has-prefix .field__prefix { display: block; }
+  .field__prefix[hidden] { display: none; }
 
   .field__clear {
     position: absolute;
@@ -1082,8 +1082,10 @@ document.addEventListener('DOMContentLoaded', () => {
       paintCountry(false);
     } else {
       ccBtn.hidden = true;
+      closeMenu();
       setPrefix('');
-      field.classList.remove('field--phone');
+      field.classList.remove('field--phone', 'has-prefix');
+      input.value = '';
       input.type = 'text';
       input.setAttribute('inputmode', 'email');
       input.placeholder = 'Логин или email';
