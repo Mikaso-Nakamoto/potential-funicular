@@ -1,6 +1,6 @@
 # Claude Code & AI Agents — Repo Guide
 
-Этот репозиторий содержит единую библиотеку из **271 навыка (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, нативных возможностей современной веб-платформы, логики и архитектуры сайтов, 3D/WebGL сцен, браузерных игр и защищённых приложений.
+Этот репозиторий содержит единую библиотеку из **294 навыков (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, нативных возможностей современной веб-платформы, логики и архитектуры сайтов, 3D/WebGL сцен, браузерных игр и защищённых приложений.
 
 ## Рекомендуемый пайплайн для фронтенда и веб-дизайна
 
@@ -29,7 +29,15 @@
 6. **Тексты и конверсия:**
    - Заголовки и обещания: `agent-skills/design-logic/copywriting/SKILL.md`, редактура — `copy-editing/SKILL.md`
    - Воронка и формы: `agent-skills/design-logic/cro/SKILL.md`; первая сессия — `onboarding/SKILL.md`; тарифы — `pricing/SKILL.md`
-7. **Финальная критика, полировка и аудит перед сдачей:**
+7. **Сеть, инфраструктура и криптография:**
+   - Разбор трафика, инцидент по pcap: `agent-skills/network-security/analyzing-network-traffic-with-wireshark/SKILL.md`, `performing-network-traffic-analysis-with-zeek/SKILL.md`, `detecting-dns-exfiltration-with-dns-query-analysis/SKILL.md`
+   - IDS/IPS и мониторинг периметра: `agent-skills/network-security/configuring-suricata-for-network-monitoring/SKILL.md`, сводный — `network-security-ops/SKILL.md`
+   - Аудит правил файрвола: `agent-skills/network-security/firewall-review/SKILL.md`
+   - Разведка и скоупинг работ: `agent-skills/network-security/reconnaissance/SKILL.md`, `pentest-engagement/SKILL.md`
+   - Любой криптокод перед сдачей: `agent-skills/crypto-engineering/constant-time-analysis/SKILL.md`, `zeroize-audit/SKILL.md`, `sharp-edges/SKILL.md`
+   - TLS/mTLS, CA, секреты: `agent-skills/crypto-engineering/performing-ssl-tls-security-assessment/SKILL.md`, `implementing-mtls-for-zero-trust-services/SKILL.md`, `implementing-secrets-management-with-vault/SKILL.md`
+   - Проектирование крипто и PQC-переход: `agent-skills/crypto-engineering/migrating-to-post-quantum-cryptography/SKILL.md`; принципы — `agent-skills/security-crypto/`
+8. **Финальная критика, полировка и аудит перед сдачей:**
    - Визуальная полировка: `agent-skills/ui/impeccable/SKILL.md` и `agent-skills/ui/audit-ai-design-slop/SKILL.md`
    - Качество в цифрах (Lighthouse / Core Web Vitals): `agent-skills/web-quality/web-quality-audit/SKILL.md`, `agent-skills/web-quality/core-web-vitals/SKILL.md`, `accessibility/SKILL.md`, `seo/SKILL.md`
    - Доступность, UX и производительность React/Next.js: `agent-skills/vercel/web-design-guidelines/SKILL.md` и `agent-skills/vercel/react-best-practices/SKILL.md`
