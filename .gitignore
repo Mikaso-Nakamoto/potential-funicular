@@ -25,4 +25,3 @@ outputs/
 *.p12
 *.pfx
 *.keystore
-kit-secret.tar.gz
