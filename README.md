@@ -1,6 +1,6 @@
 # Agent Skills Vault
 
-Масштабная библиотека переиспользуемых навыков (**271 Agent Skill**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
+Масштабная библиотека переиспользуемых навыков (**294 Agent Skills**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
 
 Собраны топовые мировые решения против шаблонного «пластикового» ИИ-дизайна (**Taste Skill**, **UI/UX Pro Max**, **Impeccable**, **Emil Kowalski Skills**, **Anthropic Frontend Design**, **Claude Design Skill**, **Vercel Web Design Guidelines**), официальный пакет современных веб-стандартов **GoogleChrome Modern Web Guidance** (совместно с Edge, Firefox и MDN), полная коллекция **MengTo/Skills** (все 94 навыка веб-дизайна, 3D и иллюстрации), библиотека **84 файлов `DESIGN.md`** с разобранными дизайн-системами реальных брендов, UX-законы и правила архитектуры сайта, аудит **Lighthouse / Core Web Vitals**, а также паки по геймдеву, Яндекс Играм и прикладной криптографии.
 
@@ -29,6 +29,9 @@
 | **Продумать структуру сайта, навигацию и сценарии** | [`site-architecture`](agent-skills/design-logic/site-architecture/SKILL.md) + [`information-architecture`](agent-skills/design-logic/information-architecture/SKILL.md) + [`numerique-responsable`](agent-skills/design-logic/numerique-responsable/SKILL.md) |
 | **Поднять конверсию лендинга, тарифов и онбординга** | [`cro`](agent-skills/design-logic/cro/SKILL.md) + [`copywriting`](agent-skills/design-logic/copywriting/SKILL.md) + [`onboarding`](agent-skills/design-logic/onboarding/SKILL.md) |
 | **Проверить скорость, доступность и SEO перед сдачей** | [`web-quality-audit`](agent-skills/web-quality/web-quality-audit/SKILL.md) + [`core-web-vitals`](agent-skills/web-quality/core-web-vitals/SKILL.md) |
+| **Разобрать сетевой инцидент по pcap** | [`analyzing-network-traffic-with-wireshark`](agent-skills/network-security/analyzing-network-traffic-with-wireshark/SKILL.md) + [`performing-network-traffic-analysis-with-zeek`](agent-skills/network-security/performing-network-traffic-analysis-with-zeek/SKILL.md) + [`detecting-dns-exfiltration-with-dns-query-analysis`](agent-skills/network-security/detecting-dns-exfiltration-with-dns-query-analysis/SKILL.md) |
+| **Проверить свой криптокод на утечки и ошибки** | [`constant-time-analysis`](agent-skills/crypto-engineering/constant-time-analysis/SKILL.md) + [`zeroize-audit`](agent-skills/crypto-engineering/zeroize-audit/SKILL.md) + [`sharp-edges`](agent-skills/crypto-engineering/sharp-edges/SKILL.md) |
+| **Спроектировать крипто и спланировать PQC-переход** | [`migrating-to-post-quantum-cryptography`](agent-skills/crypto-engineering/migrating-to-post-quantum-cryptography/SKILL.md) + [`implementing-mtls-for-zero-trust-services`](agent-skills/crypto-engineering/implementing-mtls-for-zero-trust-services/SKILL.md) |
 
 ---
 
@@ -51,6 +54,8 @@ agent-skills/
   game-development/    # Архитектура браузерных и Three.js игр (21)
   game-combat/         # Боевые анимации и стихийные спецэффекты (6)
   security-crypto/     # Прикладная криптография, управление ключами и защита (6)
+  network-security/    # Анализ трафика, IDS/IPS, Wi-Fi, файрволы, скоупинг пентеста (12)
+  crypto-engineering/  # Криптоархитектура, аудит constant-time, PQC-миграция (13)
   YA_SKILLS/           # Аудит модерации и авто-фиксер для Яндекс Игр (2)
 
 ```
@@ -59,7 +64,7 @@ agent-skills/
 
 ---
 
-## Полный каталог навыков (271)
+## Полный каталог навыков (294)
 
 ### 1. UI, дизайн-системы и борьба со стоковым ИИ ([`agent-skills/ui/`](agent-skills/ui/README.md) — 29)
 
@@ -379,6 +384,41 @@ agent-skills/
 - **[`accessibility`](agent-skills/web-quality/accessibility/SKILL.md)** — Доступность по Lighthouse: контраст, доступные имена, роли и ARIA, клавиатура, скринридеры.
 - **[`seo`](agent-skills/web-quality/seo/SKILL.md)** — Техническое SEO: метаданные, структура URL, индексируемость, канонические ссылки, Core Web Vitals.
 - **[`best-practices`](agent-skills/web-quality/best-practices/SKILL.md)** — Гигиена веба: HTTPS, ошибки в консоли, устаревшие API, безопасность сторонних скриптов.
+
+### 17. Сетевая безопасность и анализ трафика ([`agent-skills/network-security/`](agent-skills/network-security/README.md) — 12)
+
+Раньше сети закрывались только каталогом `Awesome-REA` — как ссылки на инструменты. Теперь это исполнимые навыки: от разбора pcap до скоупинга пентеста.
+
+- **[`analyzing-network-traffic-with-wireshark`](agent-skills/network-security/analyzing-network-traffic-with-wireshark/SKILL.md)** — tshark от и до: ring buffer, multi-interface capture, display-фильтры под C2 и SMB lateral movement, поиск кред в cleartext, извлечение файлов из сессии.
+- **[`analyzing-network-packets-with-scapy`](agent-skills/network-security/analyzing-network-packets-with-scapy/SKILL.md)** — Разбор и сборка пакетов на Python: dissection, реконструкция потоков, кастомные детекторы, работа с pcap без GUI.
+- **[`performing-network-traffic-analysis-with-zeek`](agent-skills/network-security/performing-network-traffic-analysis-with-zeek/SKILL.md)** — Zeek-скрипты и логи conn/dns/http/ssl: долгие соединения, регулярные интервалы, аномалии на потоке.
+- **[`configuring-suricata-for-network-monitoring`](agent-skills/network-security/configuring-suricata-for-network-monitoring/SKILL.md)** — Правила Suricata, ревизия сигнатур, контроль false-positive, запуск в режимах IDS и IPS.
+- **[`detecting-dns-exfiltration-with-dns-query-analysis`](agent-skills/network-security/detecting-dns-exfiltration-with-dns-query-analysis/SKILL.md)** — Энтропия поддоменов, злоупотребление TXT, обход через DoH/DoT, построение базлайна.
+- **[`scanning-network-with-nmap-advanced`](agent-skills/network-security/scanning-network-with-nmap-advanced/SKILL.md)** — Продвинутый nmap: тайминги, скрипты NSE, обнаружение сервисов, разбор вывода без шума.
+- **[`performing-ssl-tls-inspection-configuration`](agent-skills/network-security/performing-ssl-tls-inspection-configuration/SKILL.md)** — TLS-инспекция: расшифровка, подмена сертификатов, ограничения и юридическая сторона.
+- **[`conducting-wireless-network-penetration-test`](agent-skills/network-security/conducting-wireless-network-penetration-test/SKILL.md)** — Wi-Fi-аудит: хендшейки, PMKID, rogue-точки, оценка WPA2/WPA3.
+- **[`network-security-ops`](agent-skills/network-security/network-security-ops/SKILL.md)** — Сводный навык: PCAP + Snort/Suricata/Zeek + аудит файрволов, с контрактом доказательств (`observed` / `inferred` / `unverified`, SHA-256 артефакта) и режимами `offline` / `passive` / `authorized-active` / `simulation`.
+- **[`firewall-review`](agent-skills/network-security/firewall-review/SKILL.md)** — Аудит правил iptables, nftables, pf и cloud security groups: 11 подкаталогов справочников — парсеры, детекторы, compliance-маппинг, шаблоны отчётов.
+- **[`reconnaissance`](agent-skills/network-security/reconnaissance/SKILL.md)** — Разведка перед работой: поддомены, DNS, идентификация стека, карта поверхности атаки.
+- **[`pentest-engagement`](agent-skills/network-security/pentest-engagement/SKILL.md)** — Процесс, а не техника: скоуп, разрешения, этапы, приоритизация рисков, отчёт.
+
+### 18. Криптоинженерия, аудит и PQC-миграция ([`agent-skills/crypto-engineering/`](agent-skills/crypto-engineering/README.md) — 13)
+
+`security-crypto/` описывает **принципы**; эта категория — **исполнение и проверку**: сканеры тайминг-утечек, аудит зануления секретов, оценка TLS, миграция на пост-квантовую криптографию.
+
+- **[`constant-time-analysis`](agent-skills/crypto-engineering/constant-time-analysis/SKILL.md)** — Детект тайминг-сайдканалов в криптокоде: деление на секретах, ветвления по секретным значениям, secret-dependent индексация, утечки через кэш. 8 справочников по языкам.
+- **[`zeroize-audit`](agent-skills/crypto-engineering/zeroize-audit/SKILL.md)** — Поиск незанулённых секретов в памяти, включая случаи, когда зануление вырезал компилятор: анализ ассемблера, контроль потока, паттерны для Rust.
+- **[`sharp-edges`](agent-skills/crypto-engineering/sharp-edges/SKILL.md)** — Поиск опасных API и footgun-конфигов в крипто-библиотеках: 16 справочников с переписанными безопасными версиями.
+- **[`performing-ssl-tls-security-assessment`](agent-skills/crypto-engineering/performing-ssl-tls-security-assessment/SKILL.md)** — Оценка TLS-конфигурации через `sslyze`: версии протокола, cipher suites, цепочка сертификатов, HSTS, OCSP stapling, Heartbleed, ROBOT.
+- **[`crypto-analysis`](agent-skills/crypto-engineering/crypto-analysis/SKILL.md)** — Аудит TLS, cipher suites, идентификация хешей, ревью крипто-реализаций, PQC-гайденс; в комплекте `tls_auditor.py`.
+- **[`configuring-certificate-authority-with-openssl`](agent-skills/crypto-engineering/configuring-certificate-authority-with-openssl/SKILL.md)** — Собственный CA на OpenSSL: корневой и промежуточный сертификаты, политики, отзыв, цепочки доверия.
+- **[`implementing-mtls-for-zero-trust-services`](agent-skills/crypto-engineering/implementing-mtls-for-zero-trust-services/SKILL.md)** — mTLS между сервисами на Python `cryptography` + `ssl`: выпуск сертификатов, проверка цепочек, аудит развёртывания.
+- **[`implementing-aes-encryption-for-data-at-rest`](agent-skills/crypto-engineering/implementing-aes-encryption-for-data-at-rest/SKILL.md)** — AES-256-GCM (FIPS 197) для файлов и хранилищ: деривация ключей, управление IV/nonce, аутентифицированное шифрование.
+- **[`implementing-end-to-end-encryption-for-messaging`](agent-skills/crypto-engineering/implementing-end-to-end-encryption-for-messaging/SKILL.md)** — Сквозное шифрование переписки: обмен ключами, ратчет-подход, аутентификация устройств.
+- **[`implementing-digital-signatures-with-ed25519`](agent-skills/crypto-engineering/implementing-digital-signatures-with-ed25519/SKILL.md)** — Подписи Ed25519: генерация, формат, верификация, типичные ошибки использования.
+- **[`implementing-secrets-management-with-vault`](agent-skills/crypto-engineering/implementing-secrets-management-with-vault/SKILL.md)** — HashiCorp Vault: движки секретов, динамические креды, ротация, интеграция с приложением.
+- **[`migrating-to-post-quantum-cryptography`](agent-skills/crypto-engineering/migrating-to-post-quantum-cryptography/SKILL.md)** — Переход на PQC: инвентаризация крипто-инвентаря, гибридные схемы (X25519 + ML-KEM), ML-DSA, приоритизация по сроку секретности данных.
+- **[`cryptography`](agent-skills/crypto-engineering/cryptography/SKILL.md)** — Практический криптоанализ: AGCD-решётки, факторизация по квадрату дискриминанта, GF(2)-линейный коллапс самодельных шифров, Piret-Quisquater DFA, восстановление Shamir-секрета над составным модулем.
 
 ---
 
