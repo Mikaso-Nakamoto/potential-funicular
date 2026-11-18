@@ -1,6 +1,6 @@
 # Claude Code & AI Agents — Repo Guide
 
-Этот репозиторий содержит единую библиотеку из **294 навыков (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, нативных возможностей современной веб-платформы, логики и архитектуры сайтов, 3D/WebGL сцен, браузерных игр и защищённых приложений.
+Этот репозиторий содержит единую библиотеку из **306 навыков (Agent Skills)** для создания выразительных сайтов, дизайн-систем, микро-анимаций, нативных возможностей современной веб-платформы, логики и архитектуры сайтов, 3D/WebGL сцен, браузерных игр и защищённых приложений.
 
 ## Рекомендуемый пайплайн для фронтенда и веб-дизайна
 
@@ -37,7 +37,13 @@
    - Любой криптокод перед сдачей: `agent-skills/crypto-engineering/constant-time-analysis/SKILL.md`, `zeroize-audit/SKILL.md`, `sharp-edges/SKILL.md`
    - TLS/mTLS, CA, секреты: `agent-skills/crypto-engineering/performing-ssl-tls-security-assessment/SKILL.md`, `implementing-mtls-for-zero-trust-services/SKILL.md`, `implementing-secrets-management-with-vault/SKILL.md`
    - Проектирование крипто и PQC-переход: `agent-skills/crypto-engineering/migrating-to-post-quantum-cryptography/SKILL.md`; принципы — `agent-skills/security-crypto/`
-8. **Финальная критика, полировка и аудит перед сдачей:**
+8. **Документы, интеграции и служебные форматы:**
+   - Офисные файлы (не HTML-слайды!): `agent-skills/documents/docx/SKILL.md`, `pptx/SKILL.md`, `xlsx/SKILL.md`, `pdf/SKILL.md` — всегда через них, а не «напиши текст в ответе»
+   - Подключение к внешнему сервису: `agent-skills/ai-integration/mcp-builder/SKILL.md`; вызовы модели — `claude-api/SKILL.md`
+   - Полный браузерный тест локального приложения: `agent-skills/ai-integration/webapp-testing/SKILL.md`
+   - Соавторство документа или спеки: `agent-skills/workflow/doc-coauthoring/SKILL.md`; внутренние коммуникации — `internal-comms/SKILL.md`
+   - Создание или правка навыка в этой библиотеке: `agent-skills/workflow/skill-creator/SKILL.md`
+9. **Финальная критика, полировка и аудит перед сдачей:**
    - Визуальная полировка: `agent-skills/ui/impeccable/SKILL.md` и `agent-skills/ui/audit-ai-design-slop/SKILL.md`
    - Качество в цифрах (Lighthouse / Core Web Vitals): `agent-skills/web-quality/web-quality-audit/SKILL.md`, `agent-skills/web-quality/core-web-vitals/SKILL.md`, `accessibility/SKILL.md`, `seo/SKILL.md`
    - Доступность, UX и производительность React/Next.js: `agent-skills/vercel/web-design-guidelines/SKILL.md` и `agent-skills/vercel/react-best-practices/SKILL.md`

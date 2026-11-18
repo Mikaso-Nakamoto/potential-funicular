@@ -1,6 +1,6 @@
 # Agent Skills Vault
 
-Масштабная библиотека переиспользуемых навыков (**294 Agent Skills**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
+Масштабная библиотека переиспользуемых навыков (**306 Agent Skills**) для **Claude Code**, **Cursor**, **Codex**, **Windsurf**, **Antigravity**, **GitHub Copilot** и других AI-агентов.
 
 Собраны топовые мировые решения против шаблонного «пластикового» ИИ-дизайна (**Taste Skill**, **UI/UX Pro Max**, **Impeccable**, **Emil Kowalski Skills**, **Anthropic Frontend Design**, **Claude Design Skill**, **Vercel Web Design Guidelines**), официальный пакет современных веб-стандартов **GoogleChrome Modern Web Guidance** (совместно с Edge, Firefox и MDN), полная коллекция **MengTo/Skills** (все 94 навыка веб-дизайна, 3D и иллюстрации), библиотека **84 файлов `DESIGN.md`** с разобранными дизайн-системами реальных брендов, UX-законы и правила архитектуры сайта, аудит **Lighthouse / Core Web Vitals**, а также паки по геймдеву, Яндекс Играм и прикладной криптографии.
 
@@ -32,6 +32,9 @@
 | **Разобрать сетевой инцидент по pcap** | [`analyzing-network-traffic-with-wireshark`](agent-skills/network-security/analyzing-network-traffic-with-wireshark/SKILL.md) + [`performing-network-traffic-analysis-with-zeek`](agent-skills/network-security/performing-network-traffic-analysis-with-zeek/SKILL.md) + [`detecting-dns-exfiltration-with-dns-query-analysis`](agent-skills/network-security/detecting-dns-exfiltration-with-dns-query-analysis/SKILL.md) |
 | **Проверить свой криптокод на утечки и ошибки** | [`constant-time-analysis`](agent-skills/crypto-engineering/constant-time-analysis/SKILL.md) + [`zeroize-audit`](agent-skills/crypto-engineering/zeroize-audit/SKILL.md) + [`sharp-edges`](agent-skills/crypto-engineering/sharp-edges/SKILL.md) |
 | **Спроектировать крипто и спланировать PQC-переход** | [`migrating-to-post-quantum-cryptography`](agent-skills/crypto-engineering/migrating-to-post-quantum-cryptography/SKILL.md) + [`implementing-mtls-for-zero-trust-services`](agent-skills/crypto-engineering/implementing-mtls-for-zero-trust-services/SKILL.md) |
+| **Собрать или отредактировать офисный файл** | [`docx`](agent-skills/documents/docx/SKILL.md) + [`pptx`](agent-skills/documents/pptx/SKILL.md) + [`xlsx`](agent-skills/documents/xlsx/SKILL.md) + [`pdf`](agent-skills/documents/pdf/SKILL.md) |
+| **Подключить агента к внешнему сервису через MCP** | [`mcp-builder`](agent-skills/ai-integration/mcp-builder/SKILL.md) + [`claude-api`](agent-skills/ai-integration/claude-api/SKILL.md) |
+| **Написать новый навык под свою задачу** | [`skill-creator`](agent-skills/workflow/skill-creator/SKILL.md) |
 
 ---
 
@@ -49,8 +52,10 @@ agent-skills/
   3d/                  # Реалистичные PBR-материалы, вода, свет и 3D-туры в Three.js (16)
   illustration/        # Авторские векторные SVG-иллюстрации в 14 стилях (14)
   codex/               # Промпт-инжиниринг, захват референсов, видео-в-суперпромпт (20)
-  workflow/            # Циклы скриншот-проверки и доведения качества до 10/10 (4)
-  media/               # Аватары, моушн-ролики и стоковые изображения (7)
+  workflow/            # Скриншот-циклы, доведение до планки, соавторство документов (7)
+  media/               # Аватары, моушн-ролики, генеративная графика, сток (9)
+  documents/           # Word, PowerPoint, Excel и PDF: разбор, правка, сборка (4)
+  ai-integration/      # Claude API, MCP-серверы, тестирование веб-приложений (3)
   game-development/    # Архитектура браузерных и Three.js игр (21)
   game-combat/         # Боевые анимации и стихийные спецэффекты (6)
   security-crypto/     # Прикладная криптография, управление ключами и защита (6)
@@ -64,7 +69,7 @@ agent-skills/
 
 ---
 
-## Полный каталог навыков (294)
+## Полный каталог навыков (306)
 
 ### 1. UI, дизайн-системы и борьба со стоковым ИИ ([`agent-skills/ui/`](agent-skills/ui/README.md) — 29)
 
@@ -419,6 +424,29 @@ agent-skills/
 - **[`implementing-secrets-management-with-vault`](agent-skills/crypto-engineering/implementing-secrets-management-with-vault/SKILL.md)** — HashiCorp Vault: движки секретов, динамические креды, ротация, интеграция с приложением.
 - **[`migrating-to-post-quantum-cryptography`](agent-skills/crypto-engineering/migrating-to-post-quantum-cryptography/SKILL.md)** — Переход на PQC: инвентаризация крипто-инвентаря, гибридные схемы (X25519 + ML-KEM), ML-DSA, приоритизация по сроку секретности данных.
 - **[`cryptography`](agent-skills/crypto-engineering/cryptography/SKILL.md)** — Практический криптоанализ: AGCD-решётки, факторизация по квадрату дискриминанта, GF(2)-линейный коллапс самодельных шифров, Piret-Quisquater DFA, восстановление Shamir-секрета над составным модулем.
+
+### 19. Офисные документы: Word, PowerPoint, Excel, PDF ([`agent-skills/documents/`](agent-skills/documents/README.md) — 4)
+
+Категория, которой в библиотеке не было вообще: `ui/slides` делает HTML-презентации, `copywriting` пишет текст, но ни один навык не открывал `.docx` и не собирал `.pptx`.
+
+- **[`docx`](agent-skills/documents/docx/SKILL.md)** — Word и Word-шаблоны: создание, чтение, правка, трекинг изменений, комментарии, слияние прогонов. Внутри `scripts/office/` — валидатор OOXML по схемам ECMA-376, конвертация через LibreOffice.
+- **[`pptx`](agent-skills/documents/pptx/SKILL.md)** — Слайды `.pptx` и `.potx`: сборка колоды по layout-ам, master-слайды, изображения, заметки.
+- **[`xlsx`](agent-skills/documents/xlsx/SKILL.md)** — Таблицы: формулы, стили, объединения, чтение чужих книг без потери форматирования.
+- **[`pdf`](agent-skills/documents/pdf/SKILL.md)** — PDF: извлечение текста и таблиц, склейка и разбиение, формы и их заполнение. Плюс `REFERENCE.md` и `FORMS.md` как справочники.
+
+### 20. AI-интеграция: API, MCP и браузерное тестирование ([`agent-skills/ai-integration/`](agent-skills/ai-integration/README.md) — 3)
+
+- **[`claude-api`](agent-skills/ai-integration/claude-api/SKILL.md)** — Справочник по Claude API и Anthropic SDK: model ids, параметры, стриминг, tool use, MCP, агенты, prompt caching, подсчёт токенов. Примеры на 9 языках: Python, TypeScript, Go, Java, C#, PHP, Ruby, curl.
+- **[`mcp-builder`](agent-skills/ai-integration/mcp-builder/SKILL.md)** — Проектирование MCP-серверов, которые модели удобно вызывать: описания инструментов, схемы аргументов, обработка ошибок, ресурсы и промпты.
+- **[`webapp-testing`](agent-skills/ai-integration/webapp-testing/SKILL.md)** — Проверка локального веб-приложения через Playwright: навигация, формы, валидация отрисованного UI, отладка фронтенда.
+
+### 21. Документы и коммуникация в рабочем цикле ([`agent-skills/workflow/`](agent-skills/workflow/README.md) — 7, +3)
+
+Три навыка добавились к существующим циклам скриншот-проверки:
+
+- **[`doc-coauthoring`](agent-skills/workflow/doc-coauthoring/SKILL.md)** — Трёхстадийное соавторство реальных документов: сбор контекста, итерация структуры, проверка на читателе. Тот же цикл, что в `workflow-score-to-target`, но для текста.
+- **[`internal-comms`](agent-skills/workflow/internal-comms/SKILL.md)** — Внутренние коммуникации по корпоративным форматам: 3P-апдейты, рассылки, FAQ, статус-репорты, инцидент-репорты.
+- **[`skill-creator`](agent-skills/workflow/skill-creator/SKILL.md)** — Как писать новый навык, улучшать существующий и измерять его работу. Прямо про этот репозиторий: кодифицирует контракт `SKILL.md`, которому следует вся библиотека.
 
 ---
 
