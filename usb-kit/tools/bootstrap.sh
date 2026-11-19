@@ -36,11 +36,25 @@ log "Установка @earendil-works/pi-coding-agent (npm prefix=$NPM_CONFIG_
 npm install -g --ignore-scripts --no-fund --no-audit @earendil-works/pi-coding-agent
 
 # ------------------------------------------------------- Python + мост ------
-log "Сборка venv и установка skillbridge"
+log "Проверка Python и сборка venv"
 PYBIN=${PYTHON_BIN:-python3}
-"$PYBIN" -m venv "$ROOT/venv"
+command -v "$PYBIN" >/dev/null 2>&1 || {
+  echo "Python 3 не найден. Debian/Ubuntu: sudo apt install python3 python3-venv; Fedora: sudo dnf install python3" >&2; exit 1; }
+pyver=$("$PYBIN" -c 'import sys;print("%d.%d" % sys.version_info[:2])' 2>/dev/null || echo 0.0)
+if ! "$PYBIN" -c 'import sys;raise SystemExit(0 if sys.version_info[:2] >= (3,10) else 1)'; then
+  echo "Нужен Python >= 3.10, найден $pyver. Задайте PYTHON_BIN=/путь/к/python3.12" >&2; exit 1
+fi
+echo "  Python $pyver ($PYBIN)"
+
+if [ -x "$VENV_BIN/python" ]; then
+  echo "  venv уже есть — переиспользую"
+else
+  "$PYBIN" -m venv "$ROOT/venv" || {
+    echo "Не удалось создать venv. Debian/Ubuntu: sudo apt install python3-venv" >&2; exit 1; }
+fi
 "$VENV_BIN/pip" install --quiet --upgrade pip
-"$VENV_BIN/pip" install --quiet -r "$ROOT/skillbridge/requirements.txt"
+"$VENV_BIN/pip" install --quiet -r "$ROOT/skillbridge/requirements.txt" || {
+  echo "pip не поставил зависимости (mcp, PyYAML) — проверьте сеть/прокси." >&2; exit 1; }
 if [ "${FULL:-0}" = "1" ]; then
   "$VENV_BIN/pip" install --quiet skillware   # полный режим: BaseSkill-валидация и каталог
 fi
