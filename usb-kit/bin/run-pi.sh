@@ -1,5 +1,5 @@
 #!/bin/sh
-# Точка входа: запускает Pi целикомом из этой папки, куда бы её ни примонтировали.
+# Точка входа POSIX: запускает Pi целиком из этой папки, куда бы её ни примонтировали.
 set -eu
 
 BIN_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
@@ -7,8 +7,11 @@ BIN_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$BIN_DIR/env.sh"
 stick_dirs
 
-if [ ! -x "$PI_STICK_ROOT/node/bin/node" ] && [ ! -x "$PI_STICK_ROOT/node/bin/pi" ]; then
-  echo "Стек ещё не собран. Выполните: $PI_STICK_ROOT/tools/bootstrap.sh" >&2
+PI_SHIM="$PI_STICK_ROOT/npm-global/bin/pi"
+PI_CLI="$PI_STICK_ROOT/npm-global/node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js"
+
+if [ ! -x "$PI_SHIM" ] && [ ! -f "$PI_CLI" ]; then
+  echo "Стек ещё не собран или pi не найден. Выполните: $PI_STICK_ROOT/tools/bootstrap.sh" >&2
   exit 1
 fi
 
@@ -18,4 +21,7 @@ cleanup_tmp() {
 }
 trap cleanup_tmp EXIT INT TERM
 
-exec "$PI_STICK_ROOT/node/bin/pi" "$@"
+if [ -x "$PI_SHIM" ]; then
+  exec "$PI_SHIM" "$@"
+fi
+exec "$PI_STICK_ROOT/node/bin/node" "$PI_CLI" "$@"

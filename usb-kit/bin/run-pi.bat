@@ -1,6 +1,9 @@
 @echo off
-rem Точка входа Windows: Pi целиком с этого носителя, путь может быть любым.
+rem Windows launcher: runs Pi entirely from this stick.
+rem Path is computed at runtime, so any drive letter / mount path works.
+rem Kept pure ASCII on purpose (no codepage surprises in cmd).
 setlocal enableextensions
+chcp 65001 >nul
 
 set "ROOT=%~dp0.."
 pushd "%ROOT%" >nul && set "ROOT=%CD%" && popd >nul
@@ -23,13 +26,27 @@ if not exist "%ROOT%\tmp" mkdir "%ROOT%\tmp"
 if not exist "%ROOT%\sessions" mkdir "%ROOT%\sessions"
 if not exist "%ROOT%\config\skills" mkdir "%ROOT%\config\skills"
 
-if not exist "%ROOT%\node\node.exe" (
-  echo Стек ещё не собран. Выполните: powershell -ExecutionPolicy Bypass -File "%ROOT%\tools\bootstrap.ps1" >&2
-  exit /b 1
-)
+set "PI_CMD=%ROOT%\npm-global\pi.cmd"
+set "PI_CLI=%ROOT%\npm-global\node_modules\@earendil-works\pi-coding-agent\dist\bundle\cli.js"
 
-"%ROOT%\node\node.exe" "%ROOT%\npm-global\node_modules\@earendil-works\pi-coding-agent\bin\pi.js" %*
+if not exist "%ROOT%\node\node.exe" goto :nobuild
+if exist "%PI_CMD%" goto :viaCmd
+if exist "%PI_CLI%" goto :viaNode
+goto :nobuild
+
+:viaCmd
+call "%PI_CMD%" %*
+goto :done
+
+:viaNode
+"%ROOT%\node\node.exe" "%PI_CLI%" %*
+goto :done
+
+:done
 set "RC=%ERRORLEVEL%"
-
-rem Ручная зачистка кэшей (для автоочистки см. tools\wipe-temp.bat)
+rem caches live in tmp\ ; to wipe them run tools\wipe-temp.bat
 endlocal & exit /b %RC%
+
+:nobuild
+echo Stack is not built yet. Run SETUP.bat in the usb-kit folder first. >&2
+endlocal & exit /b 1

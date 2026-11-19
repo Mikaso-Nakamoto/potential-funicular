@@ -20,7 +20,8 @@ function Ok($m)   { Write-Host "  $m" -ForegroundColor Green }
 function Warn($m) { Write-Host "  $m" -ForegroundColor Yellow }
 function Bad($m)  { Write-Host "  $m" -ForegroundColor Red }
 
-$piJs  = "$ROOT\npm-global\node_modules\@earendil-works\pi-coding-agent\bin\pi.js"
+$piCmd = "$ROOT\npm-global\pi.cmd"
+$piCli = "$ROOT\npm-global\node_modules\@earendil-works\pi-coding-agent\dist\bundle\cli.js"
 $sbExe = "$ROOT\venv\Scripts\skillbridge.exe"
 $vpy   = "$ROOT\venv\Scripts\python.exe"
 $buildRoot = "$env:SystemDrive\usb-kit-build"
@@ -31,7 +32,7 @@ Write-Host "  Папка: $ROOT"
 Line
 
 $rebuild = $true
-if ((Test-Path "$ROOT\node\node.exe") -and (Test-Path $sbExe) -and (Test-Path $piJs)) {
+if ((Test-Path "$ROOT\node\node.exe") -and (Test-Path $sbExe) -and ((Test-Path $piCmd) -or (Test-Path $piCli))) {
   Ok 'Стек уже собран (node + pi + venv на месте).'
   $a = Read-Host '  Пересобрать/обновить? [y/N]'
   if ($a -notmatch '^\s*[yYдД]') { $rebuild = $false }
@@ -106,7 +107,10 @@ if ($rebuild) {
     exit 1
   }
 
-  if (-not (Test-Path $piJs)) { Bad '[ОШИБКА] pi-coding-agent не установился (нет pi.js).'; exit 1 }
+  if (-not ((Test-Path $piCmd) -or (Test-Path $piCli))) {
+    Bad '[ОШИБКА] pi-coding-agent не установился (нет pi.cmd и dist\bundle\cli.js).'
+    exit 1
+  }
   Write-Host ''
   Ok '[OK] Сборка завершена и лежит на носителе.'
 }

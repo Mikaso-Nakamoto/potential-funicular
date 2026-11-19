@@ -38,9 +38,10 @@ New-Item -ItemType Directory -Force "$ROOT\tmp","$ROOT\sessions","$ROOT\config\s
 # ----------------------------------------------------------------- Pi ------
 Step 'Установка pi-coding-agent'
 & "$ROOT\node\npm.cmd" install -g --ignore-scripts --no-fund --no-audit '@earendil-works/pi-coding-agent'
-$piJs = "$ROOT\npm-global\node_modules\@earendil-works\pi-coding-agent\bin\pi.js"
-if (-not (Test-Path $piJs)) {
-  throw "pi-coding-agent не установился. Проверьте сеть/антивирус. Ожидался файл: $piJs"
+$piCmd = "$ROOT\npm-global\pi.cmd"
+$piCli = "$ROOT\npm-global\node_modules\@earendil-works\pi-coding-agent\dist\bundle\cli.js"
+if (-not (Test-Path $piCmd) -and -not (Test-Path $piCli)) {
+  throw "pi-coding-agent не установился. Проверьте сеть/антивирус. Ожидался $piCmd (или dist\bundle\cli.js)"
 }
 
 # -------------------------------------------------- Python + skillbridge ---
