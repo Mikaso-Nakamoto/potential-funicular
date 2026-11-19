@@ -1,4 +1,4 @@
-#requires -version 5
+﻿#requires -version 5
 <# Одноразовая сборка стека под Windows. Исполни:
    powershell -ExecutionPolicy Bypass -File tools\bootstrap.ps1 [# категории скиллов...] #>
 $ErrorActionPreference = 'Stop'
