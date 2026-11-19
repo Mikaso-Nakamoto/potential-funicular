@@ -64,7 +64,11 @@ function Test-Py([string]$Exe, [string[]]$Prefix) {
       if ($found) { if ($found.Path) { $path = $found.Path } else { $path = $found.Source } }
     }
     if (-not $path) { $ErrorActionPreference = $prevEap; return $null }
-    $a = @($Prefix) + @('-c', 'import sys;print("%d.%d" % sys.version_info[:2])')
+    # ВАЖНО: внутри -c не должно быть кавычек и пробелов.
+    # PowerShell 5.1 калечит вложенные двойные кавычки при передаче внешней программе,
+    # Python получает SyntaxError, и рабочий интерпретатор выглядит "не найденным".
+    # Поэтому печатаем одно число: 3.14 -> 314.
+    $a = @($Prefix) + @('-c', 'import sys;print(sys.version_info.major*100+sys.version_info.minor)')
     $lines = @(& $path @a 2>&1 | ForEach-Object { "$_" })
   } catch {
     $lines = @()
@@ -72,8 +76,9 @@ function Test-Py([string]$Exe, [string[]]$Prefix) {
   $ErrorActionPreference = $prevEap
   foreach ($l in $lines) {
     $t = ("$l").Trim()
-    if ($t -match '^3\.(\d+)$') {
-      if ([int]$Matches[1] -ge 10) { return $t }
+    if ($t -match '^(\d{3,4})$') {
+      $n = [int]$t
+      if ($n -ge 310 -and $n -lt 400) { return ([string]([int]($n / 100)) + '.' + [string]($n % 100)) }
       return $null
     }
   }
@@ -87,6 +92,7 @@ if ($env:PYTHON) { $cands += [pscustomobject]@{ Exe = $env:PYTHON; Args = @(); L
 $cands += [pscustomobject]@{ Exe = 'py';      Args = @('-3.12'); Label = 'py -3.12' }
 $cands += [pscustomobject]@{ Exe = 'py';      Args = @('-3.13'); Label = 'py -3.13' }
 $cands += [pscustomobject]@{ Exe = 'py';      Args = @('-3');    Label = 'py -3' }
+$cands += [pscustomobject]@{ Exe = 'py';      Args = @();        Label = 'py' }
 $cands += [pscustomobject]@{ Exe = 'python';  Args = @();        Label = 'python' }
 $cands += [pscustomobject]@{ Exe = 'python3'; Args = @();        Label = 'python3' }
 foreach ($g in @("$env:LOCALAPPDATA\Programs\Python\Python3*\python.exe",
@@ -124,8 +130,13 @@ if (Test-Path "$ROOT\venv\Scripts\python.exe") {
   try {
     $prevEap2 = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    $venvVer = ((& "$ROOT\venv\Scripts\python.exe" -c 'import sys;print("%d.%d" % sys.version_info[:2])' 2>&1 |
-                 ForEach-Object { "$_" }) -join '').Trim()
+    $raw = @(& "$ROOT\venv\Scripts\python.exe" -c 'import sys;print(sys.version_info.major*100+sys.version_info.minor)' 2>&1 |
+             ForEach-Object { "$_" })
+    foreach ($l in $raw) {
+      if (("$l").Trim() -match '^(\d{3,4})$') {
+        $n = [int]("$l".Trim()); $venvVer = [string]([int]($n / 100)) + '.' + [string]($n % 100); break
+      }
+    }
     $ErrorActionPreference = $prevEap2
   } catch { }
   Write-Host "  venv уже есть (Python $venvVer) — переиспользую"
