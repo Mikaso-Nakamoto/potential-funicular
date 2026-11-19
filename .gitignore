@@ -37,3 +37,6 @@ usb-kit/sessions/*
 !usb-kit/sessions/.gitkeep
 usb-kit/config/skills/*
 !usb-kit/config/skills/.gitkeep
+
+# готовые архивы для раздачи (собираются локально)
+/usb-kit.zip

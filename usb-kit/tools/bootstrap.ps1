@@ -5,6 +5,8 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 # Старые Windows/PowerShell 5.1 по умолчанию любят TLS 1.0 — nodejs.org/pypi требуют 1.2+
 try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+# Русский текст в консоли: файл в UTF-8 (с BOM), консоль тоже переводим в UTF-8
+try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}
 
 $ROOT = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 

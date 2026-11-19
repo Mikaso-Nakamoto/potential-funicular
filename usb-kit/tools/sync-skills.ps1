@@ -1,4 +1,4 @@
-#requires -version 5
+﻿#requires -version 5
 <# Копирует категории маркдаун-скиллов из ..\agent-skills (или $env:SKILLS_SRC) в config\skills.
    Категории — аргументы; по умолчанию набор для сетевой безопасности и крипто. #>
 $ErrorActionPreference = 'Stop'
