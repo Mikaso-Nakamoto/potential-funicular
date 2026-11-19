@@ -47,45 +47,96 @@ if (-not (Test-Path $piCmd) -and -not (Test-Path $piCli)) {
 # -------------------------------------------------- Python + skillbridge ---
 Step 'Выбор Python и сборка venv'
 
-# Возвращает "3.12" если интерпретатор рабочий и >= 3.10, иначе $null
-function Get-PyVersion([string]$Cmd, [string[]]$Prefix) {
-  $a = @($Prefix) + @('-c', 'import sys;print("%d.%d" % sys.version_info[:2])')
-  try { $o = & $Cmd @a 2>$null } catch { return $null }
-  if ($LASTEXITCODE -ne 0 -or -not $o) { return $null }
-  $v = ("$o" -split "`r?`n")[0].Trim()
-  if ($v -match '^(\d+)\.(\d+)$' -and [int]$Matches[1] -eq 3 -and [int]$Matches[2] -ge 10) { return $v }
+# Проверка кандидата: возвращает "3.14", если интерпретатор рабочий и >= 3.10, иначе $null.
+# Тонкость: при $ErrorActionPreference='Stop' любой вывод в stderr от native-команды
+# (например, "py -3.12" когда 3.12 не установлен) валит скрипт — поэтому локально
+# переключаемся на 'Continue' и читаем stdout+stderr вместе, а версию ищем регуляркой.
+function Test-Py([string]$Exe, [string[]]$Prefix) {
+  $prevEap = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  $lines = @()
+  try {
+    $path = $null
+    if (Test-Path -LiteralPath $Exe) {
+      $path = $Exe
+    } else {
+      $found = Get-Command $Exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+      if ($found) { if ($found.Path) { $path = $found.Path } else { $path = $found.Source } }
+    }
+    if (-not $path) { $ErrorActionPreference = $prevEap; return $null }
+    $a = @($Prefix) + @('-c', 'import sys;print("%d.%d" % sys.version_info[:2])')
+    $lines = @(& $path @a 2>&1 | ForEach-Object { "$_" })
+  } catch {
+    $lines = @()
+  }
+  $ErrorActionPreference = $prevEap
+  foreach ($l in $lines) {
+    $t = ("$l").Trim()
+    if ($t -match '^3\.(\d+)$') {
+      if ([int]$Matches[1] -ge 10) { return $t }
+      return $null
+    }
+  }
   return $null
 }
 
-# 3.12/3.13 — самая проверенная связка с mcp/pydantic; 3.14 берём последней из «py -3»
-$cands = @(
-  @{ Cmd = 'py';     Prefix = @('-3.12') },
-  @{ Cmd = 'py';     Prefix = @('-3.13') },
-  @{ Cmd = 'py';     Prefix = @('-3') },
-  @{ Cmd = 'python'; Prefix = @() }
-)
-if ($env:PYTHON) { $cands = @(@{ Cmd = $env:PYTHON; Prefix = @() }) + $cands }
+# 3.12/3.13 — самая проверенная связка с mcp/pydantic; 3.14 берём последней из «py -3».
+# Последние кандидаты — обход типовых мест установки на случай, если PATH не настроен.
+$cands = @()
+if ($env:PYTHON) { $cands += [pscustomobject]@{ Exe = $env:PYTHON; Args = @(); Label = 'PYTHON' } }
+$cands += [pscustomobject]@{ Exe = 'py';      Args = @('-3.12'); Label = 'py -3.12' }
+$cands += [pscustomobject]@{ Exe = 'py';      Args = @('-3.13'); Label = 'py -3.13' }
+$cands += [pscustomobject]@{ Exe = 'py';      Args = @('-3');    Label = 'py -3' }
+$cands += [pscustomobject]@{ Exe = 'python';  Args = @();        Label = 'python' }
+$cands += [pscustomobject]@{ Exe = 'python3'; Args = @();        Label = 'python3' }
+foreach ($g in @("$env:LOCALAPPDATA\Programs\Python\Python3*\python.exe",
+                 "C:\Python3*\python.exe",
+                 "$env:ProgramFiles\Python3*\python.exe")) {
+  foreach ($f in @(Get-ChildItem -Path $g -ErrorAction SilentlyContinue)) {
+    $cands += [pscustomobject]@{ Exe = $f.FullName; Args = @(); Label = $f.FullName }
+  }
+}
 
-$pyCmd = $null; $pyPrefix = @(); $pyVer = $null
+$pyExe = $null; $pyPrefix = @(); $pyVer = $null
 foreach ($c in $cands) {
-  $v = Get-PyVersion $c.Cmd $c.Prefix
-  if ($v) { $pyCmd = $c.Cmd; $pyPrefix = $c.Prefix; $pyVer = $v; break }
+  $v = Test-Py $c.Exe $c.Args
+  if ($v) {
+    $pyExe = $c.Exe; $pyPrefix = $c.Args; $pyVer = $v
+    Write-Host "  Python $v  ($($c.Label))" -ForegroundColor Green
+    break
+  }
+  Write-Host "    $($c.Label): не подошёл" -ForegroundColor DarkGray
 }
-if (-not $pyCmd) {
-  throw "Python 3.10+ не найден. Установите: winget install -e --id Python.Python.3.12  (или python.org, галочка 'Add to PATH')"
+if (-not $pyExe) {
+  throw @"
+Python 3.10+ не найден ни одним способом.
+  Проверьте в этом же окне:   py -3 --version
+  Если версия печатается — пришлите мне вывод, доработаю определение.
+  Если нет — установите:      winget install -e --id Python.Python.3.12
+"@
 }
-Write-Host "  Python $pyVer ($pyCmd $($pyPrefix -join ' '))"
 if ($pyVer -match '^3\.(1[4-9])$') {
-  Warn "Python $pyVer очень свежий: если pip ниже упадёт на сборке колёс (pydantic и т.п.), поставьте 3.12: winget install -e --id Python.Python.3.12"
+  Warn "Python $pyVer очень свежий: если pip ниже упадёт на сборке колёс (pydantic), поставьте 3.12 и удалите venv."
 }
 
 if (Test-Path "$ROOT\venv\Scripts\python.exe") {
-  $venvVer = (& "$ROOT\venv\Scripts\python.exe" -c 'import sys;print("%d.%d" % sys.version_info[:2])') -join ''
+  $venvVer = '?'
+  try {
+    $prevEap2 = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $venvVer = ((& "$ROOT\venv\Scripts\python.exe" -c 'import sys;print("%d.%d" % sys.version_info[:2])' 2>&1 |
+                 ForEach-Object { "$_" }) -join '').Trim()
+    $ErrorActionPreference = $prevEap2
+  } catch { }
   Write-Host "  venv уже есть (Python $venvVer) — переиспользую"
 } else {
-  & $pyCmd @pyPrefix -m venv "$ROOT\venv"
-  if ($LASTEXITCODE -ne 0 -or -not (Test-Path "$ROOT\venv\Scripts\python.exe")) {
-    throw "Не удалось создать venv. Для python.org-сборки нужен модуль venv (обычно он есть)."
+  $prevEap3 = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  & $pyExe @pyPrefix -m venv "$ROOT\venv"
+  $venvRc = $LASTEXITCODE
+  $ErrorActionPreference = $prevEap3
+  if ($venvRc -ne 0 -or -not (Test-Path "$ROOT\venv\Scripts\python.exe")) {
+    throw "Не удалось создать venv (код $venvRc). Для python.org-сборки нужен модуль venv (обычно он есть)."
   }
 }
 
