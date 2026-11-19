@@ -40,3 +40,6 @@ usb-kit/config/skills/*
 
 # готовые архивы для раздачи (собираются локально)
 /usb-kit.zip
+
+# однофайловый установщик (генерируется tools/make-single-bat.py)
+/USB-KIT.bat
