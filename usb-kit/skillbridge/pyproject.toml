@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "skillbridge"
+version = "0.1.0"
+description = "MCP stdio gateway over skillware-format skill bundles: typed contracts, deterministic execution."
+requires-python = ">=3.9"
+dependencies = [
+  "mcp>=1.2,<3",
+  "PyYAML>=6.0",
+]
+
+[project.scripts]
+skillbridge = "skillbridge.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/skillbridge"]

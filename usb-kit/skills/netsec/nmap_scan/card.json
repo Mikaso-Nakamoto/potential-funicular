@@ -1,0 +1,9 @@
+{
+  "name": "netsec/nmap_scan",
+  "version": "0.1.0",
+  "issuer": { "name": "local", "org": "usb-kit" },
+  "category": "netsec",
+  "tags": ["network-security", "nmap", "reconnaissance"],
+  "description": "Structured nmap recon with typed inputs/outputs and safe defaults.",
+  "presentation": { "icon": "radar", "color": "#2ECC71" }
+}

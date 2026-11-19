@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "skillbridge": {
+      "command": "skillbridge",
+      "env": {
+        "SKILLS_ROOT": "${PI_STICK_ROOT}/skills"
+      },
+      "timeout": 300,
+      "description": "Типизированные навыки формата skillware: skills_list / skills_info / skills_invoke."
+    },
+    "ida": {
+      "command": "echo",
+      "args": ["ida-mcp placeholder — Phase 2"],
+      "enabled": false,
+      "description": "TODO(Phase 2): мост к IDA Pro 9.5 (idalib) + RE-навыки Awesome-REA как бандлы в skills/rea/."
+    }
+  }
+}

@@ -1,0 +1,71 @@
+name: "netsec/nmap_scan"
+version: "0.1.0"
+tier: core
+shape: atomic
+target:
+  - software
+tags:
+  - network-security
+  - nmap
+  - reconnaissance
+  - port-scanning
+description: >-
+  Authorized network reconnaissance via nmap: host/service discovery on explicit
+  targets, structured XML-derived output. Default safe profile: TCP connect scan,
+  no privileged or aggressive flags.
+short_description: "Structured nmap recon with typed inputs/outputs and safe defaults."
+issuer:
+  name: local
+  org: usb-kit
+category: "netsec"
+parameters:
+  type: object
+  properties:
+    target:
+      type: string
+      description: "One target: IPv4/IPv6, CIDR range, or DNS name. No spaces, no shell metacharacters."
+    ports:
+      type: string
+      description: "Port selection like '22,80,443' or '1-1024'. Digits and commas/hyphens only. Omit for nmap defaults."
+    scripts:
+      type: string
+      description: "NSE script selection, e.g. 'default' or 'http-title,ssl-cert'. Letters, digits, and ,.-_*+ only."
+    timing:
+      type: string
+      enum: ["T0", "T1", "T2", "T3", "T4", "T5"]
+      description: "Timing template. Default T3. Avoid T4/T5 on fragile production links."
+    timeout:
+      type: integer
+      minimum: 5
+      maximum: 900
+      description: "Hard wall-clock limit for the scan in seconds. Default 180."
+  required:
+    - target
+outputs:
+  status:
+    type: string
+    description: "'success', 'error', or 'timeout'"
+  summary:
+    type: string
+    description: "Human-readable one-liner: hosts up, open ports found."
+  hosts:
+    type: array
+    description: "Structured per-host results parsed from nmap XML."
+  scan:
+    type: object
+    description: "Exact command executed, exit code, elapsed seconds."
+requirements:
+  - "nmap 7.80+ on PATH (override binary via NMAP_BIN env var)"
+env_vars:
+  NMAP_BIN:
+    description: "Absolute path to the nmap binary if not on PATH."
+    required: false
+constitution: |
+  1. Scan only targets covered by explicit written authorization for this engagement.
+  2. Default profile is non-privileged (TCP connect, -sT): never add SYN stealth, OS
+     fingerprinting, version-all, or IDS-evasion flags unless the operator requests them.
+  3. Never scan ranges outside the provided target argument; do not expand scope yourself.
+  4. Report errors structurally; do not fabricate hosts or ports.
+presentation:
+  icon: "radar"
+  color: "#2ECC71"

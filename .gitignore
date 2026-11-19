@@ -25,3 +25,15 @@ outputs/
 *.p12
 *.pfx
 *.keystore
+
+# usb-kit runtime artifacts (собирается бутстрапом на носителе, не коммитится)
+usb-kit/node/
+usb-kit/npm-global/
+usb-kit/venv/
+usb-kit/tmp/
+usb-kit/config/auth.json
+usb-kit/config/mcp.log*
+usb-kit/sessions/*
+!usb-kit/sessions/.gitkeep
+usb-kit/config/skills/*
+!usb-kit/config/skills/.gitkeep
