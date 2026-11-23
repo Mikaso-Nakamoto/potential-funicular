@@ -3,6 +3,8 @@
 $ErrorActionPreference = 'Stop'
 if ($env:OS -ne 'Windows_NT' -or -not [Environment]::Is64BitProcess) { throw 'Windows x64 / 64-bit PowerShell required.' }
 $directory = $PSScriptRoot
+. (Join-Path $directory 'Vault.Common.ps1')
+Assert-VaultSupportIntegrity
 $target = Join-Path $directory 'lib'
 if (Test-Path -LiteralPath $target) { throw 'lib already exists. Use a fresh test folder; installer will not overwrite it.' }
 $stage = Join-Path $directory ('.dependency-' + [Guid]::NewGuid().ToString('N'))

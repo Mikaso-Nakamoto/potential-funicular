@@ -2,26 +2,43 @@ using System;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 namespace VicAVault {
+    // Only this assembly can construct a generated creation credential.
+    public sealed class GeneratedPassphrase : IDisposable {
+        private SecureString password;
+        internal GeneratedPassphrase(string text) {
+            password = new SecureString();
+            foreach (char c in text) password.AppendChar(c);
+            password.MakeReadOnly();
+        }
+        public SecureString CopyPassword() {
+            if (password == null) throw new ObjectDisposedException("GeneratedPassphrase");
+            return password.Copy();
+        }
+        public void Dispose() { if (password != null) { password.Dispose(); password = null; } }
+    }
     // Crypto operations are provided by libsodium, not implemented here.
     public static class Crypto {
         private const string Dll = @"__SODIUM_DLL__";
         private const int HeaderSize = 36;
         private const int Maximum = 8 * 1024 * 1024;
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("VICAVA02");
-        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int sodium_init();
-        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_is_available();
-        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern void randombytes_buf([Out] byte[] output, UIntPtr size);
-        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_pwhash([Out] byte[] key, ulong length, byte[] password, ulong passwordLength, byte[] salt, ulong ops, UIntPtr memory, int algorithm);
-        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_encrypt([Out] byte[] cipher, out ulong cipherLength, byte[] message, ulong messageLength, byte[] ad, ulong adLength, IntPtr secretNonce, byte[] nonce, byte[] key);
-        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_decrypt([Out] byte[] message, out ulong messageLength, IntPtr secretNonce, byte[] cipher, ulong cipherLength, byte[] ad, ulong adLength, byte[] nonce, byte[] key);
-        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr sodium_version_string();
         public static void CheckSupport() {
             if (!Environment.Is64BitProcess) throw new InvalidOperationException("64-bit PowerShell required.");
@@ -54,33 +71,43 @@ namespace VicAVault {
             } catch { Array.Clear(key, 0, key.Length); throw; }
             finally { Array.Clear(bytes, 0, bytes.Length); }
         }
-        // Deliberately conservative rejection heuristics, NOT an entropy estimate.
-        // Prefer six independently random words from a reputable password manager.
-        public static void ValidateNewPassword(SecureString password) {
-            byte[] encoded = PasswordBytes(password);
-            try {
-                string text = new UTF8Encoding(false, true).GetString(encoded);
-                if (text.Length < 16) throw new ArgumentException("Use at least 16 characters after NFC normalization.");
-                string folded = text.ToLowerInvariant();
-                string[] common = { "password", "qwerty", "123456", "letmein", "пароль", "йцукен" };
-                foreach (string item in common)
-                    if (folded.Contains(item)) throw new ArgumentException("Common password pattern. Use a randomly generated passphrase.");
-                int distinct = 0;
-                for (int i = 0; i < folded.Length; i++)
-                    if (!Char.IsWhiteSpace(folded[i]) && folded.IndexOf(folded[i]) == i) distinct++;
-                if (distinct < 8) throw new ArgumentException("Too few distinct characters. Use a randomly generated passphrase.");
-                for (int period = 1; period <= text.Length / 2; period++) {
-                    bool repeats = true;
-                    for (int i = period; i < text.Length; i++) if (folded[i] != folded[i % period]) { repeats = false; break; }
-                    if (repeats) throw new ArgumentException("Repeated password pattern. Use a randomly generated passphrase.");
-                }
-            } finally { Array.Clear(encoded, 0, encoded.Length); }
+        [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern uint randombytes_uniform(uint upperBound);
+        public static GeneratedPassphrase GeneratePassphrase(byte[] listBytes) {
+            CheckSupport();
+            if (listBytes == null || listBytes.Length != 108800) throw new ArgumentException("Invalid word list size.");
+            using (SHA256 hash = SHA256.Create()) {
+                string digest = BitConverter.ToString(hash.ComputeHash(listBytes)).Replace("-", "").ToLowerInvariant();
+                if (digest != "addd35536511597a02fa0a9ff1e5284677b8883b83e986e43f15a3db996b903e")
+                    throw new ArgumentException("Word list integrity check failed.");
+            }
+            string[] lines = new UTF8Encoding(false, true).GetString(listBytes).Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines.Length != 7776) throw new ArgumentException("Expected 7776 entries.");
+            var seen = new Dictionary<string, bool>(StringComparer.Ordinal);
+            string[] words = new string[7776];
+            for (int i = 0; i < lines.Length; i++) {
+                string[] fields = lines[i].Split('\t');
+                if (fields.Length != 2 || !Regex.IsMatch(fields[0], "^[1-6]{5}$") ||
+                    !Regex.IsMatch(fields[1], "^[a-z]+(-[a-z]+)?$") || seen.ContainsKey(fields[1]))
+                    throw new ArgumentException("Malformed word list.");
+                seen.Add(fields[1], true);
+                int number = 0;
+                foreach (char digit in fields[0]) number = number * 6 + (digit - '1');
+                if (number != i) throw new ArgumentException("Word list order mismatch.");
+                words[i] = fields[1];
+            }
+            string[] chosen = new string[6];
+            // libsodium implements unbiased uniform sampling, not random % wordCount.
+            // Repeated words are allowed; no output filtering that would skew the distribution.
+            for (int i = 0; i < chosen.Length; i++) chosen[i] = words[randombytes_uniform(7776)];
+            return new GeneratedPassphrase(String.Join(" ", chosen));
         }
+        // Low-level primitive: supports explicit synthetic passwords and opening old preview data.
+        // User-facing creation MUST use Write-NewVault with GeneratedPassphrase, never raw Seal.
         public static byte[] Seal(byte[] plaintext, SecureString password) {
             CheckSupport();
             if (plaintext == null || plaintext.Length > Maximum || password == null || password.Length < 16)
                 throw new ArgumentException("Use a passphrase of at least 16 characters; payload limit is 8 MiB.");
-            ValidateNewPassword(password);
             byte[] salt = new byte[16], nonce = new byte[12], header = new byte[HeaderSize], key = null;
             randombytes_buf(salt, new UIntPtr(16)); randombytes_buf(nonce, new UIntPtr(12));
             Buffer.BlockCopy(Magic, 0, header, 0, 8);

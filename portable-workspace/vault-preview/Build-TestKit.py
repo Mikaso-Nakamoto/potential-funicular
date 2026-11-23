@@ -8,8 +8,8 @@ ROOT = HERE.parents[1]
 FILES = [
     'Install-VaultDependency.ps1', 'Start-VaultCheck.ps1', 'Run-VaultTests.ps1', 'Test-Vault.ps1',
     'Test-VaultIO.ps1', 'Test-VaultLoadFailure.ps1', 'Test-SodiumImports.ps1',
-    'Test-SodiumPe.ps1', 'SodiumPe.cs', 'Vault.Common.ps1', 'VaultCrypto.cs',
-    'tests/synthetic-vector.json', 'FORMAT.md', 'LICENSE.libsodium.txt',
+    'Test-SodiumPe.ps1', 'Test-VaultGenerator.ps1', 'Test-VaultDllSearch.ps1', 'SodiumPe.cs', 'Vault.Common.ps1', 'VaultCrypto.cs',
+    'tests/synthetic-vector.json', 'tests/test_format.py', 'tests/test_revision3.py', 'words/eff-large.txt', 'words/NOTICE.md', 'FORMAT.md', 'LICENSE.libsodium.txt',
 ]
 entries = {'READ-ME.ru.md': (HERE / 'TEST-KIT.ru.md').read_bytes(),
            'Workspace.Common.ps1': (HERE.parent / 'Workspace.Common.ps1').read_bytes()}
@@ -22,7 +22,7 @@ assert not any(part.lower() in ('runtime', 'private', 'lib')
 assert not any(name.endswith(('.dll', '.vault')) for name in entries)
 sums = ''.join(f'{hashlib.sha256(data).hexdigest()}  {name}\n' for name, data in sorted(entries.items()))
 entries['SHA256SUMS.txt'] = sums.encode()
-output = ROOT / 'downloads' / 'VIC-A-Vault-Test-Kit-R2.zip'
+output = ROOT / 'downloads' / 'VIC-A-Vault-Test-Kit-R3.zip'
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
     for name, data in sorted(entries.items()):
         info = zipfile.ZipInfo(name, date_time=(2026, 11, 22, 0, 0, 0))

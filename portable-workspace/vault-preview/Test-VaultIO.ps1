@@ -5,7 +5,8 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Vault.Common.ps1')
 Initialize-VaultCrypto
 $stage = Join-Path $PSScriptRoot ('.vault-io-' + [Guid]::NewGuid().ToString('N'))
-$password = ConvertTo-SecureString 'Synthetic vault testing phrase 8274!' -AsPlainText -Force
+$generated = New-VaultPassphrase
+$password = $generated.CopyPassword()
 $wrong = ConvertTo-SecureString 'Different synthetic testing phrase 9275!' -AsPlainText -Force
 $owned = $false
 function Expect-Failure([string]$Name, [scriptblock]$Action) {
@@ -27,23 +28,28 @@ try {
             outbounds = @($outbound)
         }
     }
+    foreach ($customText in @('asdfghjklzxcvbnm','Hello world 2026!!','correct horse battery staple','abcdefghijklmnop')) {
+        $custom = ConvertTo-SecureString $customText -AsPlainText -Force
+        try { Expect-Failure 'manually chosen creation credential refused' { Write-NewVault (Join-Path $stage 'custom.vault') $document $custom $custom } }
+        finally { $custom.Dispose() }
+    }
     $path = Join-Path $stage 'synthetic.vault'
-    Write-NewVault $path $document $password $password
+    Write-NewVault $path $document $generated $password
     $read = Read-Vault $path $password
     if ($read.subscription.url -cne 'https://example.invalid/synthetic-only') { throw 'Read-back payload mismatch.' }
     Write-Host 'PASS: create, flush, read-back, schema and configuration policy'
     $before = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
-    Expect-Failure 'existing vault cannot be overwritten' { Write-NewVault $path $document $password $password }
+    Expect-Failure 'existing vault cannot be overwritten' { Write-NewVault $path $document $generated $password }
     Expect-Failure 'wrong password' { Read-Vault $path $wrong }
     $held = [IO.File]::Open($path, [IO.FileMode]::Open, [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
     try { Expect-Failure 'locked file' { Read-Vault $path $password } } finally { $held.Dispose() }
     $mismatch = Join-Path $stage 'mismatch.vault'
-    Expect-Failure 'confirmation mismatch' { Write-NewVault $mismatch $document $password $wrong }
+    Expect-Failure 'confirmation mismatch' { Write-NewVault $mismatch $document $generated $wrong }
     if (Test-Path -LiteralPath $mismatch) { throw 'Failed confirmation published a vault.' }
-    Expect-Failure 'write to missing parent fails' { Write-NewVault (Join-Path $stage 'missing\new.vault') $document $password $password }
+    Expect-Failure 'write to missing parent fails' { Write-NewVault (Join-Path $stage 'missing\new.vault') $document $generated $password }
     $invalid = $document | ConvertTo-Json -Depth 30 | ConvertFrom-Json
     $invalid.activeConfig.inbounds[0].listen = '0.0.0.0'
-    Expect-Failure 'unsafe configuration rejected before writing' { Write-NewVault (Join-Path $stage 'bad.vault') $invalid $password $password }
+    Expect-Failure 'unsafe configuration rejected before writing' { Write-NewVault (Join-Path $stage 'bad.vault') $invalid $generated $password }
     # A valid AEAD tag does not replace schema/policy validation.
     $badPlain = [Text.Encoding]::UTF8.GetBytes(($invalid | ConvertTo-Json -Depth 30 -Compress))
     try { $badCipher = [VicAVault.Crypto]::Seal($badPlain, $password) }
@@ -63,6 +69,6 @@ try {
     Write-Host 'PASS: baseline preserved and no encrypted staging files remain'
     Write-Host 'Not tested: disk-full, power loss, physical unplug, malicious filesystem races.'
 } finally {
-    $password.Dispose(); $wrong.Dispose()
+    $generated.Dispose(); $password.Dispose(); $wrong.Dispose()
     if ($owned) { Remove-Item -LiteralPath $stage -Recurse -Force }
 }

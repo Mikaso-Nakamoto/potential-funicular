@@ -45,17 +45,33 @@ function Run-TestProcess([string]$Name, [string]$Script, [string]$Extra = '') {
 try {
     New-Item -ItemType Directory -Path $stage | Out-Null
     $owned = $true
-    $lines.Add('VIC-A isolated vault tests R2 (official MSVC); only synthetic data. No Runtime access.')
+    Copy-Item -LiteralPath (Join-Path (Split-Path -Parent $tool) 'Workspace.Common.ps1') -Destination $stage
+    $lines.Add('VIC-A isolated vault tests R3 (generated-only creation, System32 dependencies); only synthetic data. No Runtime access.')
+    $lines.Add(('CLR: ' + [Environment]::Version.ToString() + '; OS: ' + [Environment]::OSVersion.VersionString))
     $lines.Add(('Windows PowerShell: ' + $PSVersionTable.PSVersion.ToString() + '; x64: ' + [Environment]::Is64BitProcess))
+    # Bind the result to exact inputs, not just a screenshot or mutable release label.
+    $hashFiles = @(Get-ChildItem -LiteralPath $tool -File | Where-Object { $_.Extension -in @('.ps1','.cs') })
+    foreach ($dir in @('lib','words','tests')) { $hashFiles += @(Get-ChildItem -LiteralPath (Join-Path $tool $dir) -File) }
+    foreach ($file in ($hashFiles | Sort-Object FullName)) {
+        $relative = $file.FullName.Substring($tool.Length).TrimStart('\','/')
+        $lines.Add(('SHA256 ' + (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash + '  ' + $relative))
+    }
+    $lines.Add(('SHA256 ' + (Get-FileHash -LiteralPath (Join-Path (Split-Path -Parent $tool) 'Workspace.Common.ps1') -Algorithm SHA256).Hash + '  ../Workspace.Common.ps1'))
     Run-TestProcess 'Synthetic PE inspector' (Join-Path $tool 'Test-SodiumPe.ps1')
     Run-TestProcess 'PE dependency inspection' (Join-Path $tool 'Test-SodiumImports.ps1') ('-Path "' + (Join-Path $tool 'lib\vica-sodium.dll') + '"')
+    Run-TestProcess 'Generated passphrase sampling' (Join-Path $tool 'Test-VaultGenerator.ps1')
     Run-TestProcess 'Crypto and normalization' (Join-Path $tool 'Test-Vault.ps1')
     Run-TestProcess 'Vault file I/O and policy' (Join-Path $tool 'Test-VaultIO.ps1')
-    foreach ($case in @('dll','manifest','source')) {
+    foreach ($case in @('baseline','dll','manifest','source','gate','pe')) {
         $copy = Join-Path $stage $case
+        # Full source/fixture/dependency copy. Never copy reports or nested scratch directories.
         New-Item -ItemType Directory -Path $copy | Out-Null
-        foreach ($file in @('Vault.Common.ps1','VaultCrypto.cs')) { Copy-Item -LiteralPath (Join-Path $tool $file) -Destination $copy }
-        Copy-Item -LiteralPath (Join-Path $tool 'lib') -Destination (Join-Path $copy 'lib') -Recurse
+        foreach ($file in Get-ChildItem -LiteralPath $tool -File) {
+            if ($file.Extension -in @('.ps1','.cs','.md','.py')) { Copy-Item -LiteralPath $file.FullName -Destination $copy }
+        }
+        foreach ($directory in @('lib','words','tests')) {
+            Copy-Item -LiteralPath (Join-Path $tool $directory) -Destination (Join-Path $copy $directory) -Recurse
+        }
         switch ($case) {
             'dll' { [IO.File]::WriteAllBytes((Join-Path $copy 'lib\vica-sodium.dll'), (New-Object byte[] 256)) }
             'manifest' {
@@ -64,12 +80,20 @@ try {
                 $manifest.archiveSha256 = 'incorrect-synthetic-value'
                 [IO.File]::WriteAllText($path, ($manifest | ConvertTo-Json))
             }
-            'source' { [IO.File]::AppendAllText((Join-Path $copy 'VaultCrypto.cs'), "`r`n// synthetic mutation`r`n") }
+            'gate' { [IO.File]::AppendAllText((Join-Path $copy 'Test-SodiumImports.ps1'), ([Environment]::NewLine + '# synthetic mutation' + [Environment]::NewLine)) }
+            'pe' { [IO.File]::AppendAllText((Join-Path $copy 'SodiumPe.cs'), ([Environment]::NewLine + '// synthetic mutation' + [Environment]::NewLine)) }
+            'source' { [IO.File]::AppendAllText((Join-Path $copy 'VaultCrypto.cs'), ([Environment]::NewLine + '// synthetic mutation' + [Environment]::NewLine)) }
+        }
+        if ($case -eq 'baseline') {
+            Run-TestProcess 'Full-copy baseline crypto' (Join-Path $copy 'Test-Vault.ps1')
+            Run-TestProcess 'Full-copy baseline I/O' (Join-Path $copy 'Test-VaultIO.ps1')
+            Run-TestProcess 'Neighbour dependency canary' (Join-Path $tool 'Test-VaultDllSearch.ps1') ('-ToolDirectory "' + $copy + '"')
+            continue
         }
         Run-TestProcess ('Integrity rejection: ' + $case) (Join-Path $tool 'Test-VaultLoadFailure.ps1') ('-ToolDirectory "' + $copy + '" -Case ' + $case)
     }
     $lines.Add('RESULT: PASS for the implemented tests only.')
-    $lines.Add('NOT TESTED: missing AES hardware, hostile tar archives, disk-full, power failure, physical unplug, full migration or Xray integration.')
+    $lines.Add('NOT TESTED: missing AES hardware, hostile ZIP archives, disk-full, power failure, physical unplug, full migration or Xray integration.')
     Write-Host 'PASS: implemented tests completed. Send vault-test-report.txt; do not migrate yet.' -ForegroundColor Green
 } catch {
     $lines.Add(('RESULT: FAIL. ' + $_.Exception.Message))

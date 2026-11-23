@@ -2,7 +2,22 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $vaultToolDirectory = $PSScriptRoot
+function Assert-VaultSupportIntegrity {
+    foreach ($entry in @(
+        @('Test-SodiumImports.ps1','78f20314b2dbcfbab33fa486a7f36201ad6abd76edbc373ebd480f2a25277e1f'),
+        @('SodiumPe.cs','79c7dd318eb2dda05d8d6e316c1848821c6d511a05ab1c18dbcf9edf9381f4df')
+    )) {
+        if ((Get-FileHash -LiteralPath (Join-Path $vaultToolDirectory $entry[0]) -Algorithm SHA256).Hash -ne $entry[1]) {
+            throw 'Vault support integrity check failed.'
+        }
+    }
+}
+function New-VaultPassphrase {
+    Initialize-VaultCrypto
+    return [VicAVault.Crypto]::GeneratePassphrase([IO.File]::ReadAllBytes((Join-Path $vaultToolDirectory 'words\eff-large.txt')))
+}
 function Initialize-VaultCrypto {
+    Assert-VaultSupportIntegrity
     if ('VicAVault.Crypto' -as [type]) { return }
     $dll = [IO.Path]::GetFullPath((Join-Path $vaultToolDirectory 'lib\vica-sodium.dll'))
     $manifestPath = Join-Path $vaultToolDirectory 'lib\dependency.json'
@@ -12,7 +27,7 @@ function Initialize-VaultCrypto {
     if ($manifest.version -ne '1.0.22' -or $manifest.build -ne 'msvc-v143-x64-release' -or $manifest.archiveSha256 -ne '3e03a726fac4bc09cb61d8f29d658ef7a5eca0811de59082130414f7ca2e4279' -or
         (Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash -ne $manifest.dllSha256) { throw 'Crypto dependency integrity check failed.' }
     $sourcePath = Join-Path $vaultToolDirectory 'VaultCrypto.cs'
-    if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne '3e86d56213d341aa9339a712ac09fe62409ac3676c97596a49eefbf00e666611') { throw 'Crypto source integrity check failed.' }
+    if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne '9de76c76388574a64b031e4684c33e42864fd09d098a50dc7dc50698414476cb') { throw 'Crypto source integrity check failed.' }
     & (Join-Path $vaultToolDirectory 'Test-SodiumImports.ps1') -Path $dll
     $source = [IO.File]::ReadAllText($sourcePath).Replace('__SODIUM_DLL__', $dll.Replace('"','""'))
     Add-Type -TypeDefinition $source -ErrorAction Stop
@@ -56,12 +71,13 @@ function Read-Vault([string]$Path, [Security.SecureString]$Password) {
     } catch { throw 'Vault could not be opened: wrong password, modified file, unavailable crypto or unsupported format. No fallback used.' }
     finally { if ($plain) { [Array]::Clear($plain, 0, $plain.Length) } }
 }
-function Write-NewVault([string]$Path, $Document, [Security.SecureString]$Password, [Security.SecureString]$Confirmation) {
+function Write-NewVault([string]$Path, $Document, $Generated, [Security.SecureString]$Confirmation) {
     Initialize-VaultCrypto
     if (Test-Path -LiteralPath $Path) { throw 'Vault already exists; this preview never overwrites it.' }
-    [VicAVault.Crypto]::ValidateNewPassword($Password)
+    if ($Generated -isnot [VicAVault.GeneratedPassphrase]) { throw 'Creation requires the built-in random passphrase generator; custom passwords are not accepted.' }
     # Validate JSON-shaped payload before creating any file.
     Assert-VaultDocument ($Document | ConvertTo-Json -Depth 30 -Compress | ConvertFrom-Json)
+    $Password = $Generated.CopyPassword()
     $ownsTemp = $false
     $plain = $null; $verified = $null; $temp = $Path + '.' + [Guid]::NewGuid().ToString('N') + '.tmp'
     try {
@@ -83,6 +99,7 @@ function Write-NewVault([string]$Path, $Document, [Security.SecureString]$Passwo
         [IO.File]::Move($temp, $Path)
     } catch { throw 'Vault creation failed (confirmation, validation or I/O). Original configuration was not changed.' }
     finally {
+        $Password.Dispose()
         if ($plain) { [Array]::Clear($plain, 0, $plain.Length) }
         if ($verified) { [Array]::Clear($verified, 0, $verified.Length) }
         if ($ownsTemp -and (Test-Path -LiteralPath $temp)) { try { Remove-Item -LiteralPath $temp -Force } catch { Write-Warning 'Encrypted staging file was not removed.' } }

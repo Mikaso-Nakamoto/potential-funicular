@@ -4,7 +4,11 @@ param([Parameter(Mandatory=$true)][string]$Path)
 $ErrorActionPreference = 'Stop'
 if (-not [Environment]::Is64BitProcess -or $env:OS -ne 'Windows_NT') { throw 'Windows x64 process required for System32 inspection.' }
 if (-not ('VicAReview.SodiumPe' -as [type])) {
-    Add-Type -TypeDefinition ([IO.File]::ReadAllText((Join-Path $PSScriptRoot 'SodiumPe.cs'))) -ErrorAction Stop
+    $peBytes = [IO.File]::ReadAllBytes((Join-Path $PSScriptRoot 'SodiumPe.cs'))
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { $digest = ([BitConverter]::ToString($sha.ComputeHash($peBytes))).Replace('-','').ToLowerInvariant() } finally { $sha.Dispose() }
+    if ($digest -cne '79c7dd318eb2dda05d8d6e316c1848821c6d511a05ab1c18dbcf9edf9381f4df') { throw 'PE source integrity check failed.' }
+    Add-Type -TypeDefinition ([Text.Encoding]::UTF8.GetString($peBytes)) -ErrorAction Stop
 }
 function Get-ImageImports([string]$ImagePath) {
     $stream = [IO.File]::Open($ImagePath, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)

@@ -1,79 +1,98 @@
-# VIC-A vault preview: format 02 (not a released migration)
+# VIC-A experimental vault — format 02, revision R3
 
-## Envelope
+## Status and trust boundary
 
-`VICAVA02` (8 ASCII bytes) | salt (16 bytes) | nonce (12 bytes) |
-AES-256-GCM ciphertext (N bytes) | authentication tag (16 bytes).
-The first 36 bytes are authenticated associated data. Plaintext limit: 8 MiB.
-Every encryption generates a fresh salt and nonce using libsodium randombytes_buf.
-Unknown magic, including preview `VICAVA01`, is rejected without fallback.
-No implicit conversion of existing vaults. A future format change needs a new magic
-and explicit, tested migration. JSON payload version is separate from crypto version.
+Not an integrated password-protected launcher. Start/Update still use plaintext
+xray.json; browser profile/cookies/downloads are not encrypted. No auto-deletion.
+Scripts, verifier, word list, OS and execution environment must be trusted.
+Local hash pins detect individual changes, NOT replacement of the whole verifier
+and payload. Source distribution authenticity needs an independent trust anchor.
+Attacker code execution/admin, preloaded injected modules and rollback are outside
+this storage-encryption model. All managed-string erasure is best effort only.
 
-## Password and KDF
+## Envelope (unchanged by R3)
 
-Input: at most 1024 UTF-16 code units before normalization. Encode NFC-normalized
-text as strict UTF-8, with no trimming, case folding or compatibility normalization.
-Normalization is identical for creation, confirmation and opening. It does not
-correct keyboard layouts or visually similar characters. The temporary normalized
-managed string cannot be reliably erased; this is an explicit limitation.
+ASCII VICAVA02 (8) | random salt (16) | random nonce (12) | ciphertext (N) | tag (16).
+First 36 bytes are GCM associated data. AES-256-GCM from libsodium, no fallback.
+Plaintext cap 8 MiB. Unknown magic (including VICAVA01) rejected. Each Seal gets
+fresh salt/nonce via randombytes_buf. Key: crypto_pwhash algorithm 2 (Argon2id13),
+32 bytes, opslimit=3, memlimit=67108864, libsodium mapping p=1. Not RFC9106 p=4.
+NFC then strict UTF-8 on creation, confirmation and opening; no trimming/case fold.
+Password input 1..1024 UTF-16 code units; raw Seal has a minimum 16-code-unit guard.
+NFC strings/BSTR/JSON may remain in managed memory. Keyboard/IME differences beyond
+canonical Unicode equivalence are not corrected. No recovery for a lost phrase.
 
-Key: libsodium crypto_pwhash algorithm 2 (Argon2id13), output 32 bytes,
-opslimit 3, memlimit 67108864 bytes. This uses libsodium's p=1 mapping; it is NOT
-claimed to implement RFC 9106's p=4 recommended profile. Parameters are fixed in
-code, never accepted from an unauthenticated file. Changing them requires new magic.
+Magic changes if normalization, KDF parameters, envelope or cipher semantics
+change. Word-list/generation policy is NOT decryption metadata and can evolve
+without changing magic. Existing valid format-02 data remains readable.
 
-Creation policy: at least 16 UTF-16 code units after NFC, reject a small explicit
-set of common patterns, fewer than 8 distinct non-whitespace lowercased characters,
-and periodic repetition. This is a rejection heuristic, NOT an entropy estimator
-or zxcvbn equivalent. Passing it does NOT imply resistance to offline guessing.
-Recommendation: six independently randomly selected words from a trusted password
-manager, with an adequately large word list. Password loss is unrecoverable.
-Opening does not apply creation heuristics to preserve access if policy evolves.
+## Creation policy R3 — generated credentials, not a complexity estimator
 
-## Payload and publication
+New-VaultPassphrase calls Crypto.GeneratePassphrase using pinned EFF data:
+7776 unique words; six independent selections WITH replacement using libsodium
+randombytes_uniform(7776), joined by one ASCII space. No output filtering.
+6*log2(7776)=77.548875... bits under trusted, unbiased CSPRNG assumptions.
+Exact dictionary bytes/hash/license/provenance: words/NOTICE.md.
 
-JSON version 1: subscription.url (HTTPS, no userinfo/fragment), subscription.hwid,
-activeConfig, optional createdAtUtc. No node list/selection state yet.
-Read and write require Assert-VaultDocument, including Assert-ConfigObjectPolicy.
-That object policy is the existing tunnel policy factored out of its file wrapper;
-no decrypted configuration file is needed for validation.
+GeneratedPassphrase has an internal constructor and owns a SecureString; the
+user-facing Write-NewVault only accepts that generated credential type, not raw
+user-supplied SecureString text. Prepare displays it and requires hidden re-entry;
+it never logs it intentionally, but scrollback/recordings/transcripts can capture
+it. No manual choice in this creation workflow. Do not regenerate selectively
+until a predictable favourite appears. No built-in dictionary attack estimator.
 
-Read opens one FileStream with FileShare.Read, checks length on that handle,
-reads exactly the bounded length and rejects extra/truncated bytes. This narrows
-TOCTOU exposure; it is not protection against privileged processes/filesystems.
-New vault creation only: CreateNew staging file beside target, write encrypted
-bytes, Flush(true), close, authenticate and validate read-back, File.Move without
-replacement. Cleanup only removes a staging file this operation created.
-No guarantee against all power failures, malicious filesystem changes or rollback.
-No update/backup recovery protocol yet. Originals are never automatically deleted.
+Crypto.Seal remains an explicitly LOW-LEVEL primitive accepting raw passwords
+for synthetic test vectors and interoperability. It does not prove password
+strength. Trusted code can bypass wrappers/reflection: this API is not a sandbox
+or a boundary against an attacker able to execute/edit scripts. Read accepts
+existing passwords, without requiring the current word-list policy.
 
-## Dependency and trust
+## Payload and I/O
 
-P/Invoke uses an absolute main DLL path and DefaultDllImportSearchPaths with
-UseDllDirectoryForDependencies | System32 (requires supported .NET/Windows). No process-global DLL
-search mutation. CheckSupport also requires runtime version string 1.0.22. Source SHA-256 is pinned in Vault.Common.ps1; archive SHA-256 is
-pinned; installed DLL hash is recorded in a local manifest. These checks do NOT
-protect against an attacker able to edit the verifier or manifest.
-R2 installs from the pinned official MSVC ZIP (SHA-256
-3e03a726fac4bc09cb61d8f29d658ef7a5eca0811de59082130414f7ca2e4279), selecting
-one x64/Release/v143/dynamic/libsodium.dll. It copies only that bounded regular ZIP
-member into a fixed staging filename, never archive-controlled output paths.
-The original MinGW package was rejected for libgcc_s_seh-1.dll and is not allowed.
-MSVC ReleaseDLL uses the DLL CRT: R2 requires needed vcruntime140[_1].dll in
-System32 with a valid Microsoft Authenticode signature and checks their imports too.
-No runtime redistribution or installation, no PATH lookup. UCRT API contracts and
-core Windows modules remain platform trust. This is a documented prerequisite,
-not a claim of zero external runtime dependencies. Actual Windows R2 execution
-and official MSVC binary import inspection have not been possible here.
+JSON v1: subscription.url (HTTPS, no userinfo/fragment), subscription.hwid,
+activeConfig and optional createdAtUtc. No node list/selection yet.
+Assert-VaultDocument checks schema/config on read AND creation.
+File wrapper Assert-ConfigPolicy delegates to the existing object tunnel policy.
+Vault opens one FileStream with FileShare.Read, bounds length on the handle, reads
+exact bytes and rejects truncation/extra bytes. Other reads still need separate
+race/resource review. This is not protection against hostile filesystems/reparse.
 
-The isolated test kit adds a non-executing PE32+ direct-import gate with a narrow
-Windows/verified-Microsoft-runtime allowlist; unexpected dependencies or delay imports stop installation.
-It is not a full recursive or dynamic import audit. Synthetic inspector and vault
-I/O/negative test scripts exist but have not been executed here on Windows.
+Create-only: own CreateNew staging beside target, encrypt, Flush(true), close,
+authenticate/validate read-back, File.Move without replacement. Cleanup only of
+owned stage. No directory flush/write-through protocol, crash-safe replacement,
+backup recovery, or power-loss guarantee. Original plaintext is retained.
 
-Outstanding release gates: actual official Windows DLL import/dependency review;
-Windows adversarial ZIP-entry tests; C# compilation and loader tests in Windows
-PowerShell 5.1; file-I/O, policy and failure-path execution tests; full migration,
-mandatory unlock, stdin Xray integration and encrypted subscription refresh.
-Do not interpret Linux format tests as proof these Windows paths work.
+## Native loading and dependency gate R3
+
+All eight P/Invokes use absolute main DLL path + DllImportSearchPath.System32 ONLY.
+UseDllDirectoryForDependencies was removed: lib is NOT a dependency search folder.
+Official libsodium 1.0.22 MSVC ZIP SHA-256:
+3e03a726fac4bc09cb61d8f29d658ef7a5eca0811de59082130414f7ca2e4279.
+Choose one bounded regular x64/Release/v143/dynamic/libsodium.dll ZIP member,
+write to fixed staging filename. No archive-controlled extraction paths.
+DLL hash in local manifest; runtime version 1.0.22 enforced. MinGW GCC import is
+not allowed. MSVC CRT needed on the target PC: vcruntime140[_1].dll checked only
+in System32 for Valid Microsoft Authenticode, then their imports inspected too.
+No admin/runtime installation/download, PATH lookup, or local runtime deployment.
+Core Windows modules/UCRT API contracts remain platform trust, not recursively
+audited OS code. Imports checked by DLL name, not imported functions/forwarders
+or runtime GetProcAddress. PE delay imports rejected rather than silently skipped.
+
+Common pins Crypto, SodiumPe and gate script hashes; standalone import gate pins
+SodiumPe too. These are detection checks rooted in TRUSTED SCRIPTS, not signatures.
+
+## Validation status
+
+R2+compile-fix passed on the user's Windows PowerShell 5.1 x64 (screenshot only;
+full log not supplied). That does NOT validate R3. R3 adds word generation,
+System32-only loading/canary test, complete negative copies and input hash reports.
+R3 Windows/C# execution still required. Linux tests do not execute these paths.
+
+Runner records source/fixture/list/DLL/manifest hashes, PS/CLR/OS versions.
+Tests run in fresh processes with full self-contained copies; an unmodified copy
+must pass before mutations. Shadowing regression places INVALID IMAGE canaries
+next to libsodium, initializes crypto, checks actual VC module paths. It reports
+whether VC was already loaded; preloaded state is NOT evidence for first-load
+search order, and even a clean process smoke test is not a universal loader proof.
+No malicious native code is built or executed. No hostile-ZIP, full-disk, unplug,
+power-loss, AES-absent-host, clean-machine matrix or end-to-end migration proof.

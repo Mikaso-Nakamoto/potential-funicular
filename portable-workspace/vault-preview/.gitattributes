@@ -1,0 +1,6 @@
+# Hash pins require identical bytes on Windows git checkouts as well as ZIP extraction.
+*.cs text eol=lf
+*.ps1 text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+words/eff-large.txt text eol=lf

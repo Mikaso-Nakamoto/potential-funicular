@@ -34,14 +34,19 @@ try {
         if ($length -gt 0) { [Array]::Copy($sealed1, $short, $length) }
         Expect-Rejection $short $password
     }
-    foreach ($weakText in @('aaaaaaaaaaaaaaaa','abcdabcdabcdabcd','password123456789!')) {
-        $weak = ConvertTo-SecureString $weakText -AsPlainText -Force
-        try {
-            $rejected = $false
-            try { [VicAVault.Crypto]::ValidateNewPassword($weak) } catch { $rejected = $true }
-            if (-not $rejected) { throw 'Weak password was accepted.' }
-        } finally { $weak.Dispose() }
-    }
+    $wordBytes = [IO.File]::ReadAllBytes((Join-Path $PSScriptRoot 'words\eff-large.txt'))
+    $generated = [VicAVault.Crypto]::GeneratePassphrase($wordBytes)
+    $generatedPassword = $generated.CopyPassword()
+    try {
+        $generatedEnvelope = [VicAVault.Crypto]::Seal($plain, $generatedPassword)
+        $generatedPlain = [VicAVault.Crypto]::Open($generatedEnvelope, $generatedPassword)
+        if ([Text.Encoding]::UTF8.GetString($generatedPlain) -cne $fixture.syntheticPlaintext) { throw 'Generated passphrase round-trip failed.' }
+        [Array]::Clear($generatedPlain, 0, $generatedPlain.Length)
+    } finally { $generatedPassword.Dispose(); $generated.Dispose() }
+    $wordBytes[0] = $wordBytes[0] -bxor 1
+    $rejected = $false
+    try { $null = [VicAVault.Crypto]::GeneratePassphrase($wordBytes) } catch { $rejected = $true }
+    if (-not $rejected) { throw 'Modified word list accepted.' }
     $nfcText = 'Synthetic ' + [char]0x00c4 + ' passphrase for testing!'
     $nfc = ConvertTo-SecureString $nfcText -AsPlainText -Force
     $nfd = ConvertTo-SecureString ($nfcText.Normalize([Text.NormalizationForm]::FormD)) -AsPlainText -Force
