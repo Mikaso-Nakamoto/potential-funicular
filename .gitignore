@@ -24,6 +24,8 @@ google_drive/
 portable-workspace/Runtime/
 portable-workspace/private/
 portable-workspace/.install-*/
+portable-workspace/vic-a.ui.json
+portable-workspace/vic-a.ui.json.*.tmp
 
 # Private keys and signing material
 *.key

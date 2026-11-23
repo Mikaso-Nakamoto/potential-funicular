@@ -1,6 +1,6 @@
 @echo off
 setlocal
-title IRIS - Portable Workspace
+title VIC-A - Portable Workspace
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy RemoteSigned -File "%~dp0Workspace-Console.ps1"
 if errorlevel 1 (
   echo.

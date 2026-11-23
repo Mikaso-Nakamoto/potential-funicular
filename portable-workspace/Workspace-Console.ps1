@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 [CmdletBinding()]
 param([switch]$NoSplash)
 Set-StrictMode -Version Latest
@@ -12,7 +12,84 @@ $openedAt = Get-Date
 $cachedStamp = ''; $cachedPolicy = 'NOT CHECKED'
 $interactive = $false
 try { $interactive = -not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected } catch { }
-function Row([string]$Text = '', [string]$Color = 'Gray') { return @{ Text = $Text; Color = $Color } }
+$uiLanguage = 'ru'; $introStyle = 'archive'
+$uiSettingsPath = Join-Path $homeDir 'vic-a.ui.json'
+try {
+    if ((Test-Path -LiteralPath $uiSettingsPath) -and (Get-Item -LiteralPath $uiSettingsPath).Length -le 2048) {
+        $savedUi = [IO.File]::ReadAllText($uiSettingsPath) | ConvertFrom-Json
+        if ($savedUi.language -in @('ru','en')) { $uiLanguage = $savedUi.language }
+        if ($savedUi.intro -in @('eye','archive')) { $introStyle = $savedUi.intro }
+    }
+} catch { }
+$ruText = @{
+    'VIC-A / Portable Workspace' = 'VIC-A / Портативное рабочее пространство'
+    'VIC-A / Intro unavailable in this console. Opening menu.' = 'VIC-A / Заставка недоступна в этом терминале. Открываю меню.'
+    'Console uptime' = 'Время работы панели'
+    'LOCAL HEALTH                                           LIVE / 2 SEC' = 'ЛОКАЛЬНОЕ СОСТОЯНИЕ                              ОБНОВЛЕНИЕ ~2 С'
+    'Xray files' = 'Файлы Xray'
+    'LibreWolf files' = 'Файлы LibreWolf'
+    'Config policy' = 'Политика конфига'
+    'Processes' = 'Процессы'
+    'Memory' = 'Память'
+    'Config saved' = 'Конфиг сохранён'
+    'FOUND' = 'НАЙДЕНЫ'
+    'MISSING / AMBIGUOUS' = 'НЕТ / НЕОДНОЗНАЧНО'
+    'MISSING' = 'НЕТ'
+    'PASS (local policy only)' = 'ПРОЙДЕНА (только локальная политика)'
+    'FAIL - regenerate configuration' = 'ОШИБКА — пересоздайте конфигурацию'
+    'NOT CHECKED' = 'НЕ ПРОВЕРЕНО'
+    'IDLE / not listening' = 'НЕ СЛУШАЕТ'
+    'READY / owner matches this Xray' = 'ГОТОВ / владелец — этот Xray'
+    'WARNING / owner or binding not verified' = 'ВНИМАНИЕ / владелец или адрес не подтверждены'
+    'UNKNOWN / listener inspection unavailable' = 'НЕИЗВЕСТНО / проверка порта недоступна'
+    'MiB (matching processes)' = 'МиБ (процессы этой установки)'
+    'partial or unknown' = 'неполные данные'
+    'GiB free /' = 'ГиБ свободно /'
+    'GiB' = 'ГиБ'
+    'not saved' = 'не сохранён'
+    'UNKNOWN' = 'НЕИЗВЕСТНО'
+    'REMOTE IP / DNS / LEAKS : NOT TESTED BY THIS DASHBOARD' = 'ВНЕШНИЙ IP / DNS / УТЕЧКИ: ЭТА ПАНЕЛЬ НЕ ПРОВЕРЯЕТ'
+    'Local listener readiness is NOT proof of a private connection.' = 'Готовность локального порта НЕ доказывает приватность соединения.'
+    '[1] Launch browser + tunnel (separate session window)' = '[1] Запустить браузер + туннель (отдельное окно сеанса)'
+    '[2] Request normal browser close (no forced termination)' = '[2] Запросить обычное закрытие браузера (без уничтожения процессов)'
+    '[3] Update subscription + existing device UUID / choose node' = '[3] Обновить подписку + UUID устройства / выбрать узел'
+    '[4] Open downloads folder' = '[4] Открыть папку загрузок'
+    '[5] Offline tests (synthetic inputs only)' = '[5] Офлайн-тесты (искусственные данные)'
+    '[6] Replay cinematic intro' = '[6] Повторить выбранную заставку'
+    '[0] Exit dashboard (does NOT stop the separate session)' = '[0] Выйти из панели (НЕ завершает отдельный сеанс)'
+    'Close LibreWolf, then its session window, before unplugging SSD.' = 'Перед отключением SSD закройте LibreWolf и дождитесь конца сеанса.'
+    'Keep session window open. Forced shell exit is not safe cleanup.' = 'Не закрывайте окно сеанса крестиком — это не безопасное завершение.'
+    'Session window opened. It owns the browser/tunnel lifecycle.' = 'Окно сеанса открыто. Оно управляет браузером и туннелем.'
+    'No identifiable main window found. Close LibreWolf yourself; no process was killed.' = 'Главное окно не определено. Закройте LibreWolf вручную; процессы не уничтожались.'
+    'Normal window-close requested. Handle browser prompts and wait for the session window to finish.' = 'Запрошено обычное закрытие. Ответьте на диалоги браузера и дождитесь завершения сеанса.'
+    'Action failed. No automatic security bypass was attempted. Check required files or use the original script for diagnostics.' = 'Действие не выполнено. Проверки безопасности не обходились. Проверьте файлы или запустите исходный скрипт для диагностики.'
+    'Enter to return to dashboard' = 'Enter — вернуться в меню'
+    'Option' = 'Пункт'
+    'Preferences could not be saved. Selection applies to this run only.' = 'Настройки не сохранены. Выбор действует только до закрытия панели.'
+    'Language' = 'Язык'
+    'Intro' = 'Заставка'
+    '[L] RU / EN    [I] Switch intro + preview' = '[L] РУ / EN    [I] Сменить заставку и показать'
+    'EYE' = 'ГЛАЗ'
+    'ARCHIVE' = 'АРХИВ'
+    '  V I C - A   /   CONTROL ROOM' = '  V I C - A   /   ЦЕНТР УПРАВЛЕНИЯ'
+}
+$translationKeys = @($ruText.Keys | Sort-Object -Property Length -Descending)
+function T([string]$Text) {
+    if ($script:uiLanguage -eq 'en') { return $Text }
+    foreach ($key in $script:translationKeys) { $Text = $Text.Replace($key, $script:ruText[$key]) }
+    return $Text
+}
+function Save-UiPreferences {
+    $temp = $uiSettingsPath + '.' + [Guid]::NewGuid().ToString('N') + '.tmp'
+    try {
+        $json = @{ language = $script:uiLanguage; intro = $script:introStyle } | ConvertTo-Json
+        [IO.File]::WriteAllText($temp, $json, (New-Object Text.UTF8Encoding($false)))
+        if (Test-Path -LiteralPath $uiSettingsPath) { [IO.File]::Replace($temp, $uiSettingsPath, $null) }
+        else { [IO.File]::Move($temp, $uiSettingsPath) }
+    } catch { Write-Warning (T 'Preferences could not be saved. Selection applies to this run only.') }
+    finally { if (Test-Path -LiteralPath $temp) { Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue } }
+}
+function Row([string]$Text = '', [string]$Color = 'Gray') { return @{ Text = (T $Text); Color = $Color } }
 function Paint($Rows) {
     if (-not $interactive) { foreach ($r in $Rows) { Write-Host $r.Text -ForegroundColor $r.Color }; return }
     $width = [Math]::Max(1, [Math]::Min(92, [Console]::WindowWidth - 1))
@@ -20,7 +97,7 @@ function Paint($Rows) {
     if ($Rows.Count -gt $height) {
         # A compact dashboard keeps controls visible in the classic 25-row console.
         # Eye frames are handled separately by Show-Eye's minimum-size check.
-        if ($Rows.Count -eq 28) { $Rows = @($Rows[0,1,7,8,9,11,14,17,18,19,20,21,22,23,25,26]) }
+        if ($Rows.Count -ge 28) { $Rows = @($Rows[0,1,7,8,9,11,14,17,18,19,20,21,22,23,24,26,27]) }
     }
     [Console]::SetCursorPosition(0, 0)
     for ($i = 0; $i -lt [Math]::Min($Rows.Count, $height); $i++) {
@@ -30,14 +107,14 @@ function Paint($Rows) {
     }
 }
 function Show-Eye {
-    if (-not $interactive) { Write-Host 'IRIS / Portable Workspace'; return }
+    if (-not $interactive) { Write-Host (T 'VIC-A / Portable Workspace'); return }
     Clear-Host
     try {
-        . (Join-Path $homeDir 'Iris.Intro.ps1')
-        Show-IrisIntro
+        . (Join-Path $homeDir 'VicA.Intro.ps1')
+        Show-VicAIntro -Style $introStyle -Language $uiLanguage
     } catch {
         # A decorative failure must never block access to the working menu.
-        Write-Host 'IRIS / Intro unavailable in this console. Opening menu.' -ForegroundColor DarkGray
+        Write-Host (T 'VIC-A / Intro unavailable in this console. Opening menu.') -ForegroundColor DarkGray
         Start-Sleep -Milliseconds 400
     }
 }
@@ -112,12 +189,12 @@ function Request-BrowserClose {
             if ($p.MainWindowHandle -ne 0 -and $p.Path -eq $binaries[0].FullName -and $p.CloseMainWindow()) { $sent++ }
         } catch { }
     }
-    if ($sent -eq 0) { Write-Host 'No identifiable main window found. Close LibreWolf yourself; no process was killed.' -ForegroundColor Yellow }
-    else { Write-Host 'Normal window-close requested. Handle browser prompts and wait for the session window to finish.' -ForegroundColor Cyan }
+    if ($sent -eq 0) { Write-Host (T 'No identifiable main window found. Close LibreWolf yourself; no process was killed.') -ForegroundColor Yellow }
+    else { Write-Host (T 'Normal window-close requested. Handle browser prompts and wait for the session window to finish.') -ForegroundColor Cyan }
 }
 $oldTitle = ''; $oldCursor = $true
 try {
-    if ($interactive) { $oldTitle = [Console]::Title; $oldCursor = [Console]::CursorVisible; [Console]::Title = 'IRIS | Portable Workspace'; [Console]::CursorVisible = $false }
+    if ($interactive) { $oldTitle = [Console]::Title; $oldCursor = [Console]::CursorVisible; [Console]::Title = 'VIC-A | Portable Workspace'; [Console]::CursorVisible = $false }
     if (-not $NoSplash) { Show-Eye }
     Clear-Host
     $done = $false
@@ -125,7 +202,7 @@ try {
         $s = Get-LocalStatus
         $age = (Get-Date) - $openedAt
         $rows = @(
-            (Row '  I R I S   /   CONTROL ROOM' Cyan),
+            (Row '  V I C - A   /   CONTROL ROOM' Cyan),
             (Row '  ---------------------------------------------------------------------' DarkCyan),
             (Row ('  {0}    |    Console uptime {1:hh\:mm\:ss}' -f (Get-Date -Format 'HH:mm:ss'), $age) DarkGray),
             (Row ''),
@@ -148,6 +225,7 @@ try {
             (Row '  [4] Open downloads folder' Gray),
             (Row '  [5] Offline tests (synthetic inputs only)' Gray),
             (Row '  [6] Replay cinematic intro' Magenta),
+            (Row ('  [L] RU / EN    [I] Switch intro + preview   |   ' + (T 'Language') + ': ' + $uiLanguage.ToUpperInvariant() + ' / ' + (T 'Intro') + ': ' + (T $introStyle.ToUpperInvariant())) Cyan),
             (Row '  [0] Exit dashboard (does NOT stop the separate session)' Gray),
             (Row ''),
             (Row '  Close LibreWolf, then its session window, before unplugging SSD.' DarkGray),
@@ -161,14 +239,18 @@ try {
                 if ([Console]::KeyAvailable) { $choice = [Console]::ReadKey($true).KeyChar.ToString(); break }
                 Start-Sleep -Milliseconds 100
             }
-        } else { $choice = Read-Host 'Option' }
-        if ($choice -notin @('0','1','2','3','4','5','6')) { continue }
+        } else { $choice = Read-Host (T 'Option') }
+        if ($null -ne $choice) { $choice = $choice.ToUpperInvariant() }
+        if ($choice -eq 'Д') { $choice = 'L' }; if ($choice -eq 'Ш') { $choice = 'I' }
+        if ($choice -notin @('0','1','2','3','4','5','6','L','I')) { continue }
         if ($interactive) { [Console]::CursorVisible = $true }
         Clear-Host
         try {
             switch ($choice) {
+                'L' { if ($uiLanguage -eq 'ru') { $uiLanguage = 'en' } else { $uiLanguage = 'ru' }; Save-UiPreferences }
+                'I' { if ($introStyle -eq 'eye') { $introStyle = 'archive' } else { $introStyle = 'eye' }; Save-UiPreferences; if ($interactive) { [Console]::CursorVisible = $false }; Show-Eye }
                 '0' { $done = $true }
-                '1' { Start-ManagedWindow; Write-Host 'Session window opened. It owns the browser/tunnel lifecycle.' }
+                '1' { Start-ManagedWindow; Write-Host (T 'Session window opened. It owns the browser/tunnel lifecycle.') }
                 '2' { Request-BrowserClose }
                 '3' { & (Join-Path $homeDir 'Update-Subscription.ps1') -Root $runtimeDir -UseDeviceHwid; $script:cachedStamp = '' }
                 '4' {
@@ -177,12 +259,12 @@ try {
                     Start-Process -FilePath explorer.exe -ArgumentList ('"' + $folder + '"')
                 }
                 '5' {
-                    foreach ($test in @('Test-Parser.ps1','Test-CryptoPolicy.ps1','Test-DeviceHwid.ps1')) { & (Join-Path $homeDir $test) }
+                    foreach ($test in @('Test-Parser.ps1','Test-CryptoPolicy.ps1','Test-DeviceHwid.ps1','Test-VicAConsole.ps1')) { & (Join-Path $homeDir $test) }
                 }
                 '6' { if ($interactive) { [Console]::CursorVisible = $false }; Show-Eye }
             }
-        } catch { Write-Host 'Action failed. No automatic security bypass was attempted. Check required files or use the original script for diagnostics.' -ForegroundColor Red }
-        if (-not $done -and $choice -ne '6') { $null = Read-Host 'Enter to return to dashboard' }
+        } catch { Write-Host (T 'Action failed. No automatic security bypass was attempted. Check required files or use the original script for diagnostics.') -ForegroundColor Red }
+        if (-not $done -and $choice -notin @('6','L','I')) { $null = Read-Host (T 'Enter to return to dashboard') }
         if ($interactive) { [Console]::CursorVisible = $false }
         Clear-Host
     }
