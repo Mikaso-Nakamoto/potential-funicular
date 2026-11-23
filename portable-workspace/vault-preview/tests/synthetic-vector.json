@@ -1,0 +1,6 @@
+{
+  "note": "PUBLIC SYNTHETIC TEST DATA ONLY. Fixed salt and nonce are for interoperability testing, NEVER for production encryption.",
+  "syntheticPassword": "VIC-A synthetic test passphrase!",
+  "syntheticPlaintext": "{\"version\":1,\"marker\":\"VIC-A synthetic vector\"}",
+  "envelopeBase64": "VklDQVZBMDIAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRoba3ntEpGuEDEEW1u7xsIdBR54MdFJdERg3LZI5EHNa0ALbP+PEqImi6Wmyf73JhdKTPAkSS83ExCWXtkN9wpA"
+}

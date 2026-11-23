@@ -1,0 +1,3 @@
+# Downloaded dependency and owned installer stages
+/lib/
+/.dependency-*/

@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 function Get-Workspace([string]$Root) {
@@ -203,8 +203,11 @@ function Assert-Fields($Object, [string[]]$Allowed, [string[]]$Required = @()) {
     }
 }
 function Assert-ConfigPolicy([string]$Path) {
+    try { Assert-ConfigObjectPolicy ([IO.File]::ReadAllText($Path) | ConvertFrom-Json) }
+    catch { throw 'Configuration violates the local TLS/tunnel policy. Details suppressed.' }
+}
+function Assert-ConfigObjectPolicy($c) {
     try {
-        $c = [IO.File]::ReadAllText($Path) | ConvertFrom-Json
         Assert-Fields $c @('log','inbounds','outbounds') @('log','inbounds','outbounds')
         Assert-Fields $c.log @('loglevel') @('loglevel')
         if ($c.log.loglevel -cne 'none' -or @($c.inbounds).Count -ne 1 -or @($c.outbounds).Count -ne 1) { throw 'Invalid topology.' }
