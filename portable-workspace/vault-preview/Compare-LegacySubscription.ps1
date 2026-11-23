@@ -6,6 +6,8 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 if ($env:OS -ne 'Windows_NT' -or -not [Environment]::Is64BitProcess -or $PSVersionTable.PSVersion.Major -ne 5) { throw 'Use 64-bit Windows PowerShell 5.1.' }
+# Read-Vault validates the document using functions from Workspace.Common.ps1.
+. (Join-Path (Split-Path -Parent $PSScriptRoot) 'Workspace.Common.ps1')
 . (Join-Path $PSScriptRoot 'Vault.Common.ps1')
 # Standalone reader of the supplied kit-enc/1 format. Never executes legacy scripts.
 $lock = $null; $password = $null; $legacySecret = $null; $ptr = [IntPtr]::Zero
