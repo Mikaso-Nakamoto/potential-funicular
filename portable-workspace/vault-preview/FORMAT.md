@@ -55,17 +55,25 @@ DllLoadDir | System32 (requires supported .NET/Windows). No process-global DLL
 search mutation. CheckSupport also requires runtime version string 1.0.22. Source SHA-256 is pinned in Vault.Common.ps1; archive SHA-256 is
 pinned; installed DLL hash is recorded in a local manifest. These checks do NOT
 protect against an attacker able to edit the verifier or manifest.
-Installer selects one anchored libsodium-win64/bin/libsodium-N.dll member, checks
-listed paths, requires one regular-file listing, and extracts only that member.
-This is fail-closed on unfamiliar package layouts, not a general tar validator.
+R2 installs from the pinned official MSVC ZIP (SHA-256
+3e03a726fac4bc09cb61d8f29d658ef7a5eca0811de59082130414f7ca2e4279), selecting
+one x64/Release/v143/dynamic/libsodium.dll. It copies only that bounded regular ZIP
+member into a fixed staging filename, never archive-controlled output paths.
+The original MinGW package was rejected for libgcc_s_seh-1.dll and is not allowed.
+MSVC ReleaseDLL uses the DLL CRT: R2 requires needed vcruntime140[_1].dll in
+System32 with a valid Microsoft Authenticode signature and checks their imports too.
+No runtime redistribution or installation, no PATH lookup. UCRT API contracts and
+core Windows modules remain platform trust. This is a documented prerequisite,
+not a claim of zero external runtime dependencies. Actual Windows R2 execution
+and official MSVC binary import inspection have not been possible here.
 
 The isolated test kit adds a non-executing PE32+ direct-import gate with a narrow
-system-library allowlist; unexpected dependencies or delay imports stop installation.
+Windows/verified-Microsoft-runtime allowlist; unexpected dependencies or delay imports stop installation.
 It is not a full recursive or dynamic import audit. Synthetic inspector and vault
 I/O/negative test scripts exist but have not been executed here on Windows.
 
 Outstanding release gates: actual official Windows DLL import/dependency review;
-Windows bsdtar adversarial archive tests; C# compilation and loader tests in Windows
+Windows adversarial ZIP-entry tests; C# compilation and loader tests in Windows
 PowerShell 5.1; file-I/O, policy and failure-path execution tests; full migration,
 mandatory unlock, stdin Xray integration and encrypted subscription refresh.
 Do not interpret Linux format tests as proof these Windows paths work.

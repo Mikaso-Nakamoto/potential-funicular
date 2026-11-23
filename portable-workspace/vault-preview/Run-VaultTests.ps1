@@ -45,7 +45,7 @@ function Run-TestProcess([string]$Name, [string]$Script, [string]$Extra = '') {
 try {
     New-Item -ItemType Directory -Path $stage | Out-Null
     $owned = $true
-    $lines.Add('VIC-A isolated vault tests; only synthetic data. No Runtime access.')
+    $lines.Add('VIC-A isolated vault tests R2 (official MSVC); only synthetic data. No Runtime access.')
     $lines.Add(('Windows PowerShell: ' + $PSVersionTable.PSVersion.ToString() + '; x64: ' + [Environment]::Is64BitProcess))
     Run-TestProcess 'Synthetic PE inspector' (Join-Path $tool 'Test-SodiumPe.ps1')
     Run-TestProcess 'PE dependency inspection' (Join-Path $tool 'Test-SodiumImports.ps1') ('-Path "' + (Join-Path $tool 'lib\vica-sodium.dll') + '"')

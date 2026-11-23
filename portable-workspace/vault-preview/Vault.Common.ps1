@@ -9,10 +9,11 @@ function Initialize-VaultCrypto {
     if (-not (Test-Path -LiteralPath $dll) -or -not (Test-Path -LiteralPath $manifestPath)) { throw 'Run Install-VaultDependency.ps1 first.' }
     if ((Get-Item -LiteralPath $manifestPath).Length -gt 4096) { throw 'Invalid dependency manifest.' }
     $manifest = [IO.File]::ReadAllText($manifestPath) | ConvertFrom-Json
-    if ($manifest.version -ne '1.0.22' -or $manifest.archiveSha256 -ne '1d99e0afaf27bce664249232e9dc628ae6bb7b49f0ab53ad6db372b028a35d9d' -or
+    if ($manifest.version -ne '1.0.22' -or $manifest.build -ne 'msvc-v143-x64-release' -or $manifest.archiveSha256 -ne '3e03a726fac4bc09cb61d8f29d658ef7a5eca0811de59082130414f7ca2e4279' -or
         (Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash -ne $manifest.dllSha256) { throw 'Crypto dependency integrity check failed.' }
     $sourcePath = Join-Path $vaultToolDirectory 'VaultCrypto.cs'
     if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne '9594757c1adfad80c89757d6a614244c2759a170769e798930a6c50c1b35f788') { throw 'Crypto source integrity check failed.' }
+    & (Join-Path $vaultToolDirectory 'Test-SodiumImports.ps1') -Path $dll
     $source = [IO.File]::ReadAllText($sourcePath).Replace('__SODIUM_DLL__', $dll.Replace('"','""'))
     Add-Type -TypeDefinition $source -ErrorAction Stop
     [VicAVault.Crypto]::CheckSupport()

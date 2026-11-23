@@ -1,6 +1,6 @@
-# VIC-A — изолированный Windows-пакет тестов vault
+# VIC-A R2 — изолированный Windows-пакет тестов vault
 
-Это НЕ обновление подключения. Пакет не содержит запуска Xray, браузера,
+Это НЕ обновление подключения. Пакет R2 использует MSVC, не MinGW. Пакет не содержит запуска Xray, браузера,
 миграции Prepare-Vault или чтения Runtime. Все тестовые URL, HWID, пароли и
 конфиги вымышлены. Сетевой доступ нужен только установщику официальной зависимости.
 
@@ -8,25 +8,44 @@
 
 В среде разработки прошли 8 Linux Python-тестов формата и статический разбор
 PowerShell/C#. Windows-скрипты и C# не исполнялись/не компилировались здесь.
-Скачивание официального бинарника здесь блокируется на redirect GitHub, поэтому
+Скачивание официального MSVC-бинарника здесь блокируется на redirect GitHub, поэтому
 фактический состав импортов DLL ещё НЕ подтверждён. Установщик проверит их до
 публикации зависимости; неизвестный импорт означает STOP, а не разрешение обойти проверку.
 Это первый проверочный запуск, а не утверждение о готовности к миграции.
 
+## Зависимости R2 — прочитать до запуска
+
+MinGW-пакет R1 был отклонён на Windows из-за libgcc_s_seh-1.dll; этот импорт
+НЕ добавлен в разрешённые. R2 скачивает официальный libsodium-1.0.22-msvc.zip,
+SHA-256 3e03a726fac4bc09cb61d8f29d658ef7a5eca0811de59082130414f7ca2e4279.
+Выбирается только x64 Release v143 dynamic/libsodium.dll (не статическая .lib).
+Источник выбора: builds/msvc/properties/Output.props и ReleaseDLL.props тега
+1.0.22-RELEASE. ReleaseDLL использует MultiThreadedDLL, поэтому возможна зависимость
+от Microsoft VC++ runtime — нельзя обещать отсутствие внешнего runtime.
+
+Только для vcruntime140.dll/vcruntime140_1.dll проверяются наличие в System32,
+отсутствие reparse point, Valid Authenticode и издатель Microsoft Corporation,
+затем PE-импорты этих библиотек. UCRT API contracts разрешены узким списком;
+доверие к Windows OS-компонентам явно остаётся. Поиск основной библиотеки ограничен
+DllLoadDir и System32, ничего из PATH не копируется. Проверка повторяется при
+Initialize-VaultCrypto в свежем процессе. Это не защита от вредоносной ОС/скриптов.
+
+Если VC runtime отсутствует, неподписан или появляется другой импорт, STOP.
+R2 не скачивает и не устанавливает redistributable, не требует администратора
+и не изменяет системные каталоги. В этом случае прислать отчёт, не искать DLL вручную.
+
 ## Где распаковать
 
-Сохранить ZIP как `Z:\Iran\Browser\VIC-A-Vault-Test-Kit.zip`.
+Сохранить ZIP как `Z:\Iran\Browser\VIC-A-Vault-Test-Kit-R2.zip`.
 Открыть **Windows PowerShell (64-bit, не x86)** обычным пользователем, без администратора.
-Использовать новый пустой каталог `Z:\Iran\Browser\Vault-Test`.
+Использовать новый пустой каталог `Z:\Iran\Browser\Vault-Test-R2`.
 Не распаковывать поверх Runtime/рабочих скриптов. Не использовать -Force.
 
 ```powershell
-Unblock-File -LiteralPath 'Z:\Iran\Browser\VIC-A-Vault-Test-Kit.zip'
-Expand-Archive -LiteralPath 'Z:\Iran\Browser\VIC-A-Vault-Test-Kit.zip' -DestinationPath 'Z:\Iran\Browser\Vault-Test'
+Unblock-File -LiteralPath 'Z:\Iran\Browser\VIC-A-Vault-Test-Kit-R2.zip'
+Expand-Archive -LiteralPath 'Z:\Iran\Browser\VIC-A-Vault-Test-Kit-R2.zip' -DestinationPath 'Z:\Iran\Browser\Vault-Test-R2'
 $ps = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
-& $ps -NoProfile -ExecutionPolicy RemoteSigned -File 'Z:\Iran\Browser\Vault-Test\vault-preview\Install-VaultDependency.ps1'
-if ($LASTEXITCODE -ne 0) { throw 'STOP: dependency installation failed. Do not run further commands.' }
-& $ps -NoProfile -ExecutionPolicy RemoteSigned -File 'Z:\Iran\Browser\Vault-Test\vault-preview\Run-VaultTests.ps1'
+& $ps -NoProfile -ExecutionPolicy RemoteSigned -File 'Z:\Iran\Browser\Vault-Test-R2\vault-preview\Start-VaultCheck.ps1'
 ```
 
 Никакого Bypass и глобальных изменений ExecutionPolicy. Unblock применяется только
@@ -38,11 +57,11 @@ if ($LASTEXITCODE -ne 0) { throw 'STOP: dependency installation failed. Do not r
 ## Результат и диагностика
 
 После тестового runner появляется:
-`Z:\Iran\Browser\Vault-Test\vault-preview\vault-test-report.txt`.
+`Z:\Iran\Browser\Vault-Test-R2\vault-preview\vault-test-report.txt`.
 Передать этот файл для разбора. В нём только тестовые данные/диагностика, но могут
 быть имена локальных каталогов пользователя — их можно скрыть перед отправкой.
-Если установка остановилась ДО runner, отчёта ещё не будет: передать текст ошибки
-установщика и строку PE import gate, если она успела появиться. Не отправлять
+Если установка остановилась ДО runner, прислать `vault-install-report.txt`
+из того же каталога. Единый Start-VaultCheck.ps1 не запустит тесты после её ошибки. Не отправлять
 никакие файлы из Runtime или реальные URL/UUID/пароли.
 
 Неверный пароль/AESGCM без ускорения могут выглядеть иначе, чем ошибка DLL.
@@ -53,8 +72,8 @@ if ($LASTEXITCODE -ne 0) { throw 'STOP: dependency installation failed. Do not r
 
 1. Synthetic PE inspector: парсинг публичного искусственного PE без его загрузки,
    отклонение некоторых повреждённых структур, RVA и delay imports.
-2. Проверка прямых импортов фактической DLL без её исполнения: разрешён только
-   узкий список системных библиотек. Это не рекурсивный аудит Windows и не анализ
+2. Проверка прямых импортов фактической DLL без её исполнения: разрешён
+   узкий список Windows-компонентов и подписанные Microsoft VC runtime из System32. Это не рекурсивный аудит Windows и не анализ
    всех вызовов динамической загрузки внутри DLL.
 3. Загрузка libsodium и проверка runtime-версии 1.0.22, компиляция C# в PowerShell 5.1,
    вектор совместимости, round-trip, новая случайность, неверный пароль, повреждение,

@@ -6,7 +6,7 @@ import zipfile
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 FILES = [
-    'Install-VaultDependency.ps1', 'Run-VaultTests.ps1', 'Test-Vault.ps1',
+    'Install-VaultDependency.ps1', 'Start-VaultCheck.ps1', 'Run-VaultTests.ps1', 'Test-Vault.ps1',
     'Test-VaultIO.ps1', 'Test-VaultLoadFailure.ps1', 'Test-SodiumImports.ps1',
     'Test-SodiumPe.ps1', 'SodiumPe.cs', 'Vault.Common.ps1', 'VaultCrypto.cs',
     'tests/synthetic-vector.json', 'FORMAT.md', 'LICENSE.libsodium.txt',
@@ -22,7 +22,7 @@ assert not any(part.lower() in ('runtime', 'private', 'lib')
 assert not any(name.endswith(('.dll', '.vault')) for name in entries)
 sums = ''.join(f'{hashlib.sha256(data).hexdigest()}  {name}\n' for name, data in sorted(entries.items()))
 entries['SHA256SUMS.txt'] = sums.encode()
-output = ROOT / 'downloads' / 'VIC-A-Vault-Test-Kit.zip'
+output = ROOT / 'downloads' / 'VIC-A-Vault-Test-Kit-R2.zip'
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
     for name, data in sorted(entries.items()):
         info = zipfile.ZipInfo(name, date_time=(2026, 11, 22, 0, 0, 0))
