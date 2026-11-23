@@ -49,7 +49,9 @@ class PasswordContracts(unittest.TestCase):
         for forbidden in ('WorkingRuntime','workspace.vault','Read-Vault ','Get-SubscriptionText','Remove-Item -Recurse','Start-VicaSession'):
             self.assertNotIn(forbidden,UI)
         self.assertIn("'test-data'",UI)
-        self.assertIn("'test.vault'",UI)
+        self.assertIn("'verified-'",UI)
+        self.assertNotIn('Read-Host \'>'+'\'',UI)
+        self.assertIn('-RecoveryVerify $credentialRecovery',UI)
         self.assertIn('[VicaPasswordPreview.SelfTests]::Run($words)',UI)
         self.assertLess(UI.index('[VicaPasswordPreview.SelfTests]::Run'),UI.index("Read-Host 'New TEST password"))
 

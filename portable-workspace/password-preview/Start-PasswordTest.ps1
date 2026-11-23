@@ -39,78 +39,65 @@ try {
     $phase = 'synthetic-self-check'
     $checks = [VicaPasswordPreview.SelfTests]::Run($words)
     Write-Host ('PASS: ' + $checks + ' automatic synthetic crypto checks. No user data used.') -ForegroundColor Green
-    $path = Join-Path $directory 'test.vault'
-    if (Test-Path -LiteralPath $path) {
-        if ((Get-Item -LiteralPath $path -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Test vault must not be a link.' }
-    }
-    Write-Host 'ISOLATED TEST: synthetic data only. No Runtime, subscription, browser profile or existing vault is read/imported/modified.' -ForegroundColor Cyan
-    Write-Host 'A password protects against offline guessing only as well as its strength permits. Recovery words do not compensate for a weak password.'
+    # A new synthetic run never reuses previously displayed recovery words or overwrites old tests.
+    $path = Join-Path $directory ('verified-' + [Guid]::NewGuid().ToString('N') + '.vault')
+    Write-Host 'ISOLATED TEST: synthetic data only. No production data imported or changed.' -ForegroundColor Cyan
+    Write-Host '1/4: Set a password: 8-256 characters, at least 6 different; no obvious/repeated pattern, all-digit password or edge whitespace.'
     while ($true) {
-        $password = $null; $confirmation = $null; $phrase = $null; $phraseConfirm = $null; $credential = $null; $created = $null
-        $bytes = $null; $next = $null
+        $phase = 'password-policy-and-creation'
+        $password = Read-Host 'New TEST password (hidden)' -AsSecureString
         try {
-            if (-not (Test-Path -LiteralPath $path)) {
-                $phase = 'create-test'
-                Write-Host 'Set a NEW TEST password once: 8-256 characters, 6 different or more, no all-digit/obvious/repeated pattern or leading/trailing whitespace. Several unrelated words are allowed. NFC normalized; keyboard layout is NOT corrected.'
-                $password = Read-Host 'New TEST password (hidden)' -AsSecureString
-                if ($password.Length -eq 0) { Write-Host 'Empty password: nothing saved. Enter a password, not just Enter.'; continue }
-                $confirmation = Read-Host 'Repeat TEST password (hidden)' -AsSecureString
-                $created = [VicaPasswordPreview.Envelope]::Create([Text.Encoding]::UTF8.GetBytes('VIC-A SYNTHETIC PASSWORD TEST ONLY'),$password,$confirmation,$words)
-                $phrase = $created.Recovery.CopyPassword()
-                Show-Recovery $phrase
-                $phraseConfirm = Read-Host 'Re-enter all TEN recovery words separated by single spaces (hidden)' -AsSecureString
-                Assert-TestPayload $created.Envelope $phraseConfirm $true
-                Write-TestEnvelope $path $created.Envelope $password '' $phraseConfirm
-                Write-Host 'PASS: test vault published only after password AND recovery phrase opened the staged file. Save the phrase independently of this drive.' -ForegroundColor Green
-                continue
-            }
-            Write-Host ''
-            Write-Host 'VIC-A PASSWORD TEST | NO IMPORT / NO CLEANUP'
-            Write-Host '1. Open test vault with password'
-            Write-Host '2. Open test vault with ten recovery words'
-            Write-Host '3. Change password using current password + recovery (fresh key; same words)'
-            Write-Host '4. Reset password using recovery words (recovery unchanged)'
-            Write-Host '0. Exit'
-            $choice = Read-Host '>'
-            if ($choice -eq '0') { break }
-            if ($choice -notin @('1','2','3','4')) { continue }
-            $phase = 'read-test'
-            $bytes = Read-TestEnvelope $path
-            $before = Get-TestCipherHash $bytes
-            $recovery = $choice -in @('2','4')
-            $prompt = 'TEST password (hidden)'
-            if ($recovery) { $prompt = 'TEN recovery words, single spaces (hidden)' }
-            $credential = Read-Host $prompt -AsSecureString
-            if ($choice -in @('1','2')) {
-                $phase = 'open-test'
-                Assert-TestPayload $bytes $credential $recovery
-                if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ne $before) { throw 'Test file changed externally.' }
-                Write-Host 'PASS: synthetic test data authenticated and opened; ciphertext unchanged.' -ForegroundColor Green
-            } else {
-                $phase = 'change-test-password'
-                Assert-TestPayload $bytes $credential $recovery
-                $password = Read-Host 'NEW TEST password (hidden)' -AsSecureString
-                $confirmation = Read-Host 'Repeat NEW TEST password (hidden)' -AsSecureString
-                if (-not $recovery) { $phraseConfirm = Read-Host 'TEN recovery words to rotate the key while keeping the same recovery phrase (hidden)' -AsSecureString }
-                else { $phraseConfirm = $credential.Copy() }
-                $next = [VicaPasswordPreview.Envelope]::ChangePassword($bytes,$credential,$recovery,$password,$confirmation,$phraseConfirm)
-                Write-TestEnvelope $path $next $password $before $phraseConfirm
-                Write-Host 'PASS: test password AND data key changed; encrypted previous version retained. The TEN recovery words are unchanged. Backups still accept their OLD password.' -ForegroundColor Green
-            }
+            # Confirmation is the independent unlock step below, not a second setup prompt.
+            $created = [VicaPasswordPreview.Envelope]::Create([Text.Encoding]::UTF8.GetBytes('VIC-A SYNTHETIC PASSWORD TEST ONLY'),$password,$password,$words)
+            break
         } catch {
-            Write-Warning ('Test operation stopped at: ' + $phase + '. Wrong credential, rejected password policy, integrity failure or I/O. Existing published file is not deliberately replaced on validation failure; if publication was attempted, retain test backups. No production data involved.')
-            Write-Host 'For a new password: check confirmation, 8-256 NFC characters, at least 6 different, no obvious/repeated pattern, no edge whitespace.'
-            if (-not (Test-Path -LiteralPath $path)) {
-                if ((Read-Host 'Enter = retry creation; type EXIT to close test') -ceq 'EXIT') { break }
-            }
-        } finally {
-            foreach ($item in @($password,$confirmation,$phrase,$phraseConfirm,$credential,$created)) { if ($null -ne $item) { $item.Dispose() } }
-            $bytes = $null; $next = $null
+            Write-Host 'Password not accepted or crypto creation failed. Minimum 8 characters, 6 different; no obvious/repeated pattern or edge spaces.' -ForegroundColor Red
+            $password.Dispose(); $password = $null
+            if ((Read-Host 'Enter = retry; EXIT = stop') -ceq 'EXIT') { return }
         }
     }
+    $phase = 'show-new-recovery'
+    $phrase = $created.Recovery.CopyPassword()
+    Write-Host '2/4: Save these TEN words offline. Do not send them or a screenshot in chat.'
+    Show-Recovery $phrase
+    while ($true) {
+        $phase = 'password-unlock-check'
+        $credentialPassword = Read-Host '3/4: Enter the password you just set (hidden)' -AsSecureString
+        try {
+            Assert-TestPayload -Envelope $created.Envelope -Credential $credentialPassword -Recovery $false
+            Write-Host 'PASSWORD OK: test data decrypted successfully.' -ForegroundColor Green
+            break
+        } catch {
+            Write-Host 'PASSWORD CHECK FAILED: test data did not open. Nothing published.' -ForegroundColor Red
+            $credentialPassword.Dispose(); $credentialPassword = $null
+            if ((Read-Host 'Enter = retry SAME password; EXIT = stop') -ceq 'EXIT') { return }
+        }
+    }
+    while ($true) {
+        $phase = 'recovery-unlock-check'
+        $credentialRecovery = Read-Host '4/4: Enter all TEN words, one ordinary space between words (hidden)' -AsSecureString
+        try {
+            Assert-TestPayload -Envelope $created.Envelope -Credential $credentialRecovery -Recovery $true
+            Write-Host 'RECOVERY OK: test data decrypted independently with the ten words.' -ForegroundColor Green
+            break
+        } catch {
+            Write-Host 'RECOVERY CHECK FAILED: check words, order and single spaces. SAME phrase remains valid; nothing published.' -ForegroundColor Red
+            $credentialRecovery.Dispose(); $credentialRecovery = $null
+            if ((Read-Host 'Enter = retry SAME phrase; EXIT = stop') -ceq 'EXIT') { return }
+        }
+    }
+    $phase = 'disk-stage-readback-and-publication'
+    Write-TestEnvelope -Path $path -Envelope $created.Envelope -Verify $credentialPassword -RecoveryVerify $credentialRecovery
+    Write-Host 'ALL CHECKS PASSED: password and recovery both work, including encrypted disk readback.' -ForegroundColor Green
+    Write-Host ('Synthetic encrypted test saved: ' + $path)
+    Write-Host 'No production import or cleanup performed. Do not send credentials or recovery words.'
 } catch {
-    throw ('Password preview stopped at: ' + $phase + '. No production import/cleanup is implemented. Do not send credentials.')
+    throw ('Password test stopped at: ' + $phase + '. No production data involved. Do not send credentials.')
 } finally {
+    foreach ($name in @('password','created','phrase','credentialPassword','credentialRecovery')) {
+        $variable = Get-Variable -Name $name -ErrorAction SilentlyContinue
+        if ($null -ne $variable -and $null -ne $variable.Value) { $variable.Value.Dispose() }
+    }
     $env:TEMP = $oldTemp; $env:TMP = $oldTmp
     if ($lock) { $lock.Dispose() }
 }
