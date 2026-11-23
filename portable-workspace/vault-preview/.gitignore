@@ -5,3 +5,5 @@
 /.vault-negative-*/
 /vault-test-report.txt
 /vault-install-report.txt
+/.pipe-tests-*/
+/xray-pipe-test-report.txt
