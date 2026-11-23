@@ -32,53 +32,14 @@ function Paint($Rows) {
 function Show-Eye {
     if (-not $interactive) { Write-Host 'IRIS / Portable Workspace'; return }
     Clear-Host
-    $frame = 0
-    while (-not [Console]::KeyAvailable) {
-        if ([Console]::WindowWidth -lt 78 -or [Console]::WindowHeight -lt 29) {
-            Write-Host 'IRIS / Expand this window for the animated eye. Press any key for menu.' -ForegroundColor Cyan
-            $null = [Console]::ReadKey($true)
-            return
-        }
-        $phase = $frame % 110
-        $openness = [Math]::Min(1.0, ($frame + 1) / 13.0)
-        if ($phase -ge 88 -and $phase -le 98) { $openness = [Math]::Max(0.04, [Math]::Abs($phase - 93) / 5.0) }
-        $gaze = [Math]::Sin($frame / 26.0) * 8.0
-        $rows = @(Row ''); $rows += Row '       I R I S    /    P O R T A B L E   W O R K S P A C E' Cyan
-        $rows += Row '       --------------------------------------------------------' DarkCyan
-        $rows += Row ''
-        for ($y = 0; $y -lt 17; $y++) {
-            $line = New-Object Text.StringBuilder
-            for ($x = 0; $x -lt 76; $x++) {
-                $nx = ($x - 37.5) / 31.0
-                $dy = $y - 8.0
-                $ch = ' '
-                if ([Math]::Abs($nx) -le 1) {
-                    $lid = 6.6 * $openness * [Math]::Pow((1 - $nx * $nx), 0.68)
-                    if ([Math]::Abs([Math]::Abs($dy) - $lid) -lt 0.48) { $ch = '=' }
-                    elseif ([Math]::Abs($dy) -lt $lid) {
-                        $radius = [Math]::Sqrt([Math]::Pow(($x - 37.5 - $gaze) / 1.9, 2) + $dy * $dy)
-                        if ($radius -lt 1.8) { $ch = '@' }
-                        elseif ($radius -lt 2.5) { $ch = '#' }
-                        elseif ($radius -lt 4.4) { $ch = ':*+|'[($x + $y + [int]($frame / 3)) % 4] }
-                        elseif ($radius -lt 5.0) { $ch = 'O' }
-                        elseif (($x + 2 * $y) % 7 -eq 0) { $ch = '.' }
-                    }
-                } elseif (($x + 3 * $y + [int]($frame / 7)) % 47 -eq 0) { $ch = '.' }
-                $null = $line.Append($ch)
-            }
-            $color = 'DarkCyan'
-            if ([Math]::Abs($y - 8) -le 2) { $color = 'Magenta' }
-            elseif ([Math]::Abs($y - 8) -le 5) { $color = 'Cyan' }
-            $rows += Row ($line.ToString()) $color
-        }
-        $rows += Row ''; $rows += Row '                 YOUR DRIVE. YOUR WORKSPACE.' White
-        $rows += Row '                 PRESS ANY KEY TO ENTER' DarkGray
-        $rows += Row ''; $rows += Row '       LOCAL ANIMATION / NO NETWORK REQUESTS / NO SECRETS DISPLAYED' DarkGray
-        Paint $rows
-        Start-Sleep -Milliseconds 85
-        $frame++
+    try {
+        . (Join-Path $homeDir 'Iris.Intro.ps1')
+        Show-IrisIntro
+    } catch {
+        # A decorative failure must never block access to the working menu.
+        Write-Host 'IRIS / Intro unavailable in this console. Opening menu.' -ForegroundColor DarkGray
+        Start-Sleep -Milliseconds 400
     }
-    $null = [Console]::ReadKey($true)
 }
 function Get-LocalStatus {
     $exe = Join-Path $runtimeDir 'Xray\xray.exe'
@@ -186,7 +147,7 @@ try {
             (Row '  [3] Update subscription + existing device UUID / choose node' Gray),
             (Row '  [4] Open downloads folder' Gray),
             (Row '  [5] Offline tests (synthetic inputs only)' Gray),
-            (Row '  [6] Replay eye animation' Magenta),
+            (Row '  [6] Replay cinematic intro' Magenta),
             (Row '  [0] Exit dashboard (does NOT stop the separate session)' Gray),
             (Row ''),
             (Row '  Close LibreWolf, then its session window, before unplugging SSD.' DarkGray),

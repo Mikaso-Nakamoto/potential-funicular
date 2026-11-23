@@ -16,8 +16,9 @@ __pycache__/
 .npmrc
 config/local/
 
-# Generated private outputs
+# Generated private outputs and downloaded user reference media
 outputs/
+google_drive/
 
 # Portable browser state / subscription credentials (never commit)
 portable-workspace/Runtime/
