@@ -33,3 +33,7 @@ portable-workspace/vic-a.ui.json.*.tmp
 *.p12
 *.pfx
 *.keystore
+
+# Private working-vault preview runtime and unpublished stages
+/portable-workspace/WorkingRuntime/
+/portable-workspace/.working-vault-*/
