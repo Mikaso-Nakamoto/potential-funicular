@@ -19,6 +19,11 @@ config/local/
 # Generated private outputs
 outputs/
 
+# Portable browser state / subscription credentials (never commit)
+portable-workspace/Runtime/
+portable-workspace/private/
+portable-workspace/.install-*/
+
 # Private keys and signing material
 *.key
 *.pem
