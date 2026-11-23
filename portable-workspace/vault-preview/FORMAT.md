@@ -86,7 +86,12 @@ SodiumPe too. These are detection checks rooted in TRUSTED SCRIPTS, not signatur
 R2+compile-fix passed on the user's Windows PowerShell 5.1 x64 (screenshot only;
 full log not supplied). That does NOT validate R3. R3 adds word generation,
 System32-only loading/canary test, complete negative copies and input hash reports.
-R3 Windows/C# execution still required. Linux tests do not execute these paths.
+Full user-supplied R3 install/test reports are now included under
+evidence/r3-windows-user, with all implemented suites reporting PASS on that PC.
+19 available input hashes match commit 19fb07f and current executable sources.
+The actual DLL/manifest bytes were not provided locally for comparison. Evidence
+is unsigned user-provided output, not an independent run or clean-machine matrix.
+Linux tests do not execute Windows paths; see evidence README for provenance.
 
 Runner records source/fixture/list/DLL/manifest hashes, PS/CLR/OS versions.
 Tests run in fresh processes with full self-contained copies; an unmodified copy

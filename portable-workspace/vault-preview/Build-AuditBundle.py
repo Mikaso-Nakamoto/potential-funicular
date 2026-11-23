@@ -21,7 +21,9 @@ entries['review/SNAPSHOT.txt'] = (
     f'Baseline before these fixes: {BASE}\n'
     'Bundle uses staged portable-workspace inputs. No self-referential commit hash.\n'
     'Source files should match the commit publishing this archive.\n'
-    'R3 Windows execution pending. Previous R2 screenshot is not an R3 log.\n'
+    'User-supplied R3 Windows reports included under evidence/r3-windows-user.\n'
+    'Tested executable inputs match 19fb07f18686d96e47252432869a69eccedc6431.\n'
+    'Unsigned user evidence, not an independent execution or clean-machine result.\n'
 ).encode()
 assert not any(n.endswith(('.dll', '.vault', '.pyc')) or any(
     part in ('Runtime', 'private', '__pycache__', 'lib') for part in Path(n).parts
@@ -29,7 +31,7 @@ assert not any(n.endswith(('.dll', '.vault', '.pyc')) or any(
 entries['SHA256SUMS.txt'] = ''.join(
     f'{hashlib.sha256(data).hexdigest()}  {name}\n' for name, data in sorted(entries.items())
 ).encode()
-output = ROOT / 'downloads/VIC-A-Encryption-Expert-Review-R3.zip'
+output = ROOT / 'downloads/VIC-A-Encryption-Expert-Review-R3-With-Reports.zip'
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
     for name, data in sorted(entries.items()):
         info = zipfile.ZipInfo(name, date_time=(2026, 11, 22, 0, 0, 0))
