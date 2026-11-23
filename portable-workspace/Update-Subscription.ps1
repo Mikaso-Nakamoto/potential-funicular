@@ -45,7 +45,49 @@ try {
             $skipped++
             # Only fixed, known parser messages are printable; never echo native URI exceptions.
             $r = 'Invalid or unsupported link.'
-            if ($_.Exception.Message -in @('Not a VLESS URI.', 'Unsupported query parameter.', 'Unsupported headerType.', 'Only TCP/RAW or WebSocket is supported.', 'Only TLS or REALITY is supported.', 'Insecure TLS is prohibited.', 'Unsupported flow.', 'REALITY public key missing.')) { $r = $_.Exception.Message }
+            $safeReasons = @(
+                'Not a VLESS URI.', 'VLESS UUID required.', 'Zero UUID is prohibited.',
+                'Explicit server and port required.', 'Unexpected URI path.',
+                'Invalid query parameter.', 'Duplicate parameter.', 'Unsupported query parameter.',
+                'Insecure TLS is prohibited.', 'Unsupported VLESS encryption.',
+                'Only TLS or REALITY is supported.', 'Only TCP/RAW or WebSocket is supported.',
+                'REALITY is supported only over TCP here.', 'Unsupported headerType.', 'Unsupported flow.',
+                'Unsupported TLS fingerprint.', 'REALITY public key missing.',
+                'REALITY ALPN parameter is not supported here.', 'Invalid REALITY key encoding.',
+                'Invalid REALITY key.', 'Invalid REALITY short ID.', 'Explicit REALITY SNI is required.',
+                'REALITY parameters on TLS URI.', 'WebSocket parameters on TCP URI.'
+            )
+            if ($_.Exception.Message -in $safeReasons) { $r = $_.Exception.Message }
+            else {
+                # Fixed categories only: exception messages can contain full URIs.
+                $exception = $_.Exception
+                while ($exception.InnerException) { $exception = $exception.InnerException }
+                if ($exception -is [UriFormatException]) { $r = 'URI format error.' }
+                elseif ($exception -is [FormatException]) { $r = 'Value format error.' }
+                elseif ($exception -is [System.Management.Automation.ParameterBindingException]) { $r = 'Parser parameter binding error.' }
+                elseif ($exception -is [System.Management.Automation.RuntimeException]) { $r = 'PowerShell parser/runtime compatibility error.' }
+            }
+            # Reveal only allowlisted transport metadata; never hosts, UUIDs, keys, labels or arbitrary values.
+            $shape = @{ type = 'unspecified'; security = 'unspecified'; fp = 'unspecified' }
+            try {
+                $nodeUri = $null
+                if ([Uri]::TryCreate($line, [UriKind]::Absolute, [ref]$nodeUri)) {
+                    foreach ($pair in $nodeUri.Query.TrimStart('?').Split('&')) {
+                        $kv = $pair.Split('=', 2)
+                        if ($kv.Count -ne 2) { continue }
+                        $name = [Uri]::UnescapeDataString($kv[0])
+                        $value = [Uri]::UnescapeDataString($kv[1])
+                        if ($name -in @('type','security','fp')) {
+                            $shape[$name] = 'other'
+                            if ($value -in @('tcp','raw','ws','grpc','xhttp','httpupgrade','tls','reality','none','chrome','firefox','safari','edge','random','randomized','unsafe')) {
+                                # Emit a canonical constant from the allowlist, not raw server text.
+                                $shape[$name] = $value.ToLowerInvariant()
+                            }
+                        }
+                    }
+                }
+            } catch { }
+            $r += ' [type=' + $shape.type + '; security=' + $shape.security + '; fp=' + $shape.fp + ']'
             if ($reasons.ContainsKey($r)) { $reasons[$r]++ } else { $reasons[$r] = 1 }
         }
     }
