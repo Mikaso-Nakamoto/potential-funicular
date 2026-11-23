@@ -16,7 +16,7 @@ class PasswordContracts(unittest.TestCase):
     def test_pins_and_base_primitives(self):
         for name in ('PasswordEnvelope.cs','PasswordSelfTests.cs'):
             self.assertIn(hashlib.sha256((HERE/name).read_bytes()).hexdigest(),COMMON)
-        self.assertIn(hashlib.sha256((HERE.parent/'vault-preview/VaultCrypto.cs').read_bytes()).hexdigest(),COMMON)
+        self.assertIn(hashlib.sha256((HERE.parent/'vault-preview/VaultCrypto.cs').read_bytes().replace(b'password.Length < 16',b'password.Length < 8').replace(b'at least 16 characters',b'at least 8 characters')).hexdigest(),COMMON)
         self.assertIn('Crypto.Seal',CS)
         self.assertIn('Crypto.Open',CS)
         self.assertNotIn('DllImport',CS)
@@ -42,7 +42,7 @@ class PasswordContracts(unittest.TestCase):
         self.assertIn('GeneratedPassphrase b = Crypto.GeneratePassphrase(wordList)',CS)
         self.assertIn('String.Join(" ",words,0,10)',CS)
         self.assertIn('NormalizationForm.FormC',CS)
-        self.assertIn('count < 16 || count > 256',CS)
+        self.assertIn('count < 8 || count > 256',CS)
         self.assertIn('not an entropy estimator',CS)
 
     def test_test_only_no_runtime_import_cleanup(self):

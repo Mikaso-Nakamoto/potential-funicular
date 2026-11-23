@@ -17,6 +17,7 @@ from System.Reflection import Assembly
 from System.Security import SecureString
 from pathlib import Path
 base=Path('portable-workspace/vault-preview/VaultCrypto.cs').read_text().replace('__SODIUM_DLL__',os.environ['VICA_SODIUM'])
+base=base.replace('password.Length < 16','password.Length < 8').replace('at least 16 characters','at least 8 characters')
 extra=Path('portable-workspace/password-preview/PasswordEnvelope.cs').read_text()+'\n'+Path('portable-workspace/password-preview/PasswordSelfTests.cs').read_text()
 refs=Array[MetadataReference]([MetadataReference.CreateFromFile(x) for x in glob.glob(os.environ['VICA_DOTNET']+'/shared/Microsoft.NETCore.App/*/*.dll')])
 tree=CSharpSyntaxTree.ParseText(base+'\n'+extra,CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.CSharp5))
@@ -64,6 +65,11 @@ raw=bytes(created.Envelope)
 phrase=reveal(r)
 assert len(phrase.split(' '))==10
 ok('ten generated recovery words')
+short=secret('M7!vQ2#z')
+short_created=Envelope.Create(Array[Byte](b'eight-character-test'),short,short,Array[Byte](Path('portable-workspace/vault-preview/words/eff-large.txt').read_bytes()))
+assert bytes(Envelope.Open(short_created.Envelope,short,False))==b'eight-character-test'
+short_created.Dispose();short.Dispose()
+ok('eight-character password creates and opens through actual crypto')
 wrong=secret('Different-planet-signal-628!')
 fails(lambda: Envelope.Open(created.Envelope,wrong,False),'wrong password')
 fails(lambda: Envelope.Open(created.Envelope,wrong,True),'wrong recovery')
@@ -127,6 +133,6 @@ for credential,offset,tag in [(reveal(p),24,b'VICPWD03'),(phrase,132,b'VICREC03'
  ok('independent Argon2id/AESGCM opens '+tag.decode())
 for x in [p,r,wrong,nfc,nfd,new]:x.Dispose()
 created.Dispose();second.Dispose()
-assert SelfTests.Run(Array[Byte](Path('portable-workspace/vault-preview/words/eff-large.txt').read_bytes()))==16
+assert SelfTests.Run(Array[Byte](Path('portable-workspace/vault-preview/words/eff-large.txt').read_bytes()))==17
 ok('the exact Windows-gate C# self-check also passes on Linux')
 print('Runtime checks passed:',checks,'; actual C# crypto on Linux, not Windows/PowerShell')

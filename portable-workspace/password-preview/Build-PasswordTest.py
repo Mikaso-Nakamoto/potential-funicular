@@ -12,6 +12,8 @@ entries['READ-ME.ru.md'] = (HERE / 'README.ru.md').read_bytes()
 entries['Bootstrap.Common.ps1'] = (WORKSPACE / 'vica/Bootstrap.Common.ps1').read_bytes()
 for name in ('Vault.Common.ps1','VaultCrypto.cs','SodiumPe.cs','Test-SodiumImports.ps1','LICENSE.libsodium.txt','words/eff-large.txt','words/NOTICE.md'):
     entries['vault-preview/' + name] = (WORKSPACE / 'vault-preview' / name).read_bytes()
+# Test-only minimum; production VaultCrypto.cs is never edited. KDF/cipher/format unchanged.
+entries['vault-preview/VaultCrypto.cs'] = entries['vault-preview/VaultCrypto.cs'].replace(b'password.Length < 16',b'password.Length < 8').replace(b'at least 16 characters',b'at least 8 characters')
 entries['Start-Test.cmd'] = (
     '@echo off\r\nsetlocal\r\n'
     '"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy RemoteSigned -File "%~dp0Start-PasswordTest.ps1"\r\n'

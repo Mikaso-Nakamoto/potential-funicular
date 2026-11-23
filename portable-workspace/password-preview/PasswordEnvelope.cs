@@ -54,8 +54,8 @@ namespace VicaPasswordPreview {
                     int scalar = Char.ConvertToUtf32(text,i); if (Char.IsHighSurrogate(text[i])) i++;
                     count++; distinct.Add(scalar); if (scalar < '0' || scalar > '9') digitsOnly = false;
                 }
-                if (count < 16 || count > 256 || distinct.Count < 6 || digitsOnly || Char.IsWhiteSpace(text[0]) || Char.IsWhiteSpace(text[text.Length-1]))
-                    throw new ArgumentException("Use 16-256 characters, at least 6 different; no all-digit or edge-whitespace password.");
+                if (count < 8 || count > 256 || distinct.Count < 6 || digitsOnly || Char.IsWhiteSpace(text[0]) || Char.IsWhiteSpace(text[text.Length-1]))
+                    throw new ArgumentException("Use 8-256 characters, at least 6 different; no all-digit or edge-whitespace password.");
                 string lower = text.ToLowerInvariant();
                 for (int period=1;period<=text.Length/2;period++) {
                     bool repeated = true;

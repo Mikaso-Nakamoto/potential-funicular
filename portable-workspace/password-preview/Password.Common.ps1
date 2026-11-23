@@ -12,11 +12,11 @@ function Initialize-PasswordPreview {
     if ($manifest.version -ne '1.0.22' -or $manifest.build -ne 'msvc-v143-x64-release' -or $manifest.archiveSha256 -ne '3e03a726fac4bc09cb61d8f29d658ef7a5eca0811de59082130414f7ca2e4279' -or
         (Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash -ne $manifest.dllSha256) { throw 'Crypto dependency integrity mismatch.' }
     $base = Join-Path $previewDirectory 'vault-preview\VaultCrypto.cs'
-    if ((Get-FileHash -LiteralPath $base -Algorithm SHA256).Hash -ne '9de76c76388574a64b031e4684c33e42864fd09d098a50dc7dc50698414476cb') { throw 'Base crypto source mismatch.' }
+    if ((Get-FileHash -LiteralPath $base -Algorithm SHA256).Hash -ne '536a3f2deaa34d42c644cf6f6938e6d06691dd2fdcf0e05fbd109010007fc019') { throw 'Base crypto source mismatch.' }
     $extra = Join-Path $previewDirectory 'PasswordEnvelope.cs'
-    if ((Get-FileHash -LiteralPath $extra -Algorithm SHA256).Hash -ne '3bb61ac3a16dc32378e4b77e33e807e9caf11c68bdc88aafd5c8be631043545d') { throw 'Password envelope source mismatch.' }
+    if ((Get-FileHash -LiteralPath $extra -Algorithm SHA256).Hash -ne 'a619bb72076e339ccc36930bcc915820b0d7293c12aba58558a5ca35ed68dd54') { throw 'Password envelope source mismatch.' }
     $selfTests = Join-Path $previewDirectory 'PasswordSelfTests.cs'
-    if ((Get-FileHash -LiteralPath $selfTests -Algorithm SHA256).Hash -ne 'de7b49f1453892e6f91a723922630772a3895c84742dfb90356ba0abf4fa0df2') { throw 'Self-check source mismatch.' }
+    if ((Get-FileHash -LiteralPath $selfTests -Algorithm SHA256).Hash -ne '58e9a5f506048da5f4ae16f0ba49617c3fd0e4ad0b29208183f80fd4e8559ca7') { throw 'Self-check source mismatch.' }
     & (Join-Path $previewDirectory 'vault-preview\Test-SodiumImports.ps1') -Path $dll
     $source = [IO.File]::ReadAllText($base).Replace('__SODIUM_DLL__',$dll.Replace('"','""')) + "`n" + [IO.File]::ReadAllText($extra) + "`n" + [IO.File]::ReadAllText($selfTests)
     Add-Type -TypeDefinition $source -ErrorAction Stop

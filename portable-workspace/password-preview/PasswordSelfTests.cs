@@ -35,7 +35,11 @@ namespace VicaPasswordPreview {
                 Same(payload,Envelope.Open(reset,password,false));
                 Same(payload,Envelope.Open(reset,phrase,true));
                 Fail(delegate { Envelope.Open(reset,nextPassword,false); });
-                return 16;
+                using (SecureString shortPassword = Secret("M7!vQ2#z"))
+                using (Created shortCreated = Envelope.Create(payload,shortPassword,shortPassword,wordList)) {
+                    Same(payload,Envelope.Open(shortCreated.Envelope,shortPassword,false));
+                }
+                return 17;
             }
         }
     }
