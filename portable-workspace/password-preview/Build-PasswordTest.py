@@ -16,7 +16,7 @@ entries['Start-Test.cmd'] = (
     '@echo off\r\nsetlocal\r\n'
     '"%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NoLogo -NoProfile -ExecutionPolicy RemoteSigned -File "%~dp0Start-PasswordTest.ps1"\r\n'
     'set "code=%errorlevel%"\r\n'
-    'if not "%code%"=="0" (\r\n  echo Password TEST stopped. No production import or cleanup.\r\n  pause\r\n)\r\nexit /b %code%\r\n'
+    'echo Password TEST ended. No production import or cleanup.\r\npause\r\nexit /b %code%\r\n'
 ).encode('ascii')
 for source in ('PasswordEnvelope.cs','PasswordSelfTests.cs'):
     assert hashlib.sha256(entries[source]).hexdigest() in entries['Password.Common.ps1'].decode()

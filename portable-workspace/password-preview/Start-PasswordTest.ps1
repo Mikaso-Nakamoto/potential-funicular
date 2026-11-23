@@ -53,6 +53,7 @@ try {
                 $phase = 'create-test'
                 Write-Host 'Set a NEW TEST password once: 16-256 characters, 6 different or more, no all-digit/obvious/repeated pattern or leading/trailing whitespace. Several unrelated words are allowed. NFC normalized; keyboard layout is NOT corrected.'
                 $password = Read-Host 'New TEST password (hidden)' -AsSecureString
+                if ($password.Length -eq 0) { Write-Host 'Empty password: nothing saved. Enter a password, not just Enter.'; continue }
                 $confirmation = Read-Host 'Repeat TEST password (hidden)' -AsSecureString
                 $created = [VicaPasswordPreview.Envelope]::Create([Text.Encoding]::UTF8.GetBytes('VIC-A SYNTHETIC PASSWORD TEST ONLY'),$password,$confirmation,$words)
                 $phrase = $created.Recovery.CopyPassword()
@@ -100,7 +101,7 @@ try {
             Write-Warning ('Test operation stopped at: ' + $phase + '. Wrong credential, rejected password policy, integrity failure or I/O. Existing published file is not deliberately replaced on validation failure; if publication was attempted, retain test backups. No production data involved.')
             Write-Host 'For a new password: check confirmation, 16-256 NFC characters, at least 6 different, no obvious/repeated pattern, no edge whitespace.'
             if (-not (Test-Path -LiteralPath $path)) {
-                if ((Read-Host 'Enter R to retry creation; anything else exits') -cne 'R') { break }
+                if ((Read-Host 'Enter = retry creation; type EXIT to close test') -ceq 'EXIT') { break }
             }
         } finally {
             foreach ($item in @($password,$confirmation,$phrase,$phraseConfirm,$credential,$created)) { if ($null -ne $item) { $item.Dispose() } }
