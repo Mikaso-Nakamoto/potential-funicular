@@ -37,3 +37,7 @@ portable-workspace/vic-a.ui.json.*.tmp
 # Private working-vault preview runtime and unpublished stages
 /portable-workspace/WorkingRuntime/
 /portable-workspace/.working-vault-*/
+
+# Owned launcher self-check scratch/report
+/portable-workspace/.job-test-*/
+/portable-workspace/job-lifecycle-report.txt

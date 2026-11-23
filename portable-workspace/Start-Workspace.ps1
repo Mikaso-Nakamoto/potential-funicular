@@ -9,10 +9,10 @@ if ([string]::IsNullOrWhiteSpace($scriptDirectory)) {
 if ([string]::IsNullOrWhiteSpace($scriptDirectory)) { throw 'Cannot determine script location. Run the saved PS1 file with -File.' }
 if ([string]::IsNullOrWhiteSpace($Root)) { $Root = Join-Path $scriptDirectory 'Runtime' }
 . (Join-Path $scriptDirectory 'Workspace.Common.ps1')
-$Root = Get-Workspace $Root
+. (Join-Path $scriptDirectory 'Workspace.Job.ps1')
 $lock = $null; $xray = $null; $browser = $null
 $oldTemp = $env:TEMP; $oldTmp = $env:TMP
-$browserExe = $null
+$browserExe = $null; $browserLaunchAttempted = $false; $phase = 'runtime-path'
 function Test-SessionBrowser {
     if ($browser -and -not $browser.HasExited) { return $true }
     if (Test-ProfileBusy $profileDir) { return $true }
@@ -24,15 +24,24 @@ function Test-SessionBrowser {
     return $false
 }
 try {
+    $Root = Get-Workspace $Root
+    $phase = 'session-lock'
     $lock = [IO.File]::Open((Join-Path $Root '.session.lock'), 'OpenOrCreate', 'ReadWrite', 'None')
     $config = Join-Path $Root 'private\xray.json'
     if (-not (Test-Path -LiteralPath $config)) { throw 'Run Update-Subscription.ps1 first.' }
+    $tmp = Join-Path $Root 'private\tmp'
+    New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+    $env:TEMP = $tmp; $env:TMP = $tmp
     $exe = Join-Path $Root 'Xray\xray.exe'
-    Test-XrayConfig $exe $config
+    $phase = 'native-config-validation'
+    Test-OwnedWorkspaceConfig $exe $config
+    $phase = 'port-check'
     if (@(Get-NetTCPConnection -State Listen -LocalPort 17890 -ErrorAction SilentlyContinue).Count -gt 0) { throw 'Port 17890 is occupied. Nothing was launched.' }
+    $phase = 'browser-path'
     $binaries = @(Get-ChildItem -LiteralPath (Join-Path $Root 'LibreWolf') -Filter librewolf.exe -Recurse -File)
     if ($binaries.Count -ne 1) { throw 'Expected one LibreWolf binary.' }
     $browserExe = $binaries[0].FullName
+    $phase = 'profile-policy'
     $profileDir = Join-Path $Root 'private\profile'
     $marker = Join-Path $profileDir '.workspace-profile'
     if ((Test-Path -LiteralPath $profileDir) -and -not (Test-Path -LiteralPath $marker)) { throw 'Unmanaged profile folder; refusing to alter it.' }
@@ -76,7 +85,9 @@ user_pref("browser.startup.homepage", "about:blank");
     $prefs += 'user_pref("browser.download.dir", ' + (ConvertTo-Json -InputObject $downloads -Compress) + ');' + "`r`n"
     [IO.File]::WriteAllText((Join-Path $profileDir 'user.js'), $prefs, (New-Object Text.UTF8Encoding($false)))
     # Config loglevel=none; no persistent stdout/stderr logs are created.
-    $xray = Start-Process -FilePath $exe -ArgumentList @('run','-config', ('"' + $config + '"')) -WorkingDirectory (Join-Path $Root 'Xray') -WindowStyle Hidden -PassThru
+    $phase = 'job-contained-xray-start'
+    $xray = Start-OwnedWorkspaceXray $exe $config (Join-Path $Root 'Xray')
+    $phase = 'owned-socks-readiness'
     $ready = $false
     for ($i=0; $i -lt 50; $i++) {
         if ($xray.HasExited) { throw 'Xray exited before opening SOCKS.' }
@@ -88,8 +99,11 @@ user_pref("browser.startup.homepage", "about:blank");
     Write-Host 'SOCKS is listening; remote connectivity is NOT yet verified.'
     Write-Host 'Keep this window open. Close LibreWolf normally to end the session.'
     Write-Host 'Do not sign in until IP/DNS and tunnel-disconnect tests pass.'
+    $phase = 'browser-start'
+    $browserLaunchAttempted = $true
     $browser = Start-Process -FilePath $binaries[0].FullName -ArgumentList @('-wait-for-browser','-no-remote','-new-instance','-profile', ('"' + $profileDir + '"'), 'about:blank') -WorkingDirectory $profileDir -PassThru
     Start-Sleep -Seconds 3
+    $phase = 'browser-monitor'
     $warned = $false
     while (Test-SessionBrowser) {
         if ($xray.HasExited -and -not $warned) {
@@ -98,9 +112,11 @@ user_pref("browser.startup.homepage", "about:blank");
         }
         Start-Sleep -Seconds 1
     }
+} catch {
+    throw ('Managed session failed at: ' + $phase + '. No automatic takeover or policy bypass was attempted.')
 } finally {
     try {
-        if ($browser) {
+        if ($browserLaunchAttempted) {
             # Also retain the lock if a monitoring error interrupted the normal loop.
             # On inspection failure, fail closed: keep waiting instead of declaring the profile free.
             $waiting = $true
@@ -110,10 +126,7 @@ user_pref("browser.startup.homepage", "about:blank");
                 if ($waiting) { Start-Sleep -Seconds 1 }
             }
         }
-        if ($xray -and -not $xray.HasExited) {
-            Stop-Process -Id $xray.Id -ErrorAction Stop
-            if (-not $xray.WaitForExit(5000)) { Write-Warning 'Xray exit was not confirmed.' }
-        }
+        Stop-OwnedWorkspaceXray $xray
     } finally {
         $env:TEMP = $oldTemp; $env:TMP = $oldTmp
         if ($lock) { $lock.Dispose() }

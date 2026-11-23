@@ -1,11 +1,13 @@
 ﻿#requires -Version 5.1
 [CmdletBinding()]
-param([switch]$NoSplash)
+param([switch]$NoSplash, [string]$Root = '')
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $homeDir = $PSScriptRoot
 if (-not $homeDir) { $homeDir = Split-Path -Parent $MyInvocation.MyCommand.Path }
-$runtimeDir = Join-Path $homeDir 'Runtime'
+$runtimeDir = $Root
+if (-not $runtimeDir) { $runtimeDir = Join-Path $homeDir 'Runtime' }
+$runtimeDir = [IO.Path]::GetFullPath($runtimeDir)
 . (Join-Path $homeDir 'Workspace.Common.ps1')
 $supervisor = $null
 $openedAt = Get-Date
@@ -171,7 +173,7 @@ function Get-LocalStatus {
 }
 function Start-ManagedWindow {
     if ($script:supervisor -and -not $script:supervisor.HasExited) { throw 'The session window is already open. Close LibreWolf normally first.' }
-    $path = Join-Path $homeDir 'Start-Workspace.ps1'
+    $path = Join-Path $homeDir 'Start-SessionWindow.ps1'
     $script:supervisor = Start-Process -FilePath (Join-Path $PSHOME 'powershell.exe') -ArgumentList @('-NoLogo','-NoProfile','-ExecutionPolicy','RemoteSigned','-File', ('"' + $path + '"'), '-Root', ('"' + $runtimeDir + '"')) -WorkingDirectory $homeDir -PassThru
 }
 function Request-BrowserClose {
