@@ -12,7 +12,7 @@ function Initialize-VaultCrypto {
     if ($manifest.version -ne '1.0.22' -or $manifest.archiveSha256 -ne '1d99e0afaf27bce664249232e9dc628ae6bb7b49f0ab53ad6db372b028a35d9d' -or
         (Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash -ne $manifest.dllSha256) { throw 'Crypto dependency integrity check failed.' }
     $sourcePath = Join-Path $vaultToolDirectory 'VaultCrypto.cs'
-    if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne '1239afd8ef6b33806f34bf2c548e7beeda317c81feed4e72b2b808450ea5e13c') { throw 'Crypto source integrity check failed.' }
+    if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne '9594757c1adfad80c89757d6a614244c2759a170769e798930a6c50c1b35f788') { throw 'Crypto source integrity check failed.' }
     $source = [IO.File]::ReadAllText($sourcePath).Replace('__SODIUM_DLL__', $dll.Replace('"','""'))
     Add-Type -TypeDefinition $source -ErrorAction Stop
     [VicAVault.Crypto]::CheckSupport()

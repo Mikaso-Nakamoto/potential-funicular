@@ -54,7 +54,7 @@ try {
     $legacy = [byte[]]$sealed1.Clone()
     $legacy[7] = [byte][char]'1'
     Expect-Rejection $legacy $password
-    Write-Host 'PASS: official crypto dependency loaded; interoperability vector, round-trip, randomness, wrong password, tampering and truncation tested.' -ForegroundColor Green
+    Write-Host 'PASS: libsodium runtime 1.0.22 loaded; interoperability vector, round-trip, randomness, wrong password, tampering and truncation tested.' -ForegroundColor Green
     Write-Host 'No user data was read or changed. This is NOT an audit of host security or memory erasure.'
 } finally {
     if ($plain) { [Array]::Clear($plain, 0, $plain.Length) }

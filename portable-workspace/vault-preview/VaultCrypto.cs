@@ -21,8 +21,12 @@ namespace VicAVault {
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_encrypt([Out] byte[] cipher, out ulong cipherLength, byte[] message, ulong messageLength, byte[] ad, ulong adLength, IntPtr secretNonce, byte[] nonce, byte[] key);
         [DefaultDllImportSearchPaths(DllImportSearchPath.DllLoadDir | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_decrypt([Out] byte[] message, out ulong messageLength, IntPtr secretNonce, byte[] cipher, ulong cipherLength, byte[] ad, ulong adLength, byte[] nonce, byte[] key);
+        [DefaultDllImportSearchPaths(DllImportSearchPath.DllLoadDir | DllImportSearchPath.System32)]
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr sodium_version_string();
         public static void CheckSupport() {
             if (!Environment.Is64BitProcess) throw new InvalidOperationException("64-bit PowerShell required.");
+            if (Marshal.PtrToStringAnsi(sodium_version_string()) != "1.0.22")
+                throw new InvalidOperationException("Expected libsodium runtime 1.0.22.");
             if (sodium_init() < 0 || crypto_aead_aes256gcm_is_available() != 1)
                 throw new InvalidOperationException("AES-GCM acceleration unavailable. No weaker fallback is used.");
         }

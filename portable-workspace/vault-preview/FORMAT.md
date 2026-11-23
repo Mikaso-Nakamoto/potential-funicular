@@ -52,12 +52,17 @@ No update/backup recovery protocol yet. Originals are never automatically delete
 
 P/Invoke uses an absolute main DLL path and DefaultDllImportSearchPaths with
 DllLoadDir | System32 (requires supported .NET/Windows). No process-global DLL
-search mutation. Source SHA-256 is pinned in Vault.Common.ps1; archive SHA-256 is
+search mutation. CheckSupport also requires runtime version string 1.0.22. Source SHA-256 is pinned in Vault.Common.ps1; archive SHA-256 is
 pinned; installed DLL hash is recorded in a local manifest. These checks do NOT
 protect against an attacker able to edit the verifier or manifest.
 Installer selects one anchored libsodium-win64/bin/libsodium-N.dll member, checks
 listed paths, requires one regular-file listing, and extracts only that member.
 This is fail-closed on unfamiliar package layouts, not a general tar validator.
+
+The isolated test kit adds a non-executing PE32+ direct-import gate with a narrow
+system-library allowlist; unexpected dependencies or delay imports stop installation.
+It is not a full recursive or dynamic import audit. Synthetic inspector and vault
+I/O/negative test scripts exist but have not been executed here on Windows.
 
 Outstanding release gates: actual official Windows DLL import/dependency review;
 Windows bsdtar adversarial archive tests; C# compilation and loader tests in Windows

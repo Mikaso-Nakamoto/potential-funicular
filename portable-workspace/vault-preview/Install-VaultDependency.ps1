@@ -6,10 +6,14 @@ $directory = $PSScriptRoot
 $target = Join-Path $directory 'lib'
 if (Test-Path -LiteralPath $target) { throw 'lib already exists. Verify it before replacing anything; installer will not overwrite it.' }
 $stage = Join-Path $directory ('.dependency-' + [Guid]::NewGuid().ToString('N'))
+$ownedStage = $false
+$oldTemp = $env:TEMP; $oldTmp = $env:TMP
 $oldTls = [Net.ServicePointManager]::SecurityProtocol
 $oldRevocation = [Net.ServicePointManager]::CheckCertificateRevocationList
 try {
-    New-Item -ItemType Directory -Path $stage | Out-Null
+    New-Item -ItemType Directory -Path $stage -ErrorAction Stop | Out-Null
+    $ownedStage = $true
+    $env:TEMP = $stage; $env:TMP = $stage
     if ([Net.ServicePointManager]::ServerCertificateValidationCallback) { throw 'Custom TLS validation callback prohibited.' }
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     [Net.ServicePointManager]::CheckCertificateRevocationList = $true
@@ -43,6 +47,7 @@ try {
     if ($bytes.Length -lt 256 -or $bytes[0] -ne 77 -or $bytes[1] -ne 90) { throw 'Invalid PE image.' }
     $offset = [BitConverter]::ToInt32($bytes, 60)
     if ($offset -lt 64 -or $offset -gt ($bytes.Length - 6) -or [BitConverter]::ToUInt32($bytes, $offset) -ne 17744 -or [BitConverter]::ToUInt16($bytes, $offset + 4) -ne 34404) { throw 'DLL is not AMD64 PE.' }
+    & (Join-Path $directory 'Test-SodiumImports.ps1') -Path $dllPath
     $bundle = Join-Path $stage 'lib'
     New-Item -ItemType Directory -Path $bundle | Out-Null
     $installed = Join-Path $bundle 'vica-sodium.dll'
@@ -54,7 +59,8 @@ try {
 } finally {
     [Net.ServicePointManager]::SecurityProtocol = $oldTls
     [Net.ServicePointManager]::CheckCertificateRevocationList = $oldRevocation
-    if (Test-Path -LiteralPath $stage) {
+    $env:TEMP = $oldTemp; $env:TMP = $oldTmp
+    if ($ownedStage -and (Test-Path -LiteralPath $stage)) {
         try { Remove-Item -LiteralPath $stage -Recurse -Force } catch { Write-Warning 'Dependency staging cleanup failed.' }
     }
 }

@@ -1,3 +1,6 @@
 # Downloaded dependency and owned installer stages
 /lib/
 /.dependency-*/
+/.vault-io-*/
+/.vault-negative-*/
+/vault-test-report.txt
