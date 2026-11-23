@@ -100,6 +100,7 @@ function Test-XrayConfig([string]$Exe, [string]$Config) {
 }
 function Get-SubscriptionText([Uri]$Uri) {
     $response = $null; $stream = $null; $memory = $null
+    $stage = 'policy'; $reason = 'request-failed'; $httpCode = $null
     $oldProtocols = [Net.ServicePointManager]::SecurityProtocol
     $oldRevocation = [Net.ServicePointManager]::CheckCertificateRevocationList
     try {
@@ -107,6 +108,7 @@ function Get-SubscriptionText([Uri]$Uri) {
         if ($null -ne [Net.ServicePointManager]::ServerCertificateValidationCallback) { throw 'Custom certificate validation callback is prohibited.' }
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         [Net.ServicePointManager]::CheckCertificateRevocationList = $true
+        $stage = 'request-setup'
         $request = [Net.HttpWebRequest]::Create($Uri)
         $request.CheckCertificateRevocationList = $true
         $request.Method = 'GET'
@@ -116,20 +118,43 @@ function Get-SubscriptionText([Uri]$Uri) {
         $request.Timeout = 45000
         $request.ReadWriteTimeout = 15000
         $request.AutomaticDecompression = [Net.DecompressionMethods]::GZip -bor [Net.DecompressionMethods]::Deflate
+        $stage = 'connect'
         $response = $request.GetResponse()
-        if ([int]$response.StatusCode -ne 200) { throw 'Unexpected HTTP status.' }
+        $httpCode = [int]$response.StatusCode
+        $stage = 'http-status'
+        if ($httpCode -ne 200) { $reason = 'non-200-status-or-redirect'; throw 'Unexpected HTTP status.' }
         $limit = 4194304
-        if ($response.ContentLength -gt $limit) { throw 'Response too large.' }
+        if ($response.ContentLength -gt $limit) { $reason = 'size-limit'; throw 'Response too large.' }
+        $stage = 'read-body'
         $stream = $response.GetResponseStream()
         $memory = New-Object IO.MemoryStream
         $buffer = New-Object byte[] 8192
         $watch = [Diagnostics.Stopwatch]::StartNew()
         while (($read = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
-            if ($watch.Elapsed.TotalSeconds -gt 45 -or ($memory.Length + $read) -gt $limit) { throw 'Response limit exceeded.' }
+            if ($watch.Elapsed.TotalSeconds -gt 45) { $reason = 'read-deadline'; throw 'Response time limit exceeded.' }
+            if (($memory.Length + $read) -gt $limit) { $reason = 'size-limit'; throw 'Response size limit exceeded.' }
             $memory.Write($buffer, 0, $read)
         }
         return [Text.Encoding]::UTF8.GetString($memory.ToArray()).Trim().TrimStart([char]0xFEFF)
-    } catch { throw 'Subscription fetch failed (HTTP, redirect, TLS, timeout or 4 MiB limit). URL and body suppressed.' }
+    } catch {
+        # Never print Message/ToString/Location: all may contain the subscription token.
+        $exception = $_.Exception
+        $networkStatus = 'unavailable'
+        for ($depth = 0; $depth -lt 10 -and $null -ne $exception; $depth++) {
+            if ($exception -is [Net.WebException]) {
+                $networkStatus = $exception.Status.ToString()
+                $reason = 'network-or-http'
+                if ($exception.Response -is [Net.HttpWebResponse]) {
+                    $httpCode = [int]$exception.Response.StatusCode
+                    if ($null -eq $response) { $response = $exception.Response }
+                }
+                break
+            }
+            $exception = $exception.InnerException
+        }
+        $code = 'unavailable'; if ($null -ne $httpCode) { $code = [string]$httpCode }
+        throw "Subscription fetch failed: stage=$stage; reason=$reason; HTTP=$code; network=$networkStatus. URL, redirect target and response body suppressed."
+    }
     finally {
         if ($stream) { $stream.Dispose() }
         if ($memory) { $memory.Dispose() }
