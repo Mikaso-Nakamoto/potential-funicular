@@ -110,7 +110,8 @@ function Get-SubscriptionText([Uri]$Uri) {
         [Net.ServicePointManager]::CheckCertificateRevocationList = $true
         $stage = 'request-setup'
         $request = [Net.HttpWebRequest]::Create($Uri)
-        $request.CheckCertificateRevocationList = $true
+        # .NET Framework HttpWebRequest uses ServicePointManager for revocation checks.
+        # It has no per-request CheckCertificateRevocationList property.
         $request.Method = 'GET'
         $request.UserAgent = 'v2rayNG'
         $request.Accept = 'text/plain'
