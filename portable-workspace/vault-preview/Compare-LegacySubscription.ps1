@@ -2,7 +2,8 @@
 [CmdletBinding()]
 param(
     [string]$Root = 'Z:\Iran\Browser\Working-Vault-Preview\WorkingRuntime',
-    [string]$LegacyEncrypted = 'F:\Data\Iran\LibreWolf Browser\vpn\sub.txt.enc'
+    [string]$LegacyEncrypted = 'F:\Data\Iran\LibreWolf Browser\vpn\sub.txt.enc',
+    [switch]$Apply
 )
 $ErrorActionPreference = 'Stop'
 if ($env:OS -ne 'Windows_NT' -or -not [Environment]::Is64BitProcess -or $PSVersionTable.PSVersion.Major -ne 5) { throw 'Use 64-bit Windows PowerShell 5.1.' }
@@ -11,6 +12,7 @@ if ($env:OS -ne 'Windows_NT' -or -not [Environment]::Is64BitProcess -or $PSVersi
 . (Join-Path $PSScriptRoot 'Vault.Common.ps1')
 . (Join-Path $PSScriptRoot 'XrayPipe.Common.ps1')
 . (Join-Path $PSScriptRoot 'VaultRefresh.Diagnostics.ps1')
+. (Join-Path $PSScriptRoot 'VaultRefresh.Common.ps1')
 # Standalone reader of the supplied kit-enc/1 format. Never executes legacy scripts.
 $lock = $null; $password = $null; $legacySecret = $null; $ptr = [IntPtr]::Zero
 $kdf = $null; $hmac = $null; $aes = $null; $decryptor = $null
@@ -123,6 +125,7 @@ try {
     if ($oldGuid -eq [Guid]::Empty -or $vaultGuid -eq [Guid]::Empty) { throw 'Zero UUID; no request sent.' }
     if ($oldGuid -eq $vaultGuid) {
         Write-Host 'HWID UUID VALUE: MATCH. Text formatting only; no live request sent.'
+        if ($Apply) { throw 'No distinct legacy UUID to apply; unchanged.' }
     } else {
         Write-Host 'HWID UUID VALUE: DIFFERENT. Testing old parameters once; vault stays unchanged.'
     if (Test-ProfileBusy (Join-Path $Root 'private\profile')) { throw 'Close the browser first.' }
@@ -158,7 +161,7 @@ try {
         'write-out = "\nVICA_STATUS:%{http_code}"'
     ) -join "`n"
     $requestBytes = [Text.Encoding]::UTF8.GetBytes($request + "`n")
-    $request = $null; $uri = $null; $hwid = $null; $document = $null
+    $request = $null; $uri = $null; $hwid = $null
     $phase = 'compile-curl-helper'
     $source = Join-Path $PSScriptRoot 'CurlPipe.cs'
     if ((Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash -ne 'c8e14d3ea10de6bb075bb8ab7e039c660c022e878d27f22484abe1b6769d84b8') { throw 'curl helper integrity mismatch.' }
@@ -193,10 +196,49 @@ try {
     $text = $text.Substring(0,$text.LastIndexOf("`nVICA_STATUS:"))
     $phase = 'diagnose'
     Get-RefreshResponseDiagnostics $text
+    if ($Apply) {
+        $phase = 'parse-for-publication'
+        $parsed = Convert-RefreshSubscription $text
+        $nodes = @($parsed.nodes)
+        $previous = Get-RefreshNodeIdentity $document.activeConfig.outbounds[0]
+        $matching = @()
+        for ($j = 0; $j -lt $nodes.Count; $j++) {
+            if ((Get-RefreshNodeIdentity $nodes[$j]) -ceq $previous) { $matching += $j }
+        }
+        $selected = -1
+        if ($matching.Count -eq 1) {
+            $selected = $matching[0]
+            Write-Host 'Existing outbound uniquely matches refreshed list; preserving it.'
+        } else {
+            Write-Host ('Supported nodes: ' + $nodes.Count + '. Private labels/hosts are not printed.')
+            $number = 0
+            if (-not [int]::TryParse((Read-Host 'Node number (1-based; Enter cancels)'),[ref]$number)) { throw 'Cancelled.' }
+            $selected = $number - 1
+        }
+        if ($selected -lt 0 -or $selected -ge $nodes.Count) { throw 'Invalid selection.' }
+        $next = $document | ConvertTo-Json -Depth 30 -Compress | ConvertFrom-Json
+        # Preserve the authenticated old UUID text; never generate a device identity.
+        $next.subscription.hwid = $params['hwid']
+        $next.activeConfig.outbounds = @($nodes[$selected])
+        Assert-VaultDocument $next
+        $phase = 'stop-fetch-children'
+        Wait-OwnedCleanup $curl 'curl'
+        Wait-OwnedCleanup $xray 'Xray'
+        $curl = $null; $xray = $null
+        $phase = 'validate-new-config'
+        Test-XrayObjectInMemory $exe $next.activeConfig
+        $phase = 'publication-confirmation'
+        Write-Warning 'This replaces HWID and active outbound in the working encrypted vault. An encrypted previous version is retained. Native validation does not prove remote connectivity.'
+        if ((Read-Host 'Type APPLY to publish; anything else cancels') -cne 'APPLY') { throw 'Cancelled; no publication.' }
+        $phase = 'encrypted-publication'
+        $backup = Write-RefreshReplacement $vaultPath $next $password $before
+        Write-Host 'APPLIED: working vault HWID and config updated.'
+        Write-Host ('Encrypted previous version: ' + $backup)
+    }
     }
     $phase = 'unchanged-check'
-    if ((Get-FileHash -LiteralPath $vaultPath -Algorithm SHA256).Hash -ne $before) { throw 'Vault changed externally.' }
-    Write-Host 'READ-ONLY: vault unchanged. No legacy code execution, plaintext file, config update or browser launch. Stopping owned children.'
+    if (-not $Apply -and (Get-FileHash -LiteralPath $vaultPath -Algorithm SHA256).Hash -ne $before) { throw 'Vault changed externally.' }
+    if (-not $Apply) { Write-Host 'READ-ONLY: vault unchanged. No legacy code execution, plaintext file, config update or browser launch. Stopping owned children.' }
     Write-Host 'LIMIT: stored text comparison, not proof of identical HTTP requests. Managed strings cannot be reliably wiped.'
 } catch {
     throw ('Legacy comparison stopped at: ' + $phase + '. Details suppressed; do not share secrets.')
@@ -205,7 +247,7 @@ try {
     if ($ptr -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
     foreach ($bytes in @($key,$enc,$macKey,$plain)) { if ($null -ne $bytes) { [Array]::Clear($bytes,0,$bytes.Length) } }
     $legacyPassword = $null; $text = $null; $params = $null; $document = $null
-    $request = $null; $uri = $null; $hwid = $null; $ua = $null; $config = $null
+    $request = $null; $uri = $null; $hwid = $null; $ua = $null; $config = $null; $next = $null; $parsed = $null; $nodes = $null
     if ($requestBytes) { [Array]::Clear($requestBytes,0,$requestBytes.Length) }
     if ($response) { [Array]::Clear($response,0,$response.Length) }
     Wait-OwnedCleanup $curl 'curl'
