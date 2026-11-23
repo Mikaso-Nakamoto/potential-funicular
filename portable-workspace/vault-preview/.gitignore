@@ -13,3 +13,6 @@
 
 /.real-session-*/
 /real-vault-session-report.txt
+
+/.refresh-tests-*/
+/vault-refresh-test-report.txt

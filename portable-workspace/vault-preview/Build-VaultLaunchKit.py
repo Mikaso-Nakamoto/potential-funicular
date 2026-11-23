@@ -10,8 +10,11 @@ parser = argparse.ArgumentParser()
 modes = parser.add_mutually_exclusive_group()
 modes.add_argument('--real-session', action='store_true')
 modes.add_argument('--working-vault', action='store_true')
+modes.add_argument('--refresh-tests', action='store_true')
 args = parser.parse_args()
 readme = 'WORKING-VAULT.ru.md' if args.working_vault else ('REAL-SESSION.ru.md' if args.real_session else 'VAULT-LAUNCH.ru.md')
+if args.refresh_tests:
+    readme = 'VAULT-REFRESH.ru.md'
 entries = {'READ-ME.ru.md': (HERE / readme).read_bytes()}
 for name in ('Workspace.Common.ps1', 'Start-VaultWorkspace.ps1'):
     entries[name] = (HERE.parent / name).read_bytes()
@@ -22,6 +25,9 @@ for name in (
     'words/eff-large.txt', 'words/NOTICE.md', 'LICENSE.libsodium.txt',
 ):
     entries['vault-preview/' + name] = (HERE / name).read_bytes()
+if args.refresh_tests:
+    for name in ('VaultRefresh.Common.ps1', 'Test-VaultRefresh.ps1', 'Start-VaultRefreshTests.ps1'):
+        entries['vault-preview/' + name] = (HERE / name).read_bytes()
 if args.working_vault:
     for name in ('Prepare-WorkingVault.ps1', 'Start-WorkingVaultPreview.ps1'):
         entries['vault-preview/' + name] = (HERE / name).read_bytes()
@@ -33,6 +39,8 @@ assert hashlib.sha256((HERE / 'VaultCrypto.cs').read_bytes()).hexdigest() in (HE
 assert not any(name.endswith(('.dll', '.exe', '.vault')) or '/Runtime/' in name for name in entries)
 entries['SHA256SUMS.txt'] = ''.join(f'{hashlib.sha256(value).hexdigest()}  {name}\n' for name, value in sorted(entries.items())).encode()
 output = ROOT / ('downloads/VIC-A-Working-Vault-Preview.zip' if args.working_vault else ('downloads/VIC-A-Vault-Real-Session-Test.zip' if args.real_session else 'downloads/VIC-A-Vault-Lifecycle-Tests.zip'))
+if args.refresh_tests:
+    output = ROOT / 'downloads/VIC-A-Vault-Refresh-Tests.zip'
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
     for name, value in sorted(entries.items()):
         info = zipfile.ZipInfo(name, (2026, 11, 22, 0, 0, 0))
