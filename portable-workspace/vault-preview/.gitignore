@@ -10,3 +10,6 @@
 /.launch-tests-*/
 /vault-launch-test-report.txt
 /vault-launch-install-report.txt
+
+/.real-session-*/
+/real-vault-session-report.txt
