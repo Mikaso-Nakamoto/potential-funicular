@@ -1,6 +1,21 @@
 # Следующий этап: изолированный транспорт конфигурации Xray через stdin
 
-## Исправление протокола теста (stdin kit R2)
+## Исправление live-session теста (stdin kit R3)
+
+Windows-скриншот stdin kit R2 подтвердил blocked-input READY, нужный таймаут,
+выход точного child и cleanup. Следующая ошибка PID marker относится к СЛЕДУЮЩЕМУ
+serve-сценарию: Start подтверждал отправку JSON в pipe, а не вход child в Main;
+тест мог вызвать Dispose до записи marker. Это не доказательство отказа stdin.
+
+В stdin kit R3 serve fixture публикует отдельный serve-ready.txt после проверки
+аргументов и чтения JSON до EOF. Тест требует PID/ready именно запущенного child,
+только затем Dispose, CleanupConfirmed и проверку его завершения. Перед каждым
+сценарием печатается CASE для точной локализации ошибки. Readiness check остаётся
+обязательным, таймауты записи/выхода не увеличены ради PASS. Сам XrayPipe.cs и его
+загрузчик в этом исправлении не менялись. R3 требует нового Windows-запуска;
+до настоящего Xray предыдущие попытки не доходили.
+
+## История исправления blocked-input теста (stdin kit R2)
 
 Первый Windows-отчёт для f302f88 показал успешные baseline/reject/hang/flood, но
 после сообщения blocked-writer PASS не оказалось PID-маркера. Причина отсутствия
@@ -78,19 +93,19 @@ Runtime/private файлы, не открывает SOCKS, не проверяе
 
 ## Как воспроизвести на Windows
 
-Сохранить VIC-A-Xray-Stdin-Tests-R2.zip в Z:\Iran\Browser. Обычный 64-bit Windows
-PowerShell 5.1, не x86, не администратор. Xray-Stdin-Test-R2 — новый пустой каталог.
+Сохранить VIC-A-Xray-Stdin-Tests-R3.zip в Z:\Iran\Browser. Обычный 64-bit Windows
+PowerShell 5.1, не x86, не администратор. Xray-Stdin-Test-R3 — новый пустой каталог.
 
 ```powershell
 & {
     $ErrorActionPreference = 'Stop'
-    Unblock-File -LiteralPath 'Z:\Iran\Browser\VIC-A-Xray-Stdin-Tests-R2.zip'
-    Expand-Archive -LiteralPath 'Z:\Iran\Browser\VIC-A-Xray-Stdin-Tests-R2.zip' -DestinationPath 'Z:\Iran\Browser\Xray-Stdin-Test-R2'
-    & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy RemoteSigned -File 'Z:\Iran\Browser\Xray-Stdin-Test-R2\vault-preview\Test-XrayPipe.ps1' -XrayExe 'Z:\Iran\Browser\Runtime\Xray\xray.exe'
+    Unblock-File -LiteralPath 'Z:\Iran\Browser\VIC-A-Xray-Stdin-Tests-R3.zip'
+    Expand-Archive -LiteralPath 'Z:\Iran\Browser\VIC-A-Xray-Stdin-Tests-R3.zip' -DestinationPath 'Z:\Iran\Browser\Xray-Stdin-Test-R3'
+    & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy RemoteSigned -File 'Z:\Iran\Browser\Xray-Stdin-Test-R3\vault-preview\Test-XrayPipe.ps1' -XrayExe 'Z:\Iran\Browser\Runtime\Xray\xray.exe'
 }
 ```
 
-Отчёт: Z:\Iran\Browser\Xray-Stdin-Test-R2\vault-preview\xray-pipe-test-report.txt.
+Отчёт: Z:\Iran\Browser\Xray-Stdin-Test-R3\vault-preview\xray-pipe-test-report.txt.
 Передать его для разбора, не конфиги/URL/пароли. TEMP/TMP на время теста направлены
 в stage на этом диске. Stage удаляется в finally; после аварии может остаться
 синтетический fixture/состояние, но не реальные подписки. OS pagefile/logs не контролируются.

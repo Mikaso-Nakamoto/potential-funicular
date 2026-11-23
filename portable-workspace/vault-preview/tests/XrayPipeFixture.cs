@@ -27,6 +27,8 @@ public static class XrayPipeFixture {
         Console.Out.WriteLine("VIC-A-PIPE-SYNTHETIC-SECRET-DO-NOT-PRINT");
         Console.Error.WriteLine("VIC-A-PIPE-SYNTHETIC-SECRET-DO-NOT-PRINT");
         if (mode == "reject") return 23;
+        // Publishing this marker proves the live branch reached Main, checked args and consumed stdin through EOF.
+        if (mode == "serve") File.WriteAllText("serve-ready.txt", Process.GetCurrentProcess().Id.ToString());
         if (mode == "hang-after-input" || mode == "serve") { Thread.Sleep(60000); return 95; }
         return 0;
     }

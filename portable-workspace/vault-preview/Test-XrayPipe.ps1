@@ -28,27 +28,27 @@ function Assert-ChildExited([string]$Exe, [int]$ExpectedPid = 0) {
         finally { $child.Dispose() }
     }
 }
-function Wait-BlockedFixtureReady($Child, [string]$Exe) {
+function Wait-FixtureReady($Child, [string]$Exe, [ValidateSet('blocked-ready.txt','serve-ready.txt')][string]$Marker) {
     $directory = Split-Path -Parent $Exe
     $watch = [Diagnostics.Stopwatch]::StartNew()
     while ($watch.ElapsedMilliseconds -lt 15000) {
-        if ($Child.HasExited) { throw 'Blocked-input fixture exited before readiness; stdin timeout was not tested.' }
+        if ($Child.HasExited) { throw ('Fixture exited before readiness: ' + $Marker) }
         $pidMarker = Join-Path $directory 'pid.txt'
-        $readyMarker = Join-Path $directory 'blocked-ready.txt'
+        $readyMarker = Join-Path $directory $Marker
         if ((Test-Path -LiteralPath $pidMarker) -and (Test-Path -LiteralPath $readyMarker)) {
             try {
                 $markedPid = 0; $readyPid = 0
                 $hasPid = [int]::TryParse([IO.File]::ReadAllText($pidMarker), [ref]$markedPid)
                 $hasReady = [int]::TryParse([IO.File]::ReadAllText($readyMarker), [ref]$readyPid)
                 if ($hasPid -and $hasReady -and $markedPid -eq $Child.Id -and $readyPid -eq $Child.Id) {
-                    Note ('READY: no-read fixture branch and both PID markers confirmed before input; startup ms=' + $watch.ElapsedMilliseconds)
+                    Note ('READY: ' + $Marker + '; both markers match the started PID; wait ms=' + $watch.ElapsedMilliseconds)
                     return
                 }
             } catch [IO.IOException] { } # marker still being written; do not infer readiness
         }
         Start-Sleep -Milliseconds 50
     }
-    throw 'Blocked-input fixture did not signal readiness in 15 seconds; no stdin timeout PASS is claimed.'
+    throw ('Fixture did not signal readiness in 15 seconds: ' + $Marker + '; scenario is NOT passed.')
 }
 function Must-Reject([string]$Name, [scriptblock]$Action, [string]$ExpectedReason = '') {
     $rejected = $false; $watch = [Diagnostics.Stopwatch]::StartNew()
@@ -69,7 +69,7 @@ function Must-Reject([string]$Name, [scriptblock]$Action, [string]$ExpectedReaso
 try {
     New-Item -ItemType Directory -Path $stage | Out-Null
     $owned = $true; $env:TEMP = $stage; $env:TMP = $stage
-    Note ('Xray stdin transport tests R2 (readiness handshake); PS ' + $PSVersionTable.PSVersion + '; CLR ' + [Environment]::Version)
+    Note ('Xray stdin transport tests R3 (blocked-input and live-session readiness); PS ' + $PSVersionTable.PSVersion + '; CLR ' + [Environment]::Version)
     foreach ($name in @('XrayPipe.cs','XrayPipe.Common.ps1','Test-XrayPipe.ps1','tests\XrayPipeFixture.cs')) {
         Note ('SHA256 ' + (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $name) -Algorithm SHA256).Hash + '  ' + $name)
     }
@@ -84,11 +84,13 @@ try {
         outbounds = @($outbound)
     } | ConvertTo-Json -Depth 30 | ConvertFrom-Json
     $payload = [Text.Encoding]::UTF8.GetBytes(($config | ConvertTo-Json -Depth 30 -Compress))
+    Note 'CASE: baseline validation'
     $exe = New-Case 'ok'
     Test-XrayObjectInMemory $exe $config 5000
     Assert-ChildExited $exe
     Note 'PASS: exact Xray argument shape, UTF-8 JSON stdin, EOF and zero-exit validation; no child output published'
     foreach ($mode in @('reject','hang-after-input','stderr-flood','stdout-flood')) {
+        Note ('CASE: ' + $mode)
         $exe = New-Case $mode
         if ($mode -in @('stderr-flood','stdout-flood')) {
             Must-Reject $mode { [VicAXrayPipe.Session]::Validate($exe, (Split-Path -Parent $exe), $payload, 3000) } 'Xray output limit exceeded.'
@@ -96,6 +98,7 @@ try {
         Assert-ChildExited $exe
         Note ('PASS: ' + $mode + '; child exit confirmed')
     }
+    Note 'CASE: blocked-input'
     $exe = New-Case 'blocked-input'
     $large = New-Object byte[] 4194304
     try {
@@ -103,7 +106,7 @@ try {
         $session = [VicAXrayPipe.Session]::BeginValidation($exe, (Split-Path -Parent $exe))
         $blockedPid = $session.Id
         Note ('STARTED: blocked-input fixture; PID=' + $blockedPid + '; input not sent yet')
-        Wait-BlockedFixtureReady $session $exe
+        Wait-FixtureReady $session $exe 'blocked-ready.txt'
         Must-Reject 'blocked stdin writer' { $session.SendAndValidate($large, 3000) } 'Xray stdin input timed out.'
         if (-not $session.CleanupConfirmed) { throw 'Blocked-input cleanup was not confirmed.' }
         Assert-ChildExited $exe $blockedPid
@@ -112,14 +115,18 @@ try {
         if ($session) { $session.Dispose(); $session = $null }
         [Array]::Clear($large, 0, $large.Length)
     }
+    Note 'CASE: live serve session'
     $exe = New-Case 'serve'
     $session = Start-XrayObjectInMemory $exe $config 5000
+    $livePid = $session.Id
+    Wait-FixtureReady $session $exe 'serve-ready.txt'
     if ($session.HasExited -or $session.HasFailed) { throw 'Live-session fixture failed.' }
     $session.Dispose()
     if (-not $session.CleanupConfirmed) { throw 'Live-session cleanup was not confirmed.' }
     $session = $null
-    Assert-ChildExited $exe
-    Note 'PASS: live child session is retained then stopped/disposed with confirmed cleanup'
+    Assert-ChildExited $exe $livePid
+    Note 'PASS: live child read JSON to EOF, signalled readiness, then exact child exit and cleanup confirmed'
+    Note 'CASE: policy rejection before start'
     $invalid = $config | ConvertTo-Json -Depth 30 | ConvertFrom-Json
     $invalid.inbounds[0].listen = '0.0.0.0'
     $exe = New-Case 'policy-reject'
@@ -127,6 +134,7 @@ try {
     if (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $exe) 'pid.txt')) { throw 'Unsafe configuration started a child.' }
     Note 'PASS: unsafe config rejected before child start'
     if ($XrayExe) {
+        Note 'CASE: supplied real Xray stdin validation'
         $actual = [IO.Path]::GetFullPath($XrayExe)
         Note ('ACTUAL XRAY SHA256 ' + (Get-FileHash -LiteralPath $actual -Algorithm SHA256).Hash)
         Test-XrayObjectInMemory $actual $config 30000
