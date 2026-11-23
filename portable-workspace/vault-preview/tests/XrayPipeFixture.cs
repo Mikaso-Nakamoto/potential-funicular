@@ -8,7 +8,12 @@ public static class XrayPipeFixture {
         string mode = File.ReadAllText("mode.txt");
         string expected = mode == "serve" ? "run -config stdin: -format json" : "run -test -config stdin: -format json";
         if (String.Join(" ", args) != expected) return 91;
-        if (mode == "blocked-input") { Thread.Sleep(60000); return 92; }
+        if (mode == "blocked-input") {
+            // Reached the actual no-read branch, not just process creation / CLR initialization.
+            File.WriteAllText("blocked-ready.txt", Process.GetCurrentProcess().Id.ToString());
+            Thread.Sleep(60000);
+            return 92;
+        }
         if (mode == "stderr-flood" || mode == "stdout-flood") {
             TextWriter output = mode == "stderr-flood" ? Console.Error : Console.Out;
             string chunk = new string('x', 4096);

@@ -1,5 +1,26 @@
 # Следующий этап: изолированный транспорт конфигурации Xray через stdin
 
+## Исправление протокола теста (stdin kit R2)
+
+Первый Windows-отчёт для f302f88 показал успешные baseline/reject/hang/flood, но
+после сообщения blocked-writer PASS не оказалось PID-маркера. Причина отсутствия
+маркера из этого отчёта не установлена: ранний PASS не доказывал достижение
+нужной ветки fixture. Реальный Xray тогда ещё НЕ был проверен.
+
+Теперь BeginValidation создаёт процесс и drains, но ещё не отправляет stdin.
+Тест ждёт до 15 секунд два маркера с PID именно этого процесса, включая marker
+из ветки fixture, которая намеренно НЕ читает stdin. Только затем SendAndValidate
+подаёт 4 МиБ и включает прежний 3-секундный deadline записи. Прежний таймаут не
+увеличен ради PASS. Итог PASS печатается только после нужной категории ошибки,
+CleanupConfirmed и проверки выхода правильного child. Startup/readiness failure
+отдельно проваливает набор; отсутствие marker не считается успешным таймаутом.
+
+BeginValidation — низкоуровневый двухфазный API. Он не обещает готовность настоящего
+Xray: handshake существует только у тестового fixture. С момента возврата caller
+владеет Session и обязан ограничить ожидание/вызвать Dispose даже до передачи JSON.
+Обычные Start/Validate сохраняют прежние сигнатуры и фиксированные аргументы.
+R2 пока прошёл только статический разбор, нужен новый Windows-запуск.
+
 ## Статус
 
 Это НОВЫЙ, ещё не исполненный на Windows код; успешные vault R3 отчёты его не покрывают.
@@ -57,19 +78,19 @@ Runtime/private файлы, не открывает SOCKS, не проверяе
 
 ## Как воспроизвести на Windows
 
-Сохранить VIC-A-Xray-Stdin-Tests.zip в Z:\Iran\Browser. Обычный 64-bit Windows
-PowerShell 5.1, не x86, не администратор. Xray-Stdin-Test — новый пустой каталог.
+Сохранить VIC-A-Xray-Stdin-Tests-R2.zip в Z:\Iran\Browser. Обычный 64-bit Windows
+PowerShell 5.1, не x86, не администратор. Xray-Stdin-Test-R2 — новый пустой каталог.
 
 ```powershell
 & {
     $ErrorActionPreference = 'Stop'
-    Unblock-File -LiteralPath 'Z:\Iran\Browser\VIC-A-Xray-Stdin-Tests.zip'
-    Expand-Archive -LiteralPath 'Z:\Iran\Browser\VIC-A-Xray-Stdin-Tests.zip' -DestinationPath 'Z:\Iran\Browser\Xray-Stdin-Test'
-    & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy RemoteSigned -File 'Z:\Iran\Browser\Xray-Stdin-Test\vault-preview\Test-XrayPipe.ps1' -XrayExe 'Z:\Iran\Browser\Runtime\Xray\xray.exe'
+    Unblock-File -LiteralPath 'Z:\Iran\Browser\VIC-A-Xray-Stdin-Tests-R2.zip'
+    Expand-Archive -LiteralPath 'Z:\Iran\Browser\VIC-A-Xray-Stdin-Tests-R2.zip' -DestinationPath 'Z:\Iran\Browser\Xray-Stdin-Test-R2'
+    & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy RemoteSigned -File 'Z:\Iran\Browser\Xray-Stdin-Test-R2\vault-preview\Test-XrayPipe.ps1' -XrayExe 'Z:\Iran\Browser\Runtime\Xray\xray.exe'
 }
 ```
 
-Отчёт: Z:\Iran\Browser\Xray-Stdin-Test\vault-preview\xray-pipe-test-report.txt.
+Отчёт: Z:\Iran\Browser\Xray-Stdin-Test-R2\vault-preview\xray-pipe-test-report.txt.
 Передать его для разбора, не конфиги/URL/пароли. TEMP/TMP на время теста направлены
 в stage на этом диске. Stage удаляется в finally; после аварии может остаться
 синтетический fixture/состояние, но не реальные подписки. OS pagefile/logs не контролируются.

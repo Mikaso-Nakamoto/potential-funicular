@@ -13,7 +13,7 @@ assert hashlib.sha256((HERE / 'XrayPipe.cs').read_bytes()).hexdigest() in (HERE 
 entries['SHA256SUMS.txt'] = ''.join(
     f'{hashlib.sha256(value).hexdigest()}  {name}\n' for name, value in sorted(entries.items())
 ).encode()
-output = ROOT / 'downloads/VIC-A-Xray-Stdin-Tests.zip'
+output = ROOT / 'downloads/VIC-A-Xray-Stdin-Tests-R2.zip'
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
     for name, value in sorted(entries.items()):
         info = zipfile.ZipInfo(name, (2026, 11, 22, 0, 0, 0))

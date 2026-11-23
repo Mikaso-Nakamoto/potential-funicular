@@ -8,7 +8,7 @@ function Initialize-XrayPipe {
     $sha = [Security.Cryptography.SHA256]::Create()
     try { $digest = ([BitConverter]::ToString($sha.ComputeHash($source))).Replace('-','').ToLowerInvariant() }
     finally { $sha.Dispose() }
-    if ($digest -cne '1702812fac9e09b37de5bfb3f370c6f762be9c4b609442293872dd12ccad143e') { throw 'Xray pipe source integrity check failed.' }
+    if ($digest -cne '02c1b535e49a14afff1693aea2328a754a2eba987f01eeb7e35216a9907ca3a7') { throw 'Xray pipe source integrity check failed.' }
     Add-Type -TypeDefinition ([Text.Encoding]::UTF8.GetString($source)) -ErrorAction Stop
 }
 function Test-XrayObjectInMemory([string]$Exe, $Config, [int]$TimeoutMs = 30000) {

@@ -8,7 +8,7 @@ namespace VicAXrayPipe {
     public sealed class Session : IDisposable {
         private readonly Process process;
         private Task stdoutTask, stderrTask, writerTask;
-        private int failed, stopping, disposed, cleanupConfirmed, outputLimitExceeded;
+        private int failed, stopping, disposed, cleanupConfirmed, outputLimitExceeded, inputStarted, inputTimeoutOccurred;
         private const long OutputLimit = 1024 * 1024; // per stream, discarded; excessive output aborts child
         private Session(Process child) { process = child; }
         public int Id { get { return process.Id; } }
@@ -43,17 +43,18 @@ namespace VicAXrayPipe {
             try { return Task.WaitAll(new Task[] { session.stdoutTask, session.stderrTask }, milliseconds); }
             catch { return false; }
         }
-        private static Session Launch(string exe, string workingDirectory, byte[] config, bool testMode, int inputTimeoutMs) {
+        private static void CheckDeadline(int timeoutMs) {
+            if (timeoutMs < 100 || timeoutMs > 120000) throw new InvalidOperationException("Invalid Xray deadline.");
+        }
+        private static void CheckInput(byte[] config) {
             if (config == null || config.Length < 1 || config.Length > 8 * 1024 * 1024)
                 throw new InvalidOperationException("Xray input size is outside the allowed range.");
-            if (inputTimeoutMs < 100 || inputTimeoutMs > 120000)
-                throw new InvalidOperationException("Invalid Xray input deadline.");
+        }
+        private static Session Open(string exe, string workingDirectory, bool testMode) {
             if (!Path.IsPathRooted(exe) || !Path.IsPathRooted(workingDirectory))
                 throw new InvalidOperationException("Absolute executable and working directory required.");
             Session session = null;
             Process child = null;
-            byte[] input = null;
-            bool inputTimedOut = false;
             try {
                 var info = new ProcessStartInfo();
                 info.FileName = exe;
@@ -67,52 +68,80 @@ namespace VicAXrayPipe {
                 child = Process.Start(info);
                 session = new Session(child);
                 Session owner = session;
-                // Dedicated drain threads; no output string, log file or unbounded ReadToEnd buffer.
                 session.stdoutTask = Task.Factory.StartNew(delegate { owner.Drain(child.StandardOutput.BaseStream); }, TaskCreationOptions.LongRunning);
                 session.stderrTask = Task.Factory.StartNew(delegate { owner.Drain(child.StandardError.BaseStream); }, TaskCreationOptions.LongRunning);
-                input = (byte[])config.Clone();
-                byte[] ownedInput = input;
-                session.writerTask = Task.Factory.StartNew(delegate {
-                    try { child.StandardInput.BaseStream.Write(ownedInput, 0, ownedInput.Length); }
-                    catch { owner.Abort(); }
-                    finally {
-                        Array.Clear(ownedInput, 0, ownedInput.Length);
-                        try { child.StandardInput.BaseStream.Close(); } catch { }
-                    }
-                }, TaskCreationOptions.LongRunning);
-                // Writer owns its cloned buffer even on timeout. Caller can clear its own input immediately on return.
-                input = null;
-                inputTimedOut = !Finish(session.writerTask, inputTimeoutMs);
-                if (inputTimedOut || session.HasFailed)
-                    throw new InvalidOperationException();
-                if (!testMode && child.HasExited) throw new InvalidOperationException();
                 return session;
             } catch {
                 if (session != null) session.Dispose();
                 else if (child != null) { try { child.Kill(); } catch { } child.Dispose(); }
+                throw new InvalidOperationException("Xray process creation failed. Diagnostics discarded.");
+            }
+        }
+        private void SendInput(byte[] config, int inputTimeoutMs) {
+            CheckDeadline(inputTimeoutMs);
+            CheckInput(config);
+            if (Volatile.Read(ref disposed) != 0 || Interlocked.CompareExchange(ref inputStarted, 1, 0) != 0)
+                throw new InvalidOperationException("Xray session cannot accept another configuration.");
+            byte[] input = null;
+            bool timedOut = false;
+            try {
+                input = (byte[])config.Clone();
+                byte[] ownedInput = input;
+                writerTask = Task.Factory.StartNew(delegate {
+                    try { process.StandardInput.BaseStream.Write(ownedInput, 0, ownedInput.Length); }
+                    catch { Abort(); }
+                    finally {
+                        Array.Clear(ownedInput, 0, ownedInput.Length);
+                        try { process.StandardInput.BaseStream.Close(); } catch { }
+                    }
+                }, TaskCreationOptions.LongRunning);
+                input = null; // writer owns this buffer until its finally, including after a timeout
+                timedOut = !Finish(writerTask, inputTimeoutMs);
+                if (timedOut) Interlocked.Exchange(ref inputTimeoutOccurred, 1);
+                if (timedOut || HasFailed) throw new InvalidOperationException();
+            } catch {
+                Dispose();
                 if (input != null) Array.Clear(input, 0, input.Length);
-                // No native stderr, exception chain, arguments containing JSON or config content is exposed.
-                if (session != null && session.OutputLimitExceeded) throw new InvalidOperationException("Xray output limit exceeded. Diagnostics discarded.");
-                if (inputTimedOut) throw new InvalidOperationException("Xray stdin input timed out. Diagnostics discarded.");
-                throw new InvalidOperationException("Xray stdin launch failed, exceeded output limits or timed out. Diagnostics discarded.");
+                if (OutputLimitExceeded) throw new InvalidOperationException("Xray output limit exceeded. Diagnostics discarded.");
+                if (timedOut) throw new InvalidOperationException("Xray stdin input timed out. Diagnostics discarded.");
+                throw new InvalidOperationException("Xray stdin write failed. Diagnostics discarded.");
+            }
+        }
+        // Split validation API permits a bounded external readiness handshake in regression tests.
+        // It does not claim real Xray has a ready protocol. Caller owns Dispose from the moment this returns.
+        public static Session BeginValidation(string exe, string workingDirectory) {
+            return Open(exe, workingDirectory, true);
+        }
+        public void SendAndValidate(byte[] config, int timeoutMs) {
+            try {
+                SendInput(config, timeoutMs);
+                // Managed waits <= 2*timeout + 5s drain + 8s cleanup, excluding OS start/kill/scheduling.
+                if (!process.WaitForExit(timeoutMs) || !FinishDrains(this, 5000) || HasFailed || process.ExitCode != 0)
+                    throw new InvalidOperationException("Xray stdin validation failed. Diagnostics discarded.");
+                Dispose();
+                if (!CleanupConfirmed) throw new InvalidOperationException("Xray cleanup was not confirmed.");
+            } catch {
+                Dispose();
+                if (OutputLimitExceeded) throw new InvalidOperationException("Xray output limit exceeded. Diagnostics discarded.");
+                if (Volatile.Read(ref inputTimeoutOccurred) != 0) throw new InvalidOperationException("Xray stdin input timed out. Diagnostics discarded.");
+                throw new InvalidOperationException("Xray stdin validation failed. Diagnostics discarded.");
             }
         }
         public static Session Start(string exe, string workingDirectory, byte[] config, int inputTimeoutMs) {
-            return Launch(exe, workingDirectory, config, false, inputTimeoutMs);
+            CheckDeadline(inputTimeoutMs);
+            CheckInput(config);
+            Session session = Open(exe, workingDirectory, false);
+            try {
+                session.SendInput(config, inputTimeoutMs);
+                if (session.HasExited || session.HasFailed) throw new InvalidOperationException("Xray exited during start.");
+                return session;
+            } catch { session.Dispose(); throw new InvalidOperationException("Xray stdin launch failed. Diagnostics discarded."); }
         }
         public static void Validate(string exe, string workingDirectory, byte[] config, int timeoutMs) {
-            if (timeoutMs < 100 || timeoutMs > 120000) throw new InvalidOperationException("Invalid Xray test deadline.");
-            using (Session session = Launch(exe, workingDirectory, config, true, timeoutMs)) {
-                try {
-                    // Managed waits <= 2*timeout + 5s drain + 8s cleanup, excluding OS scheduling/start/kill calls.
-                    if (!session.process.WaitForExit(timeoutMs) || !FinishDrains(session, 5000) || session.HasFailed || session.process.ExitCode != 0)
-                        throw new InvalidOperationException();
-                    session.Dispose();
-                    if (!session.CleanupConfirmed) throw new InvalidOperationException();
-                } catch {
-                    if (session.OutputLimitExceeded) throw new InvalidOperationException("Xray output limit exceeded. Diagnostics discarded.");
-                    throw new InvalidOperationException("Xray stdin validation failed, exceeded output limits or timed out. Diagnostics discarded.");
-                }
+            CheckDeadline(timeoutMs);
+            CheckInput(config);
+            using (Session session = BeginValidation(exe, workingDirectory)) {
+                session.SendAndValidate(config, timeoutMs);
             }
         }
         public void Dispose() {

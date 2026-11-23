@@ -17,15 +17,38 @@ function New-Case([string]$Name) {
     [IO.File]::WriteAllText((Join-Path $dir 'mode.txt'), $Name)
     return (Join-Path $dir 'fixture.exe')
 }
-function Assert-ChildExited([string]$Exe) {
+function Assert-ChildExited([string]$Exe, [int]$ExpectedPid = 0) {
     $pidPath = Join-Path (Split-Path -Parent $Exe) 'pid.txt'
-    if (-not (Test-Path -LiteralPath $pidPath)) { throw 'Fixture never started; this is not a successful timeout test.' }
+    if (-not (Test-Path -LiteralPath $pidPath)) { throw 'Fixture PID marker missing; scenario completion is not established.' }
     $childId = [int][IO.File]::ReadAllText($pidPath)
+    if ($ExpectedPid -ne 0 -and $childId -ne $ExpectedPid) { throw 'Fixture marker does not match the started process.' }
     $child = Get-Process -Id $childId -ErrorAction SilentlyContinue
     if ($child) {
         try { if (-not $child.WaitForExit(1000)) { throw 'Fixture child still running after cleanup.' } }
         finally { $child.Dispose() }
     }
+}
+function Wait-BlockedFixtureReady($Child, [string]$Exe) {
+    $directory = Split-Path -Parent $Exe
+    $watch = [Diagnostics.Stopwatch]::StartNew()
+    while ($watch.ElapsedMilliseconds -lt 15000) {
+        if ($Child.HasExited) { throw 'Blocked-input fixture exited before readiness; stdin timeout was not tested.' }
+        $pidMarker = Join-Path $directory 'pid.txt'
+        $readyMarker = Join-Path $directory 'blocked-ready.txt'
+        if ((Test-Path -LiteralPath $pidMarker) -and (Test-Path -LiteralPath $readyMarker)) {
+            try {
+                $markedPid = 0; $readyPid = 0
+                $hasPid = [int]::TryParse([IO.File]::ReadAllText($pidMarker), [ref]$markedPid)
+                $hasReady = [int]::TryParse([IO.File]::ReadAllText($readyMarker), [ref]$readyPid)
+                if ($hasPid -and $hasReady -and $markedPid -eq $Child.Id -and $readyPid -eq $Child.Id) {
+                    Note ('READY: no-read fixture branch and both PID markers confirmed before input; startup ms=' + $watch.ElapsedMilliseconds)
+                    return
+                }
+            } catch [IO.IOException] { } # marker still being written; do not infer readiness
+        }
+        Start-Sleep -Milliseconds 50
+    }
+    throw 'Blocked-input fixture did not signal readiness in 15 seconds; no stdin timeout PASS is claimed.'
 }
 function Must-Reject([string]$Name, [scriptblock]$Action, [string]$ExpectedReason = '') {
     $rejected = $false; $watch = [Diagnostics.Stopwatch]::StartNew()
@@ -42,12 +65,11 @@ function Must-Reject([string]$Name, [scriptblock]$Action, [string]$ExpectedReaso
     }
     if (-not $rejected) { throw ('Expected failure: ' + $Name) }
     if ($watch.ElapsedMilliseconds -gt 25000) { throw ('Deadline regression: ' + $Name) }
-    Note ('PASS: ' + $Name)
 }
 try {
     New-Item -ItemType Directory -Path $stage | Out-Null
     $owned = $true; $env:TEMP = $stage; $env:TMP = $stage
-    Note ('Xray stdin transport tests; PS ' + $PSVersionTable.PSVersion + '; CLR ' + [Environment]::Version)
+    Note ('Xray stdin transport tests R2 (readiness handshake); PS ' + $PSVersionTable.PSVersion + '; CLR ' + [Environment]::Version)
     foreach ($name in @('XrayPipe.cs','XrayPipe.Common.ps1','Test-XrayPipe.ps1','tests\XrayPipeFixture.cs')) {
         Note ('SHA256 ' + (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $name) -Algorithm SHA256).Hash + '  ' + $name)
     }
@@ -72,12 +94,24 @@ try {
             Must-Reject $mode { [VicAXrayPipe.Session]::Validate($exe, (Split-Path -Parent $exe), $payload, 3000) } 'Xray output limit exceeded.'
         } else { Must-Reject $mode { Test-XrayObjectInMemory $exe $config 3000 } }
         Assert-ChildExited $exe
+        Note ('PASS: ' + $mode + '; child exit confirmed')
     }
     $exe = New-Case 'blocked-input'
     $large = New-Object byte[] 4194304
-    try { Must-Reject 'blocked stdin writer' { [VicAXrayPipe.Session]::Validate($exe, (Split-Path -Parent $exe), $large, 3000) } 'Xray stdin input timed out.' }
-    finally { [Array]::Clear($large, 0, $large.Length) }
-    Assert-ChildExited $exe
+    try {
+        # Start child and drains first. Do not start the writer deadline until fixture is ready.
+        $session = [VicAXrayPipe.Session]::BeginValidation($exe, (Split-Path -Parent $exe))
+        $blockedPid = $session.Id
+        Note ('STARTED: blocked-input fixture; PID=' + $blockedPid + '; input not sent yet')
+        Wait-BlockedFixtureReady $session $exe
+        Must-Reject 'blocked stdin writer' { $session.SendAndValidate($large, 3000) } 'Xray stdin input timed out.'
+        if (-not $session.CleanupConfirmed) { throw 'Blocked-input cleanup was not confirmed.' }
+        Assert-ChildExited $exe $blockedPid
+        Note 'PASS: blocked stdin writer timeout AFTER readiness; exact child exit and cleanup confirmed'
+    } finally {
+        if ($session) { $session.Dispose(); $session = $null }
+        [Array]::Clear($large, 0, $large.Length)
+    }
     $exe = New-Case 'serve'
     $session = Start-XrayObjectInMemory $exe $config 5000
     if ($session.HasExited -or $session.HasFailed) { throw 'Live-session fixture failed.' }
@@ -91,6 +125,7 @@ try {
     $exe = New-Case 'policy-reject'
     Must-Reject 'unsafe config rejected before child start' { Test-XrayObjectInMemory $exe $invalid 3000 }
     if (Test-Path -LiteralPath (Join-Path (Split-Path -Parent $exe) 'pid.txt')) { throw 'Unsafe configuration started a child.' }
+    Note 'PASS: unsafe config rejected before child start'
     if ($XrayExe) {
         $actual = [IO.Path]::GetFullPath($XrayExe)
         Note ('ACTUAL XRAY SHA256 ' + (Get-FileHash -LiteralPath $actual -Algorithm SHA256).Hash)
