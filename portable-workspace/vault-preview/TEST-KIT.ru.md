@@ -27,7 +27,7 @@ SHA-256 3e03a726fac4bc09cb61d8f29d658ef7a5eca0811de59082130414f7ca2e4279.
 отсутствие reparse point, Valid Authenticode и издатель Microsoft Corporation,
 затем PE-импорты этих библиотек. UCRT API contracts разрешены узким списком;
 доверие к Windows OS-компонентам явно остаётся. Поиск основной библиотеки ограничен
-DllLoadDir и System32, ничего из PATH не копируется. Проверка повторяется при
+UseDllDirectoryForDependencies и System32, ничего из PATH не копируется. Проверка повторяется при
 Initialize-VaultCrypto в свежем процессе. Это не защита от вредоносной ОС/скриптов.
 
 Если VC runtime отсутствует, неподписан или появляется другой импорт, STOP.

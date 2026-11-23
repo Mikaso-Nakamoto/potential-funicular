@@ -12,7 +12,7 @@ function Initialize-VaultCrypto {
     if ($manifest.version -ne '1.0.22' -or $manifest.build -ne 'msvc-v143-x64-release' -or $manifest.archiveSha256 -ne '3e03a726fac4bc09cb61d8f29d658ef7a5eca0811de59082130414f7ca2e4279' -or
         (Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash -ne $manifest.dllSha256) { throw 'Crypto dependency integrity check failed.' }
     $sourcePath = Join-Path $vaultToolDirectory 'VaultCrypto.cs'
-    if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne '9594757c1adfad80c89757d6a614244c2759a170769e798930a6c50c1b35f788') { throw 'Crypto source integrity check failed.' }
+    if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash -ne '3e86d56213d341aa9339a712ac09fe62409ac3676c97596a49eefbf00e666611') { throw 'Crypto source integrity check failed.' }
     & (Join-Path $vaultToolDirectory 'Test-SodiumImports.ps1') -Path $dll
     $source = [IO.File]::ReadAllText($sourcePath).Replace('__SODIUM_DLL__', $dll.Replace('"','""'))
     Add-Type -TypeDefinition $source -ErrorAction Stop

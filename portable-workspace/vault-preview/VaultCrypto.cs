@@ -9,19 +9,19 @@ namespace VicAVault {
         private const int HeaderSize = 36;
         private const int Maximum = 8 * 1024 * 1024;
         private static readonly byte[] Magic = Encoding.ASCII.GetBytes("VICAVA02");
-        [DefaultDllImportSearchPaths(DllImportSearchPath.DllLoadDir | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int sodium_init();
-        [DefaultDllImportSearchPaths(DllImportSearchPath.DllLoadDir | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_is_available();
-        [DefaultDllImportSearchPaths(DllImportSearchPath.DllLoadDir | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern void randombytes_buf([Out] byte[] output, UIntPtr size);
-        [DefaultDllImportSearchPaths(DllImportSearchPath.DllLoadDir | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_pwhash([Out] byte[] key, ulong length, byte[] password, ulong passwordLength, byte[] salt, ulong ops, UIntPtr memory, int algorithm);
-        [DefaultDllImportSearchPaths(DllImportSearchPath.DllLoadDir | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_encrypt([Out] byte[] cipher, out ulong cipherLength, byte[] message, ulong messageLength, byte[] ad, ulong adLength, IntPtr secretNonce, byte[] nonce, byte[] key);
-        [DefaultDllImportSearchPaths(DllImportSearchPath.DllLoadDir | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_decrypt([Out] byte[] message, out ulong messageLength, IntPtr secretNonce, byte[] cipher, ulong cipherLength, byte[] ad, ulong adLength, byte[] nonce, byte[] key);
-        [DefaultDllImportSearchPaths(DllImportSearchPath.DllLoadDir | DllImportSearchPath.System32)]
+        [DefaultDllImportSearchPaths(DllImportSearchPath.UseDllDirectoryForDependencies | DllImportSearchPath.System32)]
         [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern IntPtr sodium_version_string();
         public static void CheckSupport() {
             if (!Environment.Is64BitProcess) throw new InvalidOperationException("64-bit PowerShell required.");

@@ -51,7 +51,7 @@ No update/backup recovery protocol yet. Originals are never automatically delete
 ## Dependency and trust
 
 P/Invoke uses an absolute main DLL path and DefaultDllImportSearchPaths with
-DllLoadDir | System32 (requires supported .NET/Windows). No process-global DLL
+UseDllDirectoryForDependencies | System32 (requires supported .NET/Windows). No process-global DLL
 search mutation. CheckSupport also requires runtime version string 1.0.22. Source SHA-256 is pinned in Vault.Common.ps1; archive SHA-256 is
 pinned; installed DLL hash is recorded in a local manifest. These checks do NOT
 protect against an attacker able to edit the verifier or manifest.
