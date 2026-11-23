@@ -98,7 +98,12 @@ function Test-XrayConfig([string]$Exe, [string]$Config) {
     } catch { throw 'Xray config test failed or timed out. Diagnostics suppressed to protect secrets.' }
     finally { if ($p) { $p.Dispose() } }
 }
-function Get-SubscriptionText([Uri]$Uri) {
+function Convert-DeviceHwid([string]$Value) {
+    $deviceId = [Guid]::Empty
+    if (-not [Guid]::TryParse($Value.Trim(), [ref]$deviceId) -or $deviceId -eq [Guid]::Empty) { throw 'Device HWID must be a valid nonzero UUID/GUID.' }
+    return $deviceId.ToString('D')
+}
+function Get-SubscriptionText([Uri]$Uri, [string]$DeviceHwid = '') {
     $response = $null; $stream = $null; $memory = $null
     $stage = 'policy'; $reason = 'request-failed'; $httpCode = $null
     $oldProtocols = [Net.ServicePointManager]::SecurityProtocol
@@ -115,6 +120,7 @@ function Get-SubscriptionText([Uri]$Uri) {
         $request.Method = 'GET'
         $request.UserAgent = 'v2rayNG'
         $request.Accept = 'text/plain'
+        if ($DeviceHwid) { $request.Headers['x-hwid'] = (Convert-DeviceHwid $DeviceHwid) }
         $request.AllowAutoRedirect = $false
         $request.Timeout = 45000
         $request.ReadWriteTimeout = 15000

@@ -1,6 +1,6 @@
 #requires -Version 5.1
 [CmdletBinding()]
-param([string]$Root = '')
+param([string]$Root = '', [switch]$UseDeviceHwid)
 # Resolve the location in the script body, not in a parameter default expression.
 $scriptDirectory = $PSScriptRoot
 if ([string]::IsNullOrWhiteSpace($scriptDirectory)) {
@@ -12,6 +12,7 @@ if ([string]::IsNullOrWhiteSpace($Root)) { $Root = Join-Path $scriptDirectory 'R
 $Root = Get-Workspace $Root
 $private = Join-Path $Root 'private'
 New-Item -ItemType Directory -Path $private -Force | Out-Null
+$deviceSecret = $null; $deviceHwid = $null; $devicePtr = [IntPtr]::Zero
 $secret = $null; $lock = $null; $candidate = $null; $ptr = [IntPtr]::Zero
 try {
     # Same exclusive lock as the launcher: never update a running managed session.
@@ -24,7 +25,14 @@ try {
     $url = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
     $uri = $null
     if (-not [Uri]::TryCreate($url, [UriKind]::Absolute, [ref]$uri) -or $uri.Scheme -ne 'https' -or $uri.UserInfo -or $uri.Fragment) { throw 'An HTTPS subscription URL without userinfo/fragment is required.' }
-    $text = Get-SubscriptionText $uri
+    if ($UseDeviceHwid) {
+        Write-Host 'Device mode: sends your existing device UUID as x-hwid over HTTPS.'
+        Write-Host 'Use only for your own subscription/device binding. This header is not yet confirmed for your provider.'
+        $deviceSecret = Read-Host 'Existing device HWID UUID/GUID from the old script or client logs (hidden)' -AsSecureString
+        $devicePtr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($deviceSecret)
+        $deviceHwid = Convert-DeviceHwid ([Runtime.InteropServices.Marshal]::PtrToStringBSTR($devicePtr))
+    }
+    $text = Get-SubscriptionText -Uri $uri -DeviceHwid $deviceHwid
     if ($text -match '<\s*(!doctype|html|head|body)\b') { throw 'Server returned HTML, not a supported subscription.' }
     if ($text -notmatch '(?m)^\s*[a-z][a-z0-9+.-]*://') {
         try {
@@ -117,6 +125,9 @@ try {
     try {
         if ($ptr -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr) }
         if ($secret) { $secret.Dispose() }
+        if ($devicePtr -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($devicePtr) }
+        if ($deviceSecret) { $deviceSecret.Dispose() }
+        $deviceHwid = $null
         $url = $null; $uri = $null; $text = $null; $nodes = $null
         if ($candidate -and (Test-Path -LiteralPath $candidate)) {
             try { Remove-Item -LiteralPath $candidate -Force }
