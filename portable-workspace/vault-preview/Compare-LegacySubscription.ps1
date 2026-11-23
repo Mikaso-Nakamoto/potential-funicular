@@ -220,6 +220,11 @@ try {
         # Preserve the authenticated old UUID text; never generate a device identity.
         $next.subscription.hwid = $params['hwid']
         $next.activeConfig.outbounds = @($nodes[$selected])
+        # Convert-Vless returns dictionaries; policy deliberately accepts JSON objects only.
+        # Normalize the entire candidate just like Invoke-VaultRefresh, without relaxing policy.
+        $phase = 'candidate-json-normalization'
+        $next = $next | ConvertTo-Json -Depth 30 -Compress | ConvertFrom-Json
+        $phase = 'candidate-policy-validation'
         Assert-VaultDocument $next
         $phase = 'stop-fetch-children'
         Wait-OwnedCleanup $curl 'curl'

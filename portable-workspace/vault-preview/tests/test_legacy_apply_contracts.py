@@ -20,6 +20,13 @@ class LegacyApplyContracts(unittest.TestCase):
         self.assertLess(validate, publish)
         self.assertIn('Write-RefreshReplacement $vaultPath $next $password $before', SOURCE)
 
+    def test_candidate_dictionary_is_normalized_before_policy(self):
+        insert = SOURCE.index('$next.activeConfig.outbounds = @($nodes[$selected])')
+        normalize = SOURCE.index('$next = $next | ConvertTo-Json -Depth 30 -Compress | ConvertFrom-Json', insert)
+        policy = SOURCE.index('Assert-VaultDocument $next', insert)
+        self.assertLess(insert, normalize)
+        self.assertLess(normalize, policy)
+
     def test_preserve_old_identity_and_request(self):
         self.assertIn("$next.subscription.hwid = $params['hwid']", SOURCE)
         self.assertIn('$response = $curl.Fetch($requestBytes)', SOURCE)
