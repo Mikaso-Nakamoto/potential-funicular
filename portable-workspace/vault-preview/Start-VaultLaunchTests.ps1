@@ -18,6 +18,6 @@ if ($XrayExe) {
     & $ps -NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File (Join-Path $PSScriptRoot 'Test-XrayPipe.ps1')
 }
 if ($LASTEXITCODE -ne 0) { throw 'STOP: transport tests failed. Send xray-pipe-test-report.txt; integration was not started.' }
-& $ps -NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File (Join-Path $PSScriptRoot 'Test-VaultLaunch.ps1')
+& $ps -NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File (Join-Path $PSScriptRoot 'Test-VaultLaunch.ps1') -Lifecycle
 if ($LASTEXITCODE -ne 0) { throw 'STOP: vault launcher integration tests failed. Send vault-launch-test-report.txt.' }
 Write-Host 'PASS: implemented synthetic tests completed. Not authorization to migrate or remove the plaintext configuration.' -ForegroundColor Green

@@ -28,8 +28,8 @@ lock и ждёт; принудительное закрытие shell НЕ бе�
 
 ## Границы готовности
 
-Эта новая связка Windows/C# здесь не исполнялась. Старые R3 vault/последний успешный
-stdin отчёт не подтверждают новый launcher и ownership API. Legacy launcher,
+Пользовательские Windows-отчёты подтвердили ValidateOnly и ownership API.
+Новые lifecycle fixtures здесь только статически разобраны, не исполнены на Windows. Legacy launcher,
 обновление и меню не переключались: вся установка пока НЕ защищена паролем.
 Старые plaintext-копии/другой launcher остаются обходом, браузерный профиль не шифруется.
 Нет encrypted refresh/node selection, протокола обновления/backup, удаления исходников
@@ -54,27 +54,37 @@ stdin fake Xray. Неверный legacy xray.json намеренно прису
 Отдельно native rejection после успешного unlock. Проверяется освобождение lock
 после ValidateOnly и сохранность vault/legacy decoy. Никаких реальных URL/UUID/ключей.
 
-Полный live vault→SOCKS→реальный браузер в этом наборе НЕ выполняется: сперва нужен
-PASS синтетической интеграции и ревью cleanup. Fake EXE компилируется только в stage;
+С флагом -Lifecycle дополнительно вызывается тот же launcher БЕЗ ValidateOnly.
+В отдельном синтетическом Runtime вместо Xray и LibreWolf компилируются fixtures.
+Xray-fixture принимает stdin, открывает настоящий TCP 127.0.0.1:17890 и отвечает
+только на SOCKS5 greeting (не проксирует трафик). Browser-fixture проверяет proxy prefs,
+занятый session lock и greeting, держит parent.lock, затем завершается. Два сценария:
+нормальное закрытие браузера и выход Xray после greeting до закрытия браузера.
+Проверяются маркеры, завершение обоих PID, освобождение порта и lock.
+Launcher, CIM и Get-NetTCPConnection не подменяются; подменён только Read-Host.
+Перед тестом закройте все LibreWolf и освободите порт 17890.
+Реальный LibreWolf, реальный SOCKS Xray, внешние запросы, зависшие потомки,
+ошибка запуска браузера, чужой listener и forced shell exit НЕ проверены.
+Fake EXE компилируется только в stage;
 защиту Windows ради него не отключать, если заблокирован — прислать ошибку.
 
 ## Запуск тестов
 
-Windows PowerShell 5.1 x64, обычный пользователь. Новый пустой Vault-Launch-Test,
+Windows PowerShell 5.1 x64, обычный пользователь. Новый пустой Vault-Lifecycle-Test,
 не поверх предыдущих каталогов/рабочей установки. Сохранить ZIP в Z:\Iran\Browser.
 
 ```powershell
 & {
     $ErrorActionPreference = 'Stop'
-    Unblock-File -LiteralPath 'Z:\Iran\Browser\VIC-A-Vault-Launch-Tests.zip'
-    Expand-Archive -LiteralPath 'Z:\Iran\Browser\VIC-A-Vault-Launch-Tests.zip' -DestinationPath 'Z:\Iran\Browser\Vault-Launch-Test'
-    & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy RemoteSigned -File 'Z:\Iran\Browser\Vault-Launch-Test\vault-preview\Start-VaultLaunchTests.ps1' -XrayExe 'Z:\Iran\Browser\Runtime\Xray\xray.exe'
+    Unblock-File -LiteralPath 'Z:\Iran\Browser\VIC-A-Vault-Lifecycle-Tests.zip'
+    Expand-Archive -LiteralPath 'Z:\Iran\Browser\VIC-A-Vault-Lifecycle-Tests.zip' -DestinationPath 'Z:\Iran\Browser\Vault-Lifecycle-Test'
+    & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -ExecutionPolicy RemoteSigned -File 'Z:\Iran\Browser\Vault-Lifecycle-Test\vault-preview\Start-VaultLaunchTests.ps1' -XrayExe 'Z:\Iran\Browser\Runtime\Xray\xray.exe'
 }
 ```
 
 Если упал установщик — дальнейшие наборы не запускаются. Если transport упал —
 integration не запускается. Повторная установка в существующий lib запрещена.
-Отчёты из Z:\Iran\Browser\Vault-Launch-Test\vault-preview:
+Отчёты из Z:\Iran\Browser\Vault-Lifecycle-Test\vault-preview:
 - vault-launch-install-report.txt;
 - xray-pipe-test-report.txt;
 - vault-launch-test-report.txt (только если дошло до него).

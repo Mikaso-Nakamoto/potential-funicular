@@ -11,7 +11,7 @@ for name in ('Workspace.Common.ps1', 'Start-VaultWorkspace.ps1'):
 for name in (
     'Install-VaultDependency.ps1', 'Vault.Common.ps1', 'VaultCrypto.cs', 'SodiumPe.cs',
     'Test-SodiumImports.ps1', 'XrayPipe.Common.ps1', 'XrayPipe.cs', 'Test-XrayPipe.ps1',
-    'Start-VaultLaunchTests.ps1', 'Test-VaultLaunch.ps1', 'tests/XrayPipeFixture.cs',
+    'Start-VaultLaunchTests.ps1', 'Test-VaultLaunch.ps1', 'tests/XrayPipeFixture.cs', 'tests/LifecycleFixture.cs',
     'words/eff-large.txt', 'words/NOTICE.md', 'LICENSE.libsodium.txt',
 ):
     entries['vault-preview/' + name] = (HERE / name).read_bytes()
@@ -19,7 +19,7 @@ assert hashlib.sha256((HERE / 'XrayPipe.cs').read_bytes()).hexdigest() in (HERE 
 assert hashlib.sha256((HERE / 'VaultCrypto.cs').read_bytes()).hexdigest() in (HERE / 'Vault.Common.ps1').read_text()
 assert not any(name.endswith(('.dll', '.exe', '.vault')) or '/Runtime/' in name for name in entries)
 entries['SHA256SUMS.txt'] = ''.join(f'{hashlib.sha256(value).hexdigest()}  {name}\n' for name, value in sorted(entries.items())).encode()
-output = ROOT / 'downloads/VIC-A-Vault-Launch-Tests.zip'
+output = ROOT / 'downloads/VIC-A-Vault-Lifecycle-Tests.zip'
 with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as archive:
     for name, value in sorted(entries.items()):
         info = zipfile.ZipInfo(name, (2026, 11, 22, 0, 0, 0))

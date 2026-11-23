@@ -1,5 +1,7 @@
 #requires -Version 5.1
-# Synthetic-only integration; all launcher calls use ValidateOnly. Never reads an installed Runtime.
+# Synthetic-only integration. Never reads an installed Runtime.
+[CmdletBinding()]
+param([switch]$Lifecycle)
 $ErrorActionPreference = 'Stop'
 if ($env:OS -ne 'Windows_NT' -or -not [Environment]::Is64BitProcess -or $PSVersionTable.PSVersion.Major -ne 5) { throw 'Use 64-bit Windows PowerShell 5.1.' }
 . (Join-Path $PSScriptRoot 'Vault.Common.ps1')
@@ -11,14 +13,14 @@ $oldTemp = $env:TEMP; $oldTmp = $env:TMP
 $log = New-Object 'Collections.Generic.List[string]'
 $report = Join-Path $PSScriptRoot 'vault-launch-test-report.txt'
 function Note([string]$Text) { Write-Host $Text; $log.Add($Text) }
-function Invoke-Preview([Security.SecureString]$PromptPassword) {
+function Invoke-Preview([Security.SecureString]$PromptPassword, [switch]$Live) {
     # Trusted test harness mocks only interactive input. No password argument/environment/file is used by the launcher.
     $mock = { param([string]$Prompt, [switch]$AsSecureString)
         if (-not $AsSecureString) { throw 'Unexpected plaintext prompt.' }
         return $PromptPassword.Copy()
     }.GetNewClosure()
     Set-Item -Path Function:Read-Host -Value $mock
-    try { & $launcher -Root $testRoot -ValidateOnly }
+    try { & $launcher -Root $testRoot -ValidateOnly:(-not $Live) }
     finally { Remove-Item -Path Function:Read-Host -ErrorAction SilentlyContinue }
 }
 function Assert-LockReleased {
@@ -113,7 +115,36 @@ try {
     if ((Get-FileHash -LiteralPath $legacy -Algorithm SHA256).Hash -cne $legacyHash) { throw 'Legacy decoy was changed.' }
     if ([Convert]::ToBase64String([IO.File]::ReadAllBytes($vault)) -cne [Convert]::ToBase64String($original)) { throw 'Original synthetic vault changed.' }
     Note 'PASS: original vault and legacy decoy preserved; locks released on validation exits'
-    Note 'RESULT: PASS for implemented integration checks only. NOT TESTED: real browser, real SOCKS session, real subscription, migration, updater or hostile process trees.'
+    if ($Lifecycle) {
+        if (@(Get-CimInstance Win32_Process -Filter "Name = 'librewolf.exe'" -ErrorAction Stop).Count -gt 0) { throw 'Close all LibreWolf instances before synthetic lifecycle tests.' }
+        if (@(Get-NetTCPConnection -State Listen -LocalPort 17890 -ErrorAction SilentlyContinue).Count -gt 0) { throw 'Port 17890 must be free for synthetic lifecycle tests.' }
+        $browserDir = Join-Path $testRoot 'LibreWolf'
+        New-Item -ItemType Directory -Path $browserDir | Out-Null
+        $fixtureExe = Join-Path $stage 'LifecycleFixture.exe'
+        Add-Type -TypeDefinition ([IO.File]::ReadAllText((Join-Path $PSScriptRoot 'tests\LifecycleFixture.cs'))) -OutputAssembly $fixtureExe -OutputType ConsoleApplication -ErrorAction Stop
+        Copy-Item -LiteralPath $fixtureExe -Destination (Join-Path $xrayDir 'xray.exe') -Force
+        Copy-Item -LiteralPath $fixtureExe -Destination (Join-Path $browserDir 'librewolf.exe')
+        Note ('SHA256 ' + (Get-FileHash -LiteralPath (Join-Path $PSScriptRoot 'tests\LifecycleFixture.cs') -Algorithm SHA256).Hash + '  tests\LifecycleFixture.cs')
+        foreach ($scenario in @('normal-browser-exit', 'xray-exits-before-browser')) {
+            foreach ($name in @('live-pid.txt','browser-pid.txt','browser-ok.txt','greeting-ok.txt','exit-after-greeting.txt')) {
+                $path = Join-Path $xrayDir $name
+                if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path }
+            }
+            if ($scenario -eq 'xray-exits-before-browser') { [IO.File]::WriteAllText((Join-Path $xrayDir 'exit-after-greeting.txt'),'synthetic failure') }
+            Invoke-Preview $password -Live
+            Assert-LockReleased
+            foreach ($name in @('browser-ok.txt','greeting-ok.txt','live-pid.txt','browser-pid.txt')) {
+                if (-not (Test-Path -LiteralPath (Join-Path $xrayDir $name))) { throw ('Missing lifecycle evidence: ' + $scenario + ': ' + $name) }
+            }
+            foreach ($name in @('live-pid.txt','browser-pid.txt')) {
+                $childId = [int][IO.File]::ReadAllText((Join-Path $xrayDir $name))
+                if (Get-Process -Id $childId -ErrorAction SilentlyContinue) { throw ('Child still alive: ' + $name) }
+            }
+            if (@(Get-NetTCPConnection -State Listen -LocalPort 17890 -ErrorAction SilentlyContinue).Count -gt 0) { throw 'Listener remained after session.' }
+            Note ('PASS: synthetic lifecycle ' + $scenario + '; owned TCP listener, SOCKS5 greeting, proxy prefs, lock held until browser exit, both child exits and port release')
+        }
+    }
+    Note 'RESULT: PASS for implemented integration checks only. NOT TESTED: real browser, real Xray SOCKS session, remote traffic, real subscription, migration, updater or hostile process trees.'
 } catch {
     Note ('RESULT: FAIL: ' + $_.Exception.Message)
     throw
