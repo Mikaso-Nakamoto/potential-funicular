@@ -34,6 +34,19 @@ class RefreshSourceContracts(unittest.TestCase):
         self.assertNotIn('$_.ToString', CORE)
         self.assertNotIn('Write-Host $response', CORE)
 
+    def test_unlock_compilation_temp_is_on_runtime(self):
+        core = CORE.split('function Invoke-VaultRefresh', 1)[1]
+        self.assertLess(core.index('$env:TEMP = $tmp'), core.index('$document = Read-Vault'))
+        self.assertIn('$env:TEMP = $oldTemp; $env:TMP = $oldTmp', core)
+
+    def test_validation_keeps_owned_handle_until_cleanup(self):
+        source = (HERE / 'XrayPipe.Common.ps1').read_text()
+        validator = source.split('function Test-XrayObjectInMemory', 1)[1].split('function Start-XrayObjectInMemory', 1)[0]
+        self.assertIn('$validation = [VicAXrayPipe.Session]::BeginValidation', validator)
+        self.assertIn('$validation.SendAndValidate', validator)
+        self.assertIn('while (-not $validation.CleanupConfirmed)', validator)
+        self.assertIn('$validation.Dispose()', validator)
+
     def test_synthetic_test_never_reads_installed_runtime(self):
         self.assertNotIn('InstalledRoot', TEST)
         self.assertNotIn('Z:\\Iran', TEST)

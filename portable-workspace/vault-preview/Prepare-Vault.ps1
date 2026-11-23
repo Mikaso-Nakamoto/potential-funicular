@@ -8,6 +8,7 @@ if (-not $Root) { $Root = Join-Path $workspaceDirectory 'Runtime' }
 . (Join-Path $PSScriptRoot 'Vault.Common.ps1')
 $Root = Get-Workspace $Root
 $path = Join-Path $Root 'private\workspace.vault'
+$oldTemp = $env:TEMP; $oldTmp = $env:TMP
 $lock = $null; $password = $null; $confirmation = $null; $generated = $null
 function Read-HiddenText([string]$Prompt) {
     $secret = Read-Host $Prompt -AsSecureString
@@ -21,9 +22,12 @@ function Read-HiddenText([string]$Prompt) {
     }
 }
 try {
-    Initialize-VaultCrypto
     $lock = [IO.File]::Open((Join-Path $Root '.session.lock'), 'OpenOrCreate', 'ReadWrite', 'None')
     if (Test-ProfileBusy (Join-Path $Root 'private\profile')) { throw 'Close the browser before testing migration.' }
+    $tmp = Join-Path $Root 'private\tmp'
+    New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+    $env:TEMP = $tmp; $env:TMP = $tmp
+    Initialize-VaultCrypto
     if ($Action -eq 'Create') {
         if (Test-Path -LiteralPath $path) { throw 'Vault exists. Use Check. No existing vault will be overwritten.' }
         $configPath = Join-Path $Root 'private\xray.json'
@@ -66,5 +70,6 @@ try {
     if ($generated) { $generated.Dispose() }
     if ($password) { $password.Dispose() }
     if ($confirmation) { $confirmation.Dispose() }
+    $env:TEMP = $oldTemp; $env:TMP = $oldTmp
     if ($lock) { $lock.Dispose() }
 }

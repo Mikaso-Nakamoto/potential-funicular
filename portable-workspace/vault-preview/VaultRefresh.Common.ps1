@@ -83,6 +83,11 @@ function Invoke-VaultRefresh([string]$Root, [Security.SecureString]$Password, [s
         $Root = Get-Workspace $Root
         $lock = [IO.File]::Open((Join-Path $Root '.session.lock'),'OpenOrCreate','ReadWrite','None')
         if (Test-ProfileBusy (Join-Path $Root 'private\profile')) { throw 'Browser profile busy.' }
+        # Crypto/import helpers may compile during unlock; keep their TEMP on the Runtime SSD too.
+        $phase = 'temporary-directory'
+        $tmp = Join-Path $Root 'private\tmp'
+        New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+        $env:TEMP = $tmp; $env:TMP = $tmp
         $phase = 'unlock'
         $path = Join-Path $Root 'private\workspace.vault'
         $hash = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
@@ -115,9 +120,6 @@ function Invoke-VaultRefresh([string]$Root, [Security.SecureString]$Password, [s
         $next = $next | ConvertTo-Json -Depth 30 -Compress | ConvertFrom-Json
         Assert-VaultDocument $next
         $phase = 'native-validation'
-        $tmp = Join-Path $Root 'private\tmp'
-        New-Item -ItemType Directory -Path $tmp -Force | Out-Null
-        $env:TEMP = $tmp; $env:TMP = $tmp
         Test-XrayObjectInMemory (Join-Path $Root 'Xray\xray.exe') $next.activeConfig
         $phase = 'encrypted-replacement'
         $backup = Write-RefreshReplacement $path $next $Password $hash

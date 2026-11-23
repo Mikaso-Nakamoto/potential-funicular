@@ -14,12 +14,22 @@ function Initialize-XrayPipe {
 function Test-XrayObjectInMemory([string]$Exe, $Config, [int]$TimeoutMs = 30000) {
     Initialize-XrayPipe
     Assert-ConfigObjectPolicy $Config
-    $bytes = $null
+    $bytes = $null; $validation = $null
     try {
         $bytes = [Text.Encoding]::UTF8.GetBytes(($Config | ConvertTo-Json -Depth 30 -Compress))
-        [VicAXrayPipe.Session]::Validate($Exe, (Split-Path -Parent $Exe), $bytes, $TimeoutMs)
+        $validation = [VicAXrayPipe.Session]::BeginValidation($Exe, (Split-Path -Parent $Exe))
+        $validation.SendAndValidate($bytes, $TimeoutMs)
     } catch { throw 'In-memory Xray validation failed. No plaintext file or native diagnostics were published.' }
-    finally { if ($bytes) { [Array]::Clear($bytes, 0, $bytes.Length) } }
+    finally {
+        if ($bytes) { [Array]::Clear($bytes, 0, $bytes.Length) }
+        if ($validation) {
+            try { $validation.Dispose() } catch { Write-Warning 'Validation cleanup raised an error.' }
+            if (-not $validation.CleanupConfirmed) {
+                Write-Warning 'Validation cleanup not confirmed. Keeping caller ownership/lock; forced shell exit is not managed cleanup.'
+                while (-not $validation.CleanupConfirmed) { Start-Sleep -Seconds 1 }
+            }
+        }
+    }
 }
 function Start-XrayObjectInMemory([string]$Exe, $Config, [int]$InputTimeoutMs = 10000) {
     Initialize-XrayPipe
