@@ -127,15 +127,22 @@ namespace VicAXrayPipe {
                 throw new InvalidOperationException("Xray stdin validation failed. Diagnostics discarded.");
             }
         }
+        // Ownership-first run API: caller retains the handle even if delivery/cleanup fails.
+        public static Session BeginRun(string exe, string workingDirectory) {
+            return Open(exe, workingDirectory, false);
+        }
+        public void SendForRun(byte[] config, int inputTimeoutMs) {
+            try {
+                SendInput(config, inputTimeoutMs);
+                if (HasExited || HasFailed) throw new InvalidOperationException();
+            } catch { Dispose(); throw new InvalidOperationException("Xray stdin launch failed. Diagnostics discarded."); }
+        }
         public static Session Start(string exe, string workingDirectory, byte[] config, int inputTimeoutMs) {
             CheckDeadline(inputTimeoutMs);
             CheckInput(config);
-            Session session = Open(exe, workingDirectory, false);
-            try {
-                session.SendInput(config, inputTimeoutMs);
-                if (session.HasExited || session.HasFailed) throw new InvalidOperationException("Xray exited during start.");
-                return session;
-            } catch { session.Dispose(); throw new InvalidOperationException("Xray stdin launch failed. Diagnostics discarded."); }
+            Session session = BeginRun(exe, workingDirectory);
+            try { session.SendForRun(config, inputTimeoutMs); return session; }
+            catch { session.Dispose(); throw; }
         }
         public static void Validate(string exe, string workingDirectory, byte[] config, int timeoutMs) {
             CheckDeadline(timeoutMs);

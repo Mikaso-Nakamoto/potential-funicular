@@ -7,3 +7,6 @@
 /vault-install-report.txt
 /.pipe-tests-*/
 /xray-pipe-test-report.txt
+/.launch-tests-*/
+/vault-launch-test-report.txt
+/vault-launch-install-report.txt

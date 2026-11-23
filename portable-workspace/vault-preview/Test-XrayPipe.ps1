@@ -117,7 +117,8 @@ try {
     }
     Note 'CASE: live serve session'
     $exe = New-Case 'serve'
-    $session = Start-XrayObjectInMemory $exe $config 5000
+    $session = Open-XrayRunSession $exe $config
+    Send-XrayRunConfig $session $config 5000
     $livePid = $session.Id
     Wait-FixtureReady $session $exe 'serve-ready.txt'
     if ($session.HasExited -or $session.HasFailed) { throw 'Live-session fixture failed.' }
