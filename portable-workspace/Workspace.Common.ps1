@@ -103,7 +103,7 @@ function Convert-DeviceHwid([string]$Value) {
     if (-not [Guid]::TryParse($Value.Trim(), [ref]$deviceId) -or $deviceId -eq [Guid]::Empty) { throw 'Device HWID must be a valid nonzero UUID/GUID.' }
     return $deviceId.ToString('D')
 }
-function Get-SubscriptionText([Uri]$Uri, [string]$DeviceHwid = '') {
+function Get-SubscriptionText([Uri]$Uri, [string]$DeviceHwid = '', [ValidateSet('v2rayNG','INCY/3.0.28')][string]$UserAgent = 'v2rayNG') {
     $response = $null; $stream = $null; $memory = $null
     $stage = 'policy'; $reason = 'request-failed'; $httpCode = $null
     $oldProtocols = [Net.ServicePointManager]::SecurityProtocol
@@ -118,7 +118,7 @@ function Get-SubscriptionText([Uri]$Uri, [string]$DeviceHwid = '') {
         # .NET Framework HttpWebRequest uses ServicePointManager for revocation checks.
         # It has no per-request CheckCertificateRevocationList property.
         $request.Method = 'GET'
-        $request.UserAgent = 'v2rayNG'
+        $request.UserAgent = $UserAgent
         $request.Accept = 'text/plain'
         if ($DeviceHwid) { $request.Headers['x-hwid'] = (Convert-DeviceHwid $DeviceHwid) }
         $request.AllowAutoRedirect = $false

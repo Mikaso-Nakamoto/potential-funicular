@@ -1,6 +1,6 @@
 #requires -Version 5.1
 [CmdletBinding()]
-param([string]$Root = 'Z:\Iran\Browser\Working-Vault-Preview\WorkingRuntime')
+param([string]$Root = 'Z:\Iran\Browser\Working-Vault-Preview\WorkingRuntime', [ValidateSet('v2rayNG','INCY/3.0.28')][string]$UserAgent = 'v2rayNG')
 $ErrorActionPreference = 'Stop'
 if ($env:OS -ne 'Windows_NT' -or -not [Environment]::Is64BitProcess -or $PSVersionTable.PSVersion.Major -ne 5) { throw 'Use 64-bit Windows PowerShell 5.1.' }
 . (Join-Path $PSScriptRoot 'VaultRefresh.Common.ps1')
@@ -20,9 +20,10 @@ try {
     $path = Join-Path $Root 'private\workspace.vault'
     $before = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
     $document = Read-Vault $path $password
+    Write-Host ('REQUEST USER-AGENT: ' + $UserAgent)
     $phase = 'fetch'
     Write-Host 'READ-ONLY diagnosis: makes a live HTTPS request using stored URL/HWID over current Windows connection; does not update vault or run Xray/browser.'
-    $text = Get-SubscriptionText -Uri ([Uri]$document.subscription.url) -DeviceHwid $document.subscription.hwid
+    $text = Get-SubscriptionText -Uri ([Uri]$document.subscription.url) -DeviceHwid $document.subscription.hwid -UserAgent $UserAgent
     $phase = 'diagnose'
     Get-RefreshResponseDiagnostics $text
     if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -ne $before) { throw 'Vault changed externally.' }
