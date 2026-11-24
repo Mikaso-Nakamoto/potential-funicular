@@ -9,7 +9,10 @@ for n in ['Native.Common.ps1','ContainedSession.cs','ContainmentFixture.cs','Tes
  e['vica/'+n]=(V/n).read_bytes()
 for n in ['Start-VicaSession.ps1','Refresh.Common.ps1','Update-VicaSubscription.ps1']:
  s=(V/n).read_text(encoding='utf-8-sig').replace('Vault passphrase (hidden)','Password (hidden)')
- if n=='Start-VicaSession.ps1':s=s.replace(". (Join-Path $scriptDirectory 'Native.Common.ps1')", ". (Join-Path $scriptDirectory 'Native.Common.ps1')\n. (Join-Path $scriptDirectory 'VaultV03.Common.ps1')")
+ if n=='Start-VicaSession.ps1':
+  assert s.count('    Initialize-VaultCrypto\n') == 1
+  s=s.replace('    Initialize-VaultCrypto\n','    Initialize-PasswordPreview\n')
+  s=s.replace(". (Join-Path $scriptDirectory 'Native.Common.ps1')", ". (Join-Path $scriptDirectory 'Native.Common.ps1')\n. (Join-Path $scriptDirectory 'VaultV03.Common.ps1')")
  if n=='Refresh.Common.ps1':s+="\n. (Join-Path $PSScriptRoot 'VaultV03.Common.ps1')\n"
  e['vica/'+n]=s.encode()
 for n in ['PasswordEnvelope.cs','PasswordSelfTests.cs']:
