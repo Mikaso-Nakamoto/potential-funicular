@@ -1,0 +1,3 @@
+# Preserve original uploaded bytes (mixed LF/CRLF and BOM) instead of normalizing evidence.
+# Treat CR at line ends as intentional Windows line endings during whitespace checks.
+*.txt -text whitespace=cr-at-eol

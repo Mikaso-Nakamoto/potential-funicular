@@ -1,0 +1,18 @@
+# Downloaded dependency and owned installer stages
+/lib/
+/.dependency-*/
+/.vault-io-*/
+/.vault-negative-*/
+/vault-test-report.txt
+/vault-install-report.txt
+/.pipe-tests-*/
+/xray-pipe-test-report.txt
+/.launch-tests-*/
+/vault-launch-test-report.txt
+/vault-launch-install-report.txt
+
+/.real-session-*/
+/real-vault-session-report.txt
+
+/.refresh-tests-*/
+/vault-refresh-test-report.txt

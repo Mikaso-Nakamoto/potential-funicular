@@ -1,0 +1,946 @@
+# VIC-A — полный текст исходников новой основы шифрования и пояснение для эксперта
+
+## 1. Статус и предмет ревью
+
+Это снимок текущих файлов рабочего дерева, а не описание законченного продукта.
+Базовый HEAD: `76fae28`; новые файлы `portable-workspace/vault-preview/` пока не закоммичены.
+Исходники приведены ниже полностью, без сокращений. Реальных URL подписки, HWID,
+паролей пользователя и конфигов пользователя в этом документе нет. Пароль в тестовом
+JSON — намеренно публичные синтетические данные.
+
+**Критически важно:** текущие `Start-Workspace.ps1`, `Update-Subscription.ps1` и меню
+не интегрированы с vault. Они по-прежнему работают с открытым `private\xray.json`.
+Пароль для подключения/обновления пока НЕ обеспечивается. Это прототип криптографического
+слоя и создания проверяемой зашифрованной копии, а не готовая миграция.
+
+Целевая задача: переносимое хранилище URL подписки, существующего HWID, списка узлов,
+выбранного узла/конфига; пароль для подключения и обновления; обновление по кнопке
+без повторного ввода URL/HWID. В текущем payload реализованы только URL/HWID/activeConfig.
+Целевое размещение: `Z:\Iran\Browser`, Runtime: `Z:\Iran\Browser\Runtime`.
+
+## 2. Карта файлов
+
+- `VaultCrypto.cs`: P/Invoke в libsodium, KDF, шифрование/расшифрование конверта.
+- `Vault.Common.ps1`: загрузка/проверка DLL, компиляция C# через Add-Type,
+  чтение JSON из vault и создание нового vault без перезаписи.
+- `Install-VaultDependency.ps1`: загрузка закреплённого официального архива,
+  проверка SHA-256 и AMD64 PE, публикация локального каталога зависимости.
+- `Prepare-Vault.ps1`: режимы Create/Check; блокировка сессии, проверка занятости
+  профиля, создание зашифрованной копии существующего конфига. Оригиналы сохраняются.
+- `Test-Vault.ps1`: Windows-тест обёртки с публичным синтетическим вектором.
+- `tests/test_format.py`: Linux-тест формата через ctypes/libsodium и независимую сверку.
+- `tests/synthetic-vector.json`: публичный тестовый вектор.
+- `README.ru.md`, `.gitignore`, `LICENSE.libsodium.txt`: ограничения, исключения, лицензия.
+
+Полный существующий `Workspace.Common.ps1` приведён отдельным приложением для проверки
+зависимостей Prepare (Get-Workspace, Test-ProfileBusy, Assert-ConfigPolicy,
+Convert-DeviceHwid). Этот файл не менялся для новой функции. Бинарник libsodium и
+создаваемый при установке dependency.json не приложены: установленной зависимости
+в этом рабочем дереве нет. Кэши Python исключены из документа.
+
+## 3. Формат и криптографические параметры
+
+Все смещения в байтах:
+
+| Смещение | Длина | Значение |
+|---|---:|---|
+| 0 | 8 | ASCII `VICAVA01` |
+| 8 | 16 | случайная соль Argon2id |
+| 24 | 12 | случайный nonce AES-GCM |
+| 36 | N | ciphertext |
+| 36+N | 16 | тег AES-GCM |
+
+Первые 36 байт целиком передаются как associated data. Соль/nonce не являются секретом.
+Ключ 32 байта: libsodium crypto_pwhash, algorithm=2 (Argon2id13), opslimit=3,
+memlimit=67108864. Python-сверка: Argon2id v19, time_cost=3, memory_cost=65536 KiB,
+parallelism=1, hash_len=32. Параметры фиксированы кодом, не читаются из входного файла.
+Для новой схемы/параметров потребуется продуманное версионирование.
+
+Пароль: SecureString -> временный BSTR -> char[] -> UTF-8. Нормализации Unicode нет;
+минимум при Seal — 16 единиц UTF-16, максимум при Derive — 1024 единицы UTF-16.
+Open допускает более короткий пароль, но неверный пароль не проходит проверку тега.
+Лимит plaintext — 8 МиБ; envelope — от 52 до 8388660 байт включительно.
+Новый salt/nonce получается из randombytes_buf при каждом Seal.
+Требуются x64-процесс и аппаратная поддержка, которую проверяет libsodium.
+Резервного шифра при отказе нет. Ключ не сохраняется, DPAPI не используется.
+
+Write-NewVault шифрует в памяти, расшифровывает вторым введённым паролем,
+сравнивает байты, записывает зашифрованный временный файл рядом с целевым,
+повторно читает его и публикует File.Move. Перезапись существующего vault запрещена.
+Это не реализация обновления существующего vault и не гарантия сохранности при
+отключении питания: явного Flush(true)/fsync и тестов аварийного восстановления нет.
+
+## 4. Границы доверия и вопросы эксперту
+
+Цель — конфиденциальность и целостность данных в покое при копировании носителя,
+при условии сильного пароля и доверенного кода/ОС. Не защищает от malware/admin,
+кейлоггера, подмены скриптов/DLL, отладчика, дампа памяти или отката к старой валидной
+копии vault. Старый открытый xray.json сейчас остаётся обходным путём к секретам.
+Браузерный профиль, cookies, загрузки, pagefile/hiberfil этим кодом не шифруются.
+
+Особое внимание при ревью:
+
+1. ABI P/Invoke, размеры size_t/ulong, соглашение вызова и фактическая загрузка
+   DLL/её зависимостей в Windows PowerShell 5.1. Абсолютный путь к основной DLL
+   не является полным доказательством безопасности поиска её зависимостей.
+2. Закреплённый SHA-256 официального архива — не независимая подпись. Manifest
+   с хешем DLL локальный и изменяемый вместе со скриптами. Уже загруженный тип
+   Crypto повторно не проверяется Initialize-VaultCrypto в том же процессе.
+3. Очистка byte[]/char[] и BSTR — best effort. Managed-строки URL/JSON и объекты
+   конфигурации не могут быть надёжно обнулены; GC может оставлять копии.
+4. Проверка длины файла перед ReadAllBytes не исключает гонку изменения файла;
+   JSON имеет только базовую проверку version, а не полную схему payload.
+   Check проверяет наличие полей/HWID, но не повторяет полную policy для activeConfig.
+5. Блокировки, симлинки/reparse points, конкурентное создание временного файла,
+   атомарность публикации на целевой файловой системе и аварийная устойчивость
+   требуют отдельного ревью. Кооперативный .session.lock не защищает от malware.
+6. Установщик использует Invoke-WebRequest и Windows tar.exe. Нужны реальные
+   проверки структуры архива, зависимости DLL, поведения TLS/redirect/error path,
+   границ загрузки и безопасного удаления только собственного staging.
+7. Нужны дополнительные негативные тесты: пустой/предельный payload, Unicode,
+   пароли на границах, неподдерживаемая CPU, плохой manifest/DLL, занятый файл,
+   исчерпание RAM/диска, сбой записи/rename и повторный запуск после сбоя.
+
+Это список направлений проверки, а не утверждение, что все перечисленные угрозы
+устранены. Удаление файлов на SSD не гарантирует удаления старых открытых копий.
+Восстановления забытого пароля нет.
+
+## 5. Что фактически проверено
+
+- 6 Python unittest прошли в Linux: воспроизведение синтетического вектора,
+  независимая сверка KDF/AEAD (argon2-cffi + cryptography), неправильный пароль,
+  выборочное повреждение magic/salt/nonce/ciphertext/tag, усечение,
+  изменение salt/nonce. Это НЕ исчерпывающее фаззинг-тестирование.
+- Python использовал libsodium из PyNaCl в Linux, а не целевой Windows DLL 1.0.22.
+- Все новые .ps1 и C# прошли tree-sitter синтаксический разбор.
+- C# не компилировался, PowerShell и Windows-тесты здесь НЕ исполнялись.
+  Сам Test-Vault.ps1 пока только исходник, а не подтверждение результата.
+
+## 6. Незавершённая интеграция
+
+Нужны: обязательная разблокировка при запуске, Xray config через stdin без
+постоянного открытого файла, безопасная обработка stderr/таймаутов/жизненного цикла,
+зашифрованный список узлов и выбор сервера, обновление по сохранённым URL/HWID,
+проверка нового состояния до атомарной замены, сохранение выбранного узла по устойчивой
+идентичности и явное решение пользователя, если он исчез. Ошибка сети/пароля/валидации
+не должна портить предыдущую рабочую версию или включать plaintext-fallback.
+Затем — явная проверяемая миграция и полноценные тесты на Windows.
+
+Далее следуют точные тексты файлов текущего снимка. Пояснение выше не вносит
+исправлений в приведённый код и не является заключением независимого аудита.
+
+
+## Исходник 1: `portable-workspace/vault-preview/VaultCrypto.cs`
+
+SHA-256 исходного файла: `19bc8c104eb01c6c3f7cafe35112fccaa959eaeeddb08ee9dfe7746bfb2001bb`. Размер: 6296 байт.
+
+````csharp
+using System;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
+namespace VicAVault {
+    // Crypto operations are provided by libsodium, not implemented here.
+    public static class Crypto {
+        private const string Dll = @"__SODIUM_DLL__";
+        private const int HeaderSize = 36;
+        private const int Maximum = 8 * 1024 * 1024;
+        private static readonly byte[] Magic = Encoding.ASCII.GetBytes("VICAVA01");
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int sodium_init();
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_is_available();
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern void randombytes_buf([Out] byte[] output, UIntPtr size);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_pwhash([Out] byte[] key, ulong length, byte[] password, ulong passwordLength, byte[] salt, ulong ops, UIntPtr memory, int algorithm);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_encrypt([Out] byte[] cipher, out ulong cipherLength, byte[] message, ulong messageLength, byte[] ad, ulong adLength, IntPtr secretNonce, byte[] nonce, byte[] key);
+        [DllImport(Dll, CallingConvention = CallingConvention.Cdecl)] private static extern int crypto_aead_aes256gcm_decrypt([Out] byte[] message, out ulong messageLength, IntPtr secretNonce, byte[] cipher, ulong cipherLength, byte[] ad, ulong adLength, byte[] nonce, byte[] key);
+        public static void CheckSupport() {
+            if (!Environment.Is64BitProcess) throw new InvalidOperationException("64-bit PowerShell required.");
+            if (sodium_init() < 0 || crypto_aead_aes256gcm_is_available() != 1)
+                throw new InvalidOperationException("AES-GCM acceleration unavailable. No weaker fallback is used.");
+        }
+        private static byte[] PasswordBytes(SecureString password) {
+            if (password == null || password.Length < 1 || password.Length > 1024) throw new ArgumentException("Invalid password length.");
+            IntPtr ptr = IntPtr.Zero;
+            char[] chars = new char[password.Length];
+            try {
+                ptr = Marshal.SecureStringToBSTR(password);
+                for (int k = 0; k < chars.Length; k++) chars[k] = (char)Marshal.ReadInt16(ptr, k * 2);
+                return new UTF8Encoding(false, true).GetBytes(chars);
+            } finally {
+                Array.Clear(chars, 0, chars.Length);
+                if (ptr != IntPtr.Zero) Marshal.ZeroFreeBSTR(ptr);
+            }
+        }
+        private static byte[] Derive(SecureString password, byte[] salt) {
+            byte[] bytes = PasswordBytes(password), key = new byte[32];
+            try {
+                // Fixed parameters bound CPU/RAM cost even when an attacker edits the envelope.
+                // libsodium algorithm 2 = Argon2id13, opslimit=3, memlimit=64 MiB.
+                if (crypto_pwhash(key, 32, bytes, (ulong)bytes.Length, salt, 3, new UIntPtr(67108864), 2) != 0)
+                    throw new InvalidOperationException("Password KDF failed.");
+                return key;
+            } catch { Array.Clear(key, 0, key.Length); throw; }
+            finally { Array.Clear(bytes, 0, bytes.Length); }
+        }
+        public static byte[] Seal(byte[] plaintext, SecureString password) {
+            CheckSupport();
+            if (plaintext == null || plaintext.Length > Maximum || password == null || password.Length < 16)
+                throw new ArgumentException("Use a passphrase of at least 16 characters; payload limit is 8 MiB.");
+            byte[] salt = new byte[16], nonce = new byte[12], header = new byte[HeaderSize], key = null;
+            randombytes_buf(salt, new UIntPtr(16)); randombytes_buf(nonce, new UIntPtr(12));
+            Buffer.BlockCopy(Magic, 0, header, 0, 8);
+            Buffer.BlockCopy(salt, 0, header, 8, 16); Buffer.BlockCopy(nonce, 0, header, 24, 12);
+            try {
+                key = Derive(password, salt);
+                byte[] cipher = new byte[plaintext.Length + 16]; ulong length;
+                if (crypto_aead_aes256gcm_encrypt(cipher, out length, plaintext, (ulong)plaintext.Length, header, HeaderSize, IntPtr.Zero, nonce, key) != 0 || length != (ulong)cipher.Length)
+                    throw new InvalidOperationException("Encryption failed.");
+                byte[] envelope = new byte[HeaderSize + cipher.Length];
+                Buffer.BlockCopy(header, 0, envelope, 0, HeaderSize); Buffer.BlockCopy(cipher, 0, envelope, HeaderSize, cipher.Length);
+                return envelope;
+            } finally { if (key != null) Array.Clear(key, 0, key.Length); }
+        }
+        public static byte[] Open(byte[] envelope, SecureString password) {
+            CheckSupport();
+            if (envelope == null || envelope.Length < HeaderSize + 16 || envelope.Length > Maximum + HeaderSize + 16)
+                throw new ArgumentException("Invalid vault or wrong password.");
+            for (int k = 0; k < Magic.Length; k++) if (envelope[k] != Magic[k]) throw new ArgumentException("Invalid vault or wrong password.");
+            byte[] header = new byte[HeaderSize], salt = new byte[16], nonce = new byte[12], key = null;
+            Buffer.BlockCopy(envelope, 0, header, 0, HeaderSize); Buffer.BlockCopy(header, 8, salt, 0, 16); Buffer.BlockCopy(header, 24, nonce, 0, 12);
+            byte[] cipher = new byte[envelope.Length - HeaderSize], message = new byte[cipher.Length - 16];
+            Buffer.BlockCopy(envelope, HeaderSize, cipher, 0, cipher.Length);
+            try {
+                key = Derive(password, salt); ulong length;
+                if (crypto_aead_aes256gcm_decrypt(message, out length, IntPtr.Zero, cipher, (ulong)cipher.Length, header, HeaderSize, nonce, key) != 0 || length != (ulong)message.Length)
+                    throw new ArgumentException("Invalid vault or wrong password.");
+                return message;
+            } catch { Array.Clear(message, 0, message.Length); throw; }
+            finally { if (key != null) Array.Clear(key, 0, key.Length); }
+        }
+    }
+}
+````
+
+
+## Исходник 2: `portable-workspace/vault-preview/Vault.Common.ps1`
+
+SHA-256 исходного файла: `7a1013069eb470ababf913d90863f7585a207726610848d1f7711779fd80f2e8`. Размер: 3609 байт.
+
+````powershell
+#requires -Version 5.1
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$vaultToolDirectory = $PSScriptRoot
+function Initialize-VaultCrypto {
+    if ('VicAVault.Crypto' -as [type]) { return }
+    $dll = [IO.Path]::GetFullPath((Join-Path $vaultToolDirectory 'lib\vica-sodium.dll'))
+    $manifestPath = Join-Path $vaultToolDirectory 'lib\dependency.json'
+    if (-not (Test-Path -LiteralPath $dll) -or -not (Test-Path -LiteralPath $manifestPath)) { throw 'Run Install-VaultDependency.ps1 first.' }
+    if ((Get-Item -LiteralPath $manifestPath).Length -gt 4096) { throw 'Invalid dependency manifest.' }
+    $manifest = [IO.File]::ReadAllText($manifestPath) | ConvertFrom-Json
+    if ($manifest.version -ne '1.0.22' -or $manifest.archiveSha256 -ne '1d99e0afaf27bce664249232e9dc628ae6bb7b49f0ab53ad6db372b028a35d9d' -or
+        (Get-FileHash -LiteralPath $dll -Algorithm SHA256).Hash -ne $manifest.dllSha256) { throw 'Crypto dependency integrity check failed.' }
+    $source = [IO.File]::ReadAllText((Join-Path $vaultToolDirectory 'VaultCrypto.cs')).Replace('__SODIUM_DLL__', $dll.Replace('"','""'))
+    Add-Type -TypeDefinition $source -ErrorAction Stop
+    [VicAVault.Crypto]::CheckSupport()
+}
+function Read-Vault([string]$Path, [Security.SecureString]$Password) {
+    Initialize-VaultCrypto
+    $plain = $null
+    try {
+        $info = Get-Item -LiteralPath $Path
+        if ($info.Length -gt 8388660) { throw 'Vault exceeds limit.' }
+        $plain = [VicAVault.Crypto]::Open([IO.File]::ReadAllBytes($Path), $Password)
+        $utf8 = New-Object Text.UTF8Encoding($false, $true)
+        $document = $utf8.GetString($plain) | ConvertFrom-Json
+        if ($document.version -ne 1) { throw 'Unsupported payload version.' }
+        return $document
+    } catch { throw 'Vault could not be opened: wrong password, modified file, unavailable crypto or unsupported format. No fallback used.' }
+    finally { if ($plain) { [Array]::Clear($plain, 0, $plain.Length) } }
+}
+function Write-NewVault([string]$Path, $Document, [Security.SecureString]$Password, [Security.SecureString]$Confirmation) {
+    Initialize-VaultCrypto
+    if (Test-Path -LiteralPath $Path) { throw 'Vault already exists; this preview never overwrites it.' }
+    $plain = $null; $verified = $null; $temp = $Path + '.' + [Guid]::NewGuid().ToString('N') + '.tmp'
+    try {
+        $plain = [Text.Encoding]::UTF8.GetBytes(($Document | ConvertTo-Json -Depth 30 -Compress))
+        $sealed = [VicAVault.Crypto]::Seal($plain, $Password)
+        # Read-back with the confirmation password before publishing; never create an unusable vault silently.
+        $verified = [VicAVault.Crypto]::Open($sealed, $Confirmation)
+        if ($verified.Length -ne $plain.Length) { throw 'Read-back mismatch.' }
+        $difference = 0
+        for ($k = 0; $k -lt $plain.Length; $k++) { $difference = $difference -bor ($plain[$k] -bxor $verified[$k]) }
+        if ($difference -ne 0) { throw 'Read-back mismatch.' }
+        [IO.File]::WriteAllBytes($temp, $sealed)
+        # Verify the ciphertext actually written to disk too.
+        $null = Read-Vault $temp $Confirmation
+        [IO.File]::Move($temp, $Path)
+    } catch { throw 'Vault creation failed or password confirmation did not match. Original configuration was not changed.' }
+    finally {
+        if ($plain) { [Array]::Clear($plain, 0, $plain.Length) }
+        if ($verified) { [Array]::Clear($verified, 0, $verified.Length) }
+        if (Test-Path -LiteralPath $temp) { try { Remove-Item -LiteralPath $temp -Force } catch { Write-Warning 'Encrypted staging file was not removed.' } }
+    }
+}
+````
+
+
+## Исходник 3: `portable-workspace/vault-preview/Install-VaultDependency.ps1`
+
+SHA-256 исходного файла: `6fe7359f8ff39027b40210c225f8aa0779c53f9882eb3870fa815dd7f2e16e51`. Размер: 3560 байт.
+
+````powershell
+#requires -Version 5.1
+# Installs only a pinned official crypto dependency beside this script. Does not read Runtime.
+$ErrorActionPreference = 'Stop'
+if ($env:OS -ne 'Windows_NT' -or -not [Environment]::Is64BitProcess) { throw 'Windows x64 / 64-bit PowerShell required.' }
+$directory = $PSScriptRoot
+$target = Join-Path $directory 'lib'
+if (Test-Path -LiteralPath $target) { throw 'lib already exists. Verify it before replacing anything; installer will not overwrite it.' }
+$stage = Join-Path $directory ('.dependency-' + [Guid]::NewGuid().ToString('N'))
+$oldTls = [Net.ServicePointManager]::SecurityProtocol
+$oldRevocation = [Net.ServicePointManager]::CheckCertificateRevocationList
+try {
+    New-Item -ItemType Directory -Path $stage | Out-Null
+    if ([Net.ServicePointManager]::ServerCertificateValidationCallback) { throw 'Custom TLS validation callback prohibited.' }
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    [Net.ServicePointManager]::CheckCertificateRevocationList = $true
+    $archive = Join-Path $stage 'sodium.tar.gz'
+    $expected = '1d99e0afaf27bce664249232e9dc628ae6bb7b49f0ab53ad6db372b028a35d9d'
+    $url = 'https://github.com/jedisct1/libsodium/releases/download/1.0.22-RELEASE/libsodium-1.0.22-mingw.tar.gz'
+    Write-Host 'Downloading official libsodium 1.0.22 MinGW package...'
+    Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $archive -TimeoutSec 120
+    if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $expected) { throw 'Archive SHA-256 mismatch.' }
+    $tar = Join-Path $env:SystemRoot 'System32\tar.exe'
+    if (-not (Test-Path -LiteralPath $tar)) { throw 'Windows tar.exe required. No alternate archive tool is downloaded.' }
+    $unpack = Join-Path $stage 'unpack'
+    New-Item -ItemType Directory -Path $unpack | Out-Null
+    & $tar -xzf $archive -C $unpack
+    if ($LASTEXITCODE -ne 0) { throw 'Archive extraction failed.' }
+    $dlls = @(Get-ChildItem -LiteralPath $unpack -Recurse -File -Filter '*.dll' | Where-Object { $_.FullName -match '(?i)win64[\\/].*bin[\\/]' })
+    if ($dlls.Count -ne 1) { throw 'Expected exactly one official Win64 DLL. Package layout differs; refusing to guess.' }
+    $bytes = [IO.File]::ReadAllBytes($dlls[0].FullName)
+    if ($bytes.Length -lt 256 -or $bytes[0] -ne 77 -or $bytes[1] -ne 90) { throw 'Invalid PE image.' }
+    $offset = [BitConverter]::ToInt32($bytes, 60)
+    if ($offset -lt 64 -or $offset -gt ($bytes.Length - 6) -or [BitConverter]::ToUInt32($bytes, $offset) -ne 17744 -or [BitConverter]::ToUInt16($bytes, $offset + 4) -ne 34404) { throw 'DLL is not AMD64 PE.' }
+    $bundle = Join-Path $stage 'lib'
+    New-Item -ItemType Directory -Path $bundle | Out-Null
+    $installed = Join-Path $bundle 'vica-sodium.dll'
+    Copy-Item -LiteralPath $dlls[0].FullName -Destination $installed
+    @{ version = '1.0.22'; source = $url; archiveSha256 = $expected; dllSha256 = (Get-FileHash -LiteralPath $installed -Algorithm SHA256).Hash } |
+        ConvertTo-Json | Set-Content -LiteralPath (Join-Path $bundle 'dependency.json') -Encoding UTF8
+    [IO.Directory]::Move($bundle, $target)
+    Write-Host 'Installed. Next run Test-Vault.ps1. No secrets were read or changed.' -ForegroundColor Green
+} finally {
+    [Net.ServicePointManager]::SecurityProtocol = $oldTls
+    [Net.ServicePointManager]::CheckCertificateRevocationList = $oldRevocation
+    if (Test-Path -LiteralPath $stage) {
+        try { Remove-Item -LiteralPath $stage -Recurse -Force } catch { Write-Warning 'Dependency staging cleanup failed.' }
+    }
+}
+````
+
+
+## Исходник 4: `portable-workspace/vault-preview/Prepare-Vault.ps1`
+
+SHA-256 исходного файла: `acefcdf7b7a58f03aed0f8dee8495cd44ddb1310600227ffdff1bb208a9c8c01`. Размер: 3581 байт.
+
+````powershell
+#requires -Version 5.1
+[CmdletBinding()]
+param([ValidateSet('Create','Check')][string]$Action = 'Check', [string]$Root = '')
+$ErrorActionPreference = 'Stop'
+$workspaceDirectory = Split-Path -Parent $PSScriptRoot
+if (-not $Root) { $Root = Join-Path $workspaceDirectory 'Runtime' }
+. (Join-Path $workspaceDirectory 'Workspace.Common.ps1')
+. (Join-Path $PSScriptRoot 'Vault.Common.ps1')
+$Root = Get-Workspace $Root
+$path = Join-Path $Root 'private\workspace.vault'
+$lock = $null; $password = $null; $confirmation = $null
+function Read-HiddenText([string]$Prompt) {
+    $secret = Read-Host $Prompt -AsSecureString
+    $pointer = [IntPtr]::Zero
+    try {
+        $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
+        return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+    } finally {
+        if ($pointer -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer) }
+        $secret.Dispose()
+    }
+}
+try {
+    Initialize-VaultCrypto
+    $lock = [IO.File]::Open((Join-Path $Root '.session.lock'), 'OpenOrCreate', 'ReadWrite', 'None')
+    if (Test-ProfileBusy (Join-Path $Root 'private\profile')) { throw 'Close the browser before testing migration.' }
+    if ($Action -eq 'Create') {
+        if (Test-Path -LiteralPath $path) { throw 'Vault exists. Use Check. No existing vault will be overwritten.' }
+        $configPath = Join-Path $Root 'private\xray.json'
+        Assert-ConfigPolicy $configPath
+        Write-Warning 'PREVIEW: creates an encrypted COPY. Old xray.json and browser profile remain readable; password is NOT yet enforced by Start-Workspace.ps1.'
+        $url = Read-HiddenText 'Complete HTTPS subscription URL (hidden, saved only inside vault)'
+        $uri = $null
+        if (-not [Uri]::TryCreate($url, [UriKind]::Absolute, [ref]$uri) -or $uri.Scheme -ne 'https' -or $uri.UserInfo -or $uri.Fragment) { throw 'A complete HTTPS subscription URL without userinfo/fragment is required.' }
+        $hwid = Convert-DeviceHwid (Read-HiddenText 'Your existing device HWID UUID/GUID (hidden)')
+        $password = Read-Host 'New unique passphrase, minimum 16 characters (no recovery)' -AsSecureString
+        $confirmation = Read-Host 'Repeat passphrase' -AsSecureString
+        $document = @{
+            version = 1; createdAtUtc = [DateTime]::UtcNow.ToString('o')
+            subscription = @{ url = $url; hwid = $hwid }
+            activeConfig = ([IO.File]::ReadAllText($configPath) | ConvertFrom-Json)
+        }
+        Write-NewVault $path $document $password $confirmation
+        Write-Host 'Encrypted copy created and read-back verified. Originals were NOT removed. Test Check in a NEW PowerShell process.' -ForegroundColor Green
+    } else {
+        $password = Read-Host 'Vault passphrase' -AsSecureString
+        $document = Read-Vault $path $password
+        $names = @($document.PSObject.Properties.Name)
+        if ('subscription' -notin $names -or 'activeConfig' -notin $names) { throw 'Expected migration payload was not found.' }
+        $null = Convert-DeviceHwid $document.subscription.hwid
+        Write-Host 'Vault authenticated and decrypted. Subscription and configuration are present; values are NOT displayed.' -ForegroundColor Green
+        Write-Warning 'This is a read-only check. Current launcher still uses plaintext xray.json. Browser profile is not encrypted.'
+    }
+} finally {
+    $url = $null; $uri = $null; $hwid = $null; $document = $null
+    if ($password) { $password.Dispose() }
+    if ($confirmation) { $confirmation.Dispose() }
+    if ($lock) { $lock.Dispose() }
+}
+````
+
+
+## Исходник 5: `portable-workspace/vault-preview/Test-Vault.ps1`
+
+SHA-256 исходного файла: `b13bce61921db535a7ad97bb084b1096cab5416d21a203b504cb5f7b065921a0`. Размер: 2544 байт.
+
+````powershell
+#requires -Version 5.1
+# PUBLIC SYNTHETIC DATA ONLY. Does not read Runtime, subscription, UUID or browser profile.
+$ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'Vault.Common.ps1')
+Initialize-VaultCrypto
+$fixture = [IO.File]::ReadAllText((Join-Path $PSScriptRoot 'tests\synthetic-vector.json')) | ConvertFrom-Json
+$password = ConvertTo-SecureString -String $fixture.syntheticPassword -AsPlainText -Force
+$wrong = ConvertTo-SecureString -String 'incorrect synthetic password' -AsPlainText -Force
+$plain = $null; $opened = $null
+function Expect-Rejection([byte[]]$Bytes, [Security.SecureString]$Pass) {
+    $rejected = $false
+    try { $null = [VicAVault.Crypto]::Open($Bytes, $Pass) } catch { $rejected = $true }
+    if (-not $rejected) { throw 'Unauthenticated ciphertext was accepted.' }
+}
+try {
+    $envelope = [Convert]::FromBase64String($fixture.envelopeBase64)
+    $opened = [VicAVault.Crypto]::Open($envelope, $password)
+    if ([Text.Encoding]::UTF8.GetString($opened) -cne $fixture.syntheticPlaintext) { throw 'Cross-implementation vector mismatch.' }
+    $plain = [Text.Encoding]::UTF8.GetBytes($fixture.syntheticPlaintext)
+    $sealed1 = [VicAVault.Crypto]::Seal($plain, $password)
+    $sealed2 = [VicAVault.Crypto]::Seal($plain, $password)
+    if ([Convert]::ToBase64String($sealed1) -eq [Convert]::ToBase64String($sealed2)) { throw 'Fresh salt/nonce test failed.' }
+    $roundTrip = [VicAVault.Crypto]::Open($sealed1, $password)
+    if ([Text.Encoding]::UTF8.GetString($roundTrip) -cne $fixture.syntheticPlaintext) { throw 'Round-trip mismatch.' }
+    [Array]::Clear($roundTrip, 0, $roundTrip.Length)
+    Expect-Rejection $sealed1 $wrong
+    foreach ($offset in @(0,8,24,36,($sealed1.Length - 1))) {
+        $altered = [byte[]]$sealed1.Clone()
+        $altered[$offset] = $altered[$offset] -bxor 1
+        Expect-Rejection $altered $password
+    }
+    foreach ($length in @(0,7,35,51)) {
+        $short = New-Object byte[] $length
+        if ($length -gt 0) { [Array]::Copy($sealed1, $short, $length) }
+        Expect-Rejection $short $password
+    }
+    Write-Host 'PASS: official crypto dependency loaded; interoperability vector, round-trip, randomness, wrong password, tampering and truncation tested.' -ForegroundColor Green
+    Write-Host 'No user data was read or changed. This is NOT an audit of host security or memory erasure.'
+} finally {
+    if ($plain) { [Array]::Clear($plain, 0, $plain.Length) }
+    if ($opened) { [Array]::Clear($opened, 0, $opened.Length) }
+    $password.Dispose(); $wrong.Dispose()
+}
+````
+
+
+## Исходник 6: `portable-workspace/vault-preview/tests/test_format.py`
+
+SHA-256 исходного файла: `e98bf844bafd143e1648920d9ffc29016a39a78a7a01c86cdf74ef7125686b09`. Размер: 4497 байт.
+
+````python
+"""Development-only cross-implementation tests. No real user secrets, network or files in Runtime.
+Dependencies: PyNaCl (libsodium), argon2-cffi, cryptography. Not required on user PCs.
+"""
+import base64
+import ctypes
+import json
+import unittest
+from pathlib import Path
+import nacl._sodium
+from argon2.low_level import hash_secret_raw, Type
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+SODIUM = ctypes.CDLL(nacl._sodium.__file__)
+SODIUM.sodium_init()
+SODIUM.crypto_pwhash.argtypes = [ctypes.c_void_p, ctypes.c_ulonglong, ctypes.c_void_p, ctypes.c_ulonglong, ctypes.c_void_p, ctypes.c_ulonglong, ctypes.c_size_t, ctypes.c_int]
+SODIUM.crypto_aead_aes256gcm_encrypt.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulonglong), ctypes.c_void_p, ctypes.c_ulonglong, ctypes.c_void_p, ctypes.c_ulonglong, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p]
+SODIUM.crypto_aead_aes256gcm_decrypt.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulonglong), ctypes.c_void_p, ctypes.c_void_p, ctypes.c_ulonglong, ctypes.c_void_p, ctypes.c_ulonglong, ctypes.c_void_p, ctypes.c_void_p]
+
+
+def key(password, salt):
+    result = ctypes.create_string_buffer(32)
+    code = SODIUM.crypto_pwhash(result, 32, password, len(password), salt, 3, 67108864, 2)
+    assert code == 0
+    return result.raw
+
+
+def seal(password, salt, nonce, message):
+    header = b'VICAVA01' + salt + nonce
+    output = ctypes.create_string_buffer(len(message) + 16)
+    length = ctypes.c_ulonglong()
+    code = SODIUM.crypto_aead_aes256gcm_encrypt(output, ctypes.byref(length), message, len(message), header, len(header), None, nonce, key(password, salt))
+    assert code == 0 and length.value == len(message) + 16
+    return header + output.raw
+
+
+def open_envelope(password, envelope):
+    if len(envelope) < 52 or envelope[:8] != b'VICAVA01':
+        raise ValueError('Invalid envelope')
+    header, cipher = envelope[:36], envelope[36:]
+    output = ctypes.create_string_buffer(len(cipher) - 16)
+    length = ctypes.c_ulonglong()
+    code = SODIUM.crypto_aead_aes256gcm_decrypt(output, ctypes.byref(length), None, cipher, len(cipher), header, len(header), header[24:36], key(password, header[8:24]))
+    if code != 0:
+        raise ValueError('Authentication failed')
+    return output.raw[:length.value]
+
+
+class FormatTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        if SODIUM.crypto_aead_aes256gcm_is_available() != 1:
+            raise unittest.SkipTest('AES-GCM hardware unavailable')
+        cls.fixture = json.loads((Path(__file__).parent / 'synthetic-vector.json').read_text())
+        cls.password = cls.fixture['syntheticPassword'].encode()
+        cls.envelope = base64.b64decode(cls.fixture['envelopeBase64'])
+        cls.message = cls.fixture['syntheticPlaintext'].encode()
+
+    def test_sodium_matches_fixture(self):
+        self.assertEqual(seal(self.password, self.envelope[8:24], self.envelope[24:36], self.message), self.envelope)
+        self.assertEqual(open_envelope(self.password, self.envelope), self.message)
+
+    def test_independent_argon2_and_aes_gcm(self):
+        derived = hash_secret_raw(self.password, self.envelope[8:24], time_cost=3, memory_cost=65536, parallelism=1, hash_len=32, type=Type.ID, version=19)
+        self.assertEqual(derived, key(self.password, self.envelope[8:24]))
+        self.assertEqual(AESGCM(derived).decrypt(self.envelope[24:36], self.envelope[36:], self.envelope[:36]), self.message)
+
+    def test_wrong_password(self):
+        with self.assertRaises(ValueError):
+            open_envelope(b'incorrect synthetic password', self.envelope)
+
+    def test_tampering(self):
+        for offset in (0, 8, 24, 36, len(self.envelope)-1):
+            altered = bytearray(self.envelope)
+            altered[offset] ^= 1
+            with self.subTest(offset=offset), self.assertRaises(ValueError):
+                open_envelope(self.password, bytes(altered))
+
+    def test_truncation(self):
+        for length in (0, 7, 35, 51, len(self.envelope)-1):
+            with self.subTest(length=length), self.assertRaises(ValueError):
+                open_envelope(self.password, self.envelope[:length])
+
+    def test_salt_and_nonce_change_envelope(self):
+        self.assertNotEqual(seal(self.password, bytes(range(16,32)), self.envelope[24:36], self.message), self.envelope)
+        self.assertNotEqual(seal(self.password, self.envelope[8:24], bytes(range(32,44)), self.message), self.envelope)
+
+if __name__ == '__main__':
+    unittest.main()
+````
+
+
+## Исходник 7: `portable-workspace/vault-preview/tests/synthetic-vector.json`
+
+SHA-256 исходного файла: `8f07f07a3188844554aca1b9b20610b0a7e97b0dec45cbb6a249b76ac5d2e2f6`. Размер: 433 байт.
+
+````json
+{
+  "note": "PUBLIC SYNTHETIC TEST DATA ONLY. Fixed salt and nonce are for interoperability testing, NEVER for production encryption.",
+  "syntheticPassword": "VIC-A synthetic test passphrase!",
+  "syntheticPlaintext": "{\"version\":1,\"marker\":\"VIC-A synthetic vector\"}",
+  "envelopeBase64": "VklDQVZBMDEAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRoba3ntEpGuEDEEW1u7xsIdBR54MdFJdERg3LZI5EHNa0ALbP+PEqImi6Wmyf73JhfU5M8CwezBHZUqslz2ekQe"
+}
+````
+
+
+## Исходник 8: `portable-workspace/vault-preview/README.ru.md`
+
+SHA-256 исходного файла: `aa7656d4974f887929254ddd85548f10b5c9d77e5c115d28be49fc3750cb9eec`. Размер: 7274 байт.
+
+````markdown
+# VIC-A: экспериментальная основа зашифрованного хранилища
+
+**Не готовое обновление защиты. Не заменяет текущую установку.**
+
+Этот каталог изолирован от рабочего меню: `Start-Workspace.ps1` и
+`Update-Subscription.ps1` пока не используют хранилище, пароль для подключения
+и обновления **не требуется**. Архивы в `downloads/` не обновлены.
+Не удаляйте рабочий `private\xray.json` и не считайте его защищённым после создания копии.
+
+## Что сделано
+
+- Обёртка над официальной libsodium: AES-256-GCM, Argon2id13 (3 прохода,
+  64 МиБ, параллелизм 1). Никакой собственной реализации шифра.
+- Новый случайный salt 16 байт и nonce 12 байт при каждом шифровании.
+  Заголовок аутентифицирован. Ограничение открытых данных — 8 МиБ.
+- Переносимость без DPAPI/привязки к Windows-пользователю. Требуются Windows x64,
+  64-битный PowerShell 5.1 и поддерживаемое AES-GCM аппаратное ускорение.
+  Без ускорения операция прекращается; слабого резервного режима нет.
+- Пароль от 16 символов при создании; пароль и ключ не сохраняются.
+- Создание только нового `Runtime\private\workspace.vault`, проверка повторным
+  паролем и чтением записанного шифротекста до публикации. Перезапись запрещена.
+- В копии пока только URL, существующий HWID и текущий конфиг — **не список
+  серверов и не полноценное состояние обновления**.
+- Отдельный тест на вымышленных публичных данных, не читающий Runtime.
+
+## Что проверено здесь
+
+В Linux выполнены 6 Python-тестов: совместимость формата libsodium,
+независимая сверка с argon2-cffi и cryptography, неверный пароль,
+изменение заголовка/шифротекста/тега, усечение, изменение salt/nonce.
+В `tests/synthetic-vector.json` — исключительно публичные вымышленные данные;
+фиксированные salt/nonce допустимы **только для теста**.
+
+PowerShell/C# проверяются статическим синтаксическим разбором. Это не компиляция
+C#, не запуск Windows и не аудит безопасности. Установка DLL, P/Invoke,
+`Test-Vault.ps1`, создание/проверка копии на Windows ещё не выполнены здесь.
+Успешные Python-тесты не доказывают работоспособность Windows-обёртки.
+
+## Порядок будущей проверки на Windows
+
+Это описание для разработчика, не рекомендация обновлять рабочую установку сейчас.
+После ревью скриптов: установить зависимость через `Install-VaultDependency.ps1`,
+запустить `Test-Vault.ps1` в новом 64-битном PowerShell. Только после успешного
+теста обсуждать запуск `Prepare-Vault.ps1 -Action Create` и затем `-Action Check`
+в другом процессе с Root `Z:\Iran\Browser\Runtime`.
+Create запрашивает скрытые URL/HWID и новый пароль дважды; Check не показывает секреты.
+Оригиналы не удаляются. Не передавайте пароль аргументом командной строки.
+
+Зависимость скачивается только из официального релиза jedisct1/libsodium 1.0.22,
+архив закреплён SHA-256. Хеш из GitHub не является независимой подписью.
+Хеш DLL в локальном manifest обнаруживает случайные изменения, но не защищает
+от атакующего, способного переписать manifest/скрипты. Лицензия библиотеки —
+`LICENSE.libsodium.txt`. Двоичные зависимости и staging не включаются в Git.
+
+## Что ещё обязательно до выпуска
+
+1. Проверить C#/P/Invoke и все сценарии на Windows 5.1, включая отсутствие AES,
+   неверный пароль, недоступный/повреждённый DLL и прерывание записи.
+2. Передавать конфиг Xray через stdin без постоянного открытого файла,
+   ограничить время/вывод дочернего процесса, не выводить его секретный stderr.
+3. Перевести запуск на обязательную разблокировку без отката к plaintext.
+4. Сохранить список узлов и идентичность выбранного узла внутри vault;
+   отдельная кнопка обновления с сохранёнными URL/HWID. Не менять узел молча,
+   если он исчез. Публиковать только полностью проверенное новое состояние.
+5. Отдельный выбор сервера и изменение меню; тесты ошибок сети, блокировок,
+   неверного пароля, сохранности предыдущего рабочего состояния.
+6. Явная миграция после проверки пользователем; никакого автоматического
+   удаления старого рабочего конфига до проверки нового пути.
+
+## Ограничения
+
+Забытый пароль восстановить нельзя. Нужна длинная уникальная парольная фраза.
+Браузерный профиль, cookies и загрузки этим хранилищем не шифруются.
+Секреты доступны работающему процессу; malware/admin/дампы/подмена скриптов
+не входят в защиту. В .NET/PowerShell нет гарантии очистки всех копий строк
+из памяти; очистка байтовых буферов — лишь best effort. Старые открытые копии
+на SSD нельзя гарантированно стереть программным удалением.
+````
+
+
+## Исходник 9: `portable-workspace/vault-preview/.gitignore`
+
+SHA-256 исходного файла: `e506d0864c93cfd15469d574b07f71d4b61e75aee9071e5d3416ecb1bff5f6ba`. Размер: 73 байт.
+
+````text
+# Downloaded dependency and owned installer stages
+/lib/
+/.dependency-*/
+````
+
+
+## Исходник 10: `portable-workspace/vault-preview/LICENSE.libsodium.txt`
+
+SHA-256 исходного файла: `508a76d186356c0dd807a670ef510964f8724557024796a2c426c6c0e19ab683`. Размер: 823 байт.
+
+````text
+/*
+ * ISC License
+ *
+ * Copyright (c) 2013-2026
+ * Frank Denis <j at pureftpd dot org>
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+````
+
+
+## Исходник 11: `portable-workspace/Workspace.Common.ps1`
+
+SHA-256 исходного файла: `8b3cfb691c94d9d47b5e8a08952ab348876864b519bd0d990b16710167da738d`. Размер: 14804 байт.
+
+````powershell
+#requires -Version 5.1
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+function Get-Workspace([string]$Root) {
+    $r = [IO.Path]::GetFullPath($Root)
+    if (-not (Test-Path -LiteralPath (Join-Path $r 'Xray\xray.exe'))) { throw 'Xray installation not found.' }
+    return $r
+}
+function Convert-Vless([string]$Link) {
+    $u = $null
+    if (-not [Uri]::TryCreate($Link, [UriKind]::Absolute, [ref]$u) -or $u.Scheme -ne 'vless') { throw 'Not a VLESS URI.' }
+    $id = [Uri]::UnescapeDataString($u.UserInfo)
+    $uuid = [Guid]::Empty
+    if (-not [Guid]::TryParse($id, [ref]$uuid)) { throw 'VLESS UUID required.' }
+    if ($uuid -eq [Guid]::Empty) { throw 'Zero UUID is prohibited.' }
+    if ($u.Port -lt 1 -or $u.Port -gt 65535 -or -not $u.Host) { throw 'Explicit server and port required.' }
+    if ($u.AbsolutePath -notin @('', '/')) { throw 'Unexpected URI path.' }
+    $q = @{}
+    foreach ($pair in $u.Query.TrimStart('?').Split('&')) {
+        if (-not $pair) { continue }
+        $kv = $pair.Split('=', 2)
+        if ($kv.Count -ne 2) { throw 'Invalid query parameter.' }
+        $k = [Uri]::UnescapeDataString($kv[0])
+        if ($q.ContainsKey($k)) { throw 'Duplicate parameter.' }
+        $q[$k] = [Uri]::UnescapeDataString($kv[1])
+    }
+    $allowed = @('encryption','security','type','flow','sni','fp','alpn','pbk','sid','spx','path','host','allowInsecure','headerType')
+    foreach ($k in $q.Keys) { if ($k -notin $allowed) { throw 'Unsupported query parameter.' } }
+    if ($q.ContainsKey('allowInsecure') -and $q.allowInsecure -notin @('0','false')) { throw 'Insecure TLS is prohibited.' }
+    if ($q.ContainsKey('encryption') -and $q.encryption -ne 'none') { throw 'Unsupported VLESS encryption.' }
+    $security = 'none'; if ($q.ContainsKey('security')) { $security = $q.security }
+    if ($security -notin @('tls','reality')) { throw 'Only TLS or REALITY is supported.' }
+    $network = 'tcp'; if ($q.ContainsKey('type')) { $network = $q.type }
+    if ($network -eq 'raw') { $network = 'tcp' }
+    if ($network -notin @('tcp','ws')) { throw 'Only TCP/RAW or WebSocket is supported.' }
+    if ($security -eq 'reality' -and $network -ne 'tcp') { throw 'REALITY is supported only over TCP here.' }
+    if ($q.ContainsKey('headerType') -and ($network -ne 'tcp' -or $q.headerType -ne 'none')) { throw 'Unsupported headerType.' }
+    $user = @{ id = $uuid.ToString(); encryption = 'none' }
+    if ($q.ContainsKey('flow') -and $q.flow) {
+        if ($q.flow -ne 'xtls-rprx-vision' -or $network -ne 'tcp') { throw 'Unsupported flow.' }
+        $user.flow = $q.flow
+    }
+    $stream = @{ network = $network; security = $security }
+    $tls = @{ serverName = $u.DnsSafeHost; fingerprint = 'chrome' }
+    if ($q.ContainsKey('sni') -and $q.sni) { $tls.serverName = $q.sni }
+    if ($q.ContainsKey('fp') -and $q.fp) { $tls.fingerprint = $q.fp }
+    Assert-Fingerprint $tls.fingerprint
+    if ($security -eq 'reality') {
+        if (-not $q.ContainsKey('pbk') -or -not $q.pbk) { throw 'REALITY public key missing.' }
+        if ($q.ContainsKey('alpn')) { throw 'REALITY ALPN parameter is not supported here.' }
+        Assert-RealityKey $q.pbk
+        if (-not $q.ContainsKey('sni') -or -not $q.sni) { throw 'Explicit REALITY SNI is required.' }
+        $tls.password = $q.pbk
+        $tls.shortId = ''; if ($q.ContainsKey('sid')) { $tls.shortId = $q.sid }
+        Assert-ShortId $tls.shortId
+        if ($q.ContainsKey('spx')) { $tls.spiderX = $q.spx }
+        $stream.realitySettings = $tls
+    } else {
+        foreach ($k in @('pbk','sid','spx')) { if ($q.ContainsKey($k)) { throw 'REALITY parameters on TLS URI.' } }
+        $tls.allowInsecure = $false
+        $tls.minVersion = '1.2'
+        if ($q.ContainsKey('alpn') -and $q.alpn) { $tls.alpn = @($q.alpn.Split(',')) }
+        $stream.tlsSettings = $tls
+    }
+    if ($network -eq 'ws') {
+        $ws = @{ path = '/' }
+        if ($q.ContainsKey('path') -and $q.path) { $ws.path = $q.path }
+        if ($q.ContainsKey('host') -and $q.host) { $ws.host = $q.host }
+        $stream.wsSettings = $ws
+    } else {
+        foreach ($k in @('path','host')) { if ($q.ContainsKey($k)) { throw 'WebSocket parameters on TCP URI.' } }
+    }
+    return @{ tag = 'tunnel'; protocol = 'vless'; settings = @{ vnext = @(@{ address = $u.DnsSafeHost.Trim('[',']'); port = $u.Port; users = @($user) }) }; streamSettings = $stream }
+}
+function Test-XrayConfig([string]$Exe, [string]$Config) {
+    Assert-ConfigPolicy $Config
+    $psi = New-Object Diagnostics.ProcessStartInfo
+    $psi.FileName = $Exe
+    $psi.Arguments = 'run -test -config "' + $Config + '"'
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $p = $null
+    try {
+        $p = [Diagnostics.Process]::Start($psi)
+        $stdout = $p.StandardOutput.ReadToEndAsync()
+        $stderr = $p.StandardError.ReadToEndAsync()
+        if (-not $p.WaitForExit(30000)) {
+            $p.Kill()
+            $p.WaitForExit()
+            throw 'Xray config test timed out.'
+        }
+        # Drain both pipes concurrently. Neither output is routed through PowerShell's error stream.
+        $null = $stdout.GetAwaiter().GetResult()
+        $null = $stderr.GetAwaiter().GetResult()
+        if ($p.ExitCode -ne 0) { throw 'Xray rejected the configuration.' }
+    } catch { throw 'Xray config test failed or timed out. Diagnostics suppressed to protect secrets.' }
+    finally { if ($p) { $p.Dispose() } }
+}
+function Convert-DeviceHwid([string]$Value) {
+    $deviceId = [Guid]::Empty
+    if (-not [Guid]::TryParse($Value.Trim(), [ref]$deviceId) -or $deviceId -eq [Guid]::Empty) { throw 'Device HWID must be a valid nonzero UUID/GUID.' }
+    return $deviceId.ToString('D')
+}
+function Get-SubscriptionText([Uri]$Uri, [string]$DeviceHwid = '') {
+    $response = $null; $stream = $null; $memory = $null
+    $stage = 'policy'; $reason = 'request-failed'; $httpCode = $null
+    $oldProtocols = [Net.ServicePointManager]::SecurityProtocol
+    $oldRevocation = [Net.ServicePointManager]::CheckCertificateRevocationList
+    try {
+        if ($Uri.Scheme -ne 'https') { throw 'HTTPS required.' }
+        if ($null -ne [Net.ServicePointManager]::ServerCertificateValidationCallback) { throw 'Custom certificate validation callback is prohibited.' }
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        [Net.ServicePointManager]::CheckCertificateRevocationList = $true
+        $stage = 'request-setup'
+        $request = [Net.HttpWebRequest]::Create($Uri)
+        # .NET Framework HttpWebRequest uses ServicePointManager for revocation checks.
+        # It has no per-request CheckCertificateRevocationList property.
+        $request.Method = 'GET'
+        $request.UserAgent = 'v2rayNG'
+        $request.Accept = 'text/plain'
+        if ($DeviceHwid) { $request.Headers['x-hwid'] = (Convert-DeviceHwid $DeviceHwid) }
+        $request.AllowAutoRedirect = $false
+        $request.Timeout = 45000
+        $request.ReadWriteTimeout = 15000
+        $request.AutomaticDecompression = [Net.DecompressionMethods]::GZip -bor [Net.DecompressionMethods]::Deflate
+        $stage = 'connect'
+        $response = $request.GetResponse()
+        $httpCode = [int]$response.StatusCode
+        $stage = 'http-status'
+        if ($httpCode -ne 200) { $reason = 'non-200-status-or-redirect'; throw 'Unexpected HTTP status.' }
+        $limit = 4194304
+        if ($response.ContentLength -gt $limit) { $reason = 'size-limit'; throw 'Response too large.' }
+        $stage = 'read-body'
+        $stream = $response.GetResponseStream()
+        $memory = New-Object IO.MemoryStream
+        $buffer = New-Object byte[] 8192
+        $watch = [Diagnostics.Stopwatch]::StartNew()
+        while (($read = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            if ($watch.Elapsed.TotalSeconds -gt 45) { $reason = 'read-deadline'; throw 'Response time limit exceeded.' }
+            if (($memory.Length + $read) -gt $limit) { $reason = 'size-limit'; throw 'Response size limit exceeded.' }
+            $memory.Write($buffer, 0, $read)
+        }
+        return [Text.Encoding]::UTF8.GetString($memory.ToArray()).Trim().TrimStart([char]0xFEFF)
+    } catch {
+        # Never print Message/ToString/Location: all may contain the subscription token.
+        $exception = $_.Exception
+        $networkStatus = 'unavailable'
+        for ($depth = 0; $depth -lt 10 -and $null -ne $exception; $depth++) {
+            if ($exception -is [Net.WebException]) {
+                $networkStatus = $exception.Status.ToString()
+                $reason = 'network-or-http'
+                if ($exception.Response -is [Net.HttpWebResponse]) {
+                    $httpCode = [int]$exception.Response.StatusCode
+                    if ($null -eq $response) { $response = $exception.Response }
+                }
+                break
+            }
+            $exception = $exception.InnerException
+        }
+        $code = 'unavailable'; if ($null -ne $httpCode) { $code = [string]$httpCode }
+        throw "Subscription fetch failed: stage=$stage; reason=$reason; HTTP=$code; network=$networkStatus. URL, redirect target and response body suppressed."
+    }
+    finally {
+        if ($stream) { $stream.Dispose() }
+        if ($memory) { $memory.Dispose() }
+        if ($response) { $response.Close() }
+        [Net.ServicePointManager]::SecurityProtocol = $oldProtocols
+        [Net.ServicePointManager]::CheckCertificateRevocationList = $oldRevocation
+    }
+}
+function Test-ProfileBusy([string]$ProfileDir) {
+    $file = Join-Path $ProfileDir 'parent.lock'
+    if (-not (Test-Path -LiteralPath $file)) { return $false }
+    $handle = $null
+    try { $handle = [IO.File]::Open($file, 'Open', 'ReadWrite', 'None'); return $false }
+    catch { return $true }
+    finally { if ($handle) { $handle.Dispose() } }
+}
+
+function Assert-Fingerprint([string]$Value) {
+    if ($Value -notin @('chrome','firefox','safari','edge')) { throw 'Unsupported TLS fingerprint.' }
+}
+function Assert-RealityKey([string]$Value) {
+    if ($Value -cnotmatch '^[A-Za-z0-9_-]{43}$') { throw 'Invalid REALITY key encoding.' }
+    try { $bytes = [Convert]::FromBase64String($Value.Replace('-','+').Replace('_','/') + '=') }
+    catch { throw 'Invalid REALITY key encoding.' }
+    $canonical = [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+','-').Replace('/','_')
+    if ($bytes.Length -ne 32 -or $canonical -cne $Value -or @($bytes | Where-Object { $_ -ne 0 }).Count -eq 0) { throw 'Invalid REALITY key.' }
+    # Shape/canonical encoding only. X25519 peer validation remains the responsibility of Xray/REALITY.
+}
+function Assert-ShortId([string]$Value) {
+    if ($Value -cnotmatch '^(?:[0-9a-fA-F]{2}){0,8}$') { throw 'Invalid REALITY short ID.' }
+}
+function Assert-Fields($Object, [string[]]$Allowed, [string[]]$Required = @()) {
+    if ($null -eq $Object -or $Object -isnot [pscustomobject]) { throw 'Expected JSON object.' }
+    foreach ($property in $Object.PSObject.Properties) {
+        if ($property.Name -notin $Allowed) { throw 'Unexpected configuration field.' }
+    }
+    foreach ($name in $Required) {
+        if ($name -notin @($Object.PSObject.Properties.Name)) { throw 'Required configuration field missing.' }
+    }
+}
+function Assert-ConfigPolicy([string]$Path) {
+    try {
+        $c = [IO.File]::ReadAllText($Path) | ConvertFrom-Json
+        Assert-Fields $c @('log','inbounds','outbounds') @('log','inbounds','outbounds')
+        Assert-Fields $c.log @('loglevel') @('loglevel')
+        if ($c.log.loglevel -cne 'none' -or @($c.inbounds).Count -ne 1 -or @($c.outbounds).Count -ne 1) { throw 'Invalid topology.' }
+        $i = $c.inbounds[0]
+        Assert-Fields $i @('tag','listen','port','protocol','settings') @('listen','port','protocol','settings')
+        Assert-Fields $i.settings @('auth','udp') @('auth','udp')
+        if ($i.listen -cne '127.0.0.1' -or $i.port -ne 17890 -or $i.protocol -cne 'socks' -or $i.settings.auth -cne 'noauth' -or $i.settings.udp -isnot [bool] -or $i.settings.udp) { throw 'Invalid listener.' }
+        $o = $c.outbounds[0]
+        Assert-Fields $o @('tag','protocol','settings','streamSettings') @('protocol','settings','streamSettings')
+        if ($o.protocol -cne 'vless') { throw 'Only VLESS allowed.' }
+        Assert-Fields $o.settings @('vnext') @('vnext')
+        if (@($o.settings.vnext).Count -ne 1) { throw 'Invalid servers.' }
+        $v = $o.settings.vnext[0]
+        Assert-Fields $v @('address','port','users') @('address','port','users')
+        if (-not $v.address -or $v.port -lt 1 -or $v.port -gt 65535 -or @($v.users).Count -ne 1) { throw 'Invalid server.' }
+        $u = $v.users[0]; $id = [Guid]::Empty
+        Assert-Fields $u @('id','encryption','flow') @('id','encryption')
+        if (-not [Guid]::TryParse($u.id, [ref]$id) -or $id -eq [Guid]::Empty -or $u.encryption -cne 'none') { throw 'Invalid user.' }
+        $t = $o.streamSettings
+        Assert-Fields $t @('network','security','tlsSettings','realitySettings','wsSettings') @('network','security')
+        if ($t.network -notin @('tcp','ws') -or $t.security -notin @('tls','reality')) { throw 'Unprotected transport.' }
+        if ('flow' -in @($u.PSObject.Properties.Name) -and ($u.flow -cne 'xtls-rprx-vision' -or $t.network -cne 'tcp')) { throw 'Unsupported flow.' }
+        if ($t.security -ceq 'tls') {
+            if ('realitySettings' -in @($t.PSObject.Properties.Name)) { throw 'Mixed security settings.' }
+            $tls = $t.tlsSettings
+            Assert-Fields $tls @('serverName','fingerprint','allowInsecure','minVersion','alpn') @('serverName','fingerprint','allowInsecure','minVersion')
+            if (-not $tls.serverName -or $tls.allowInsecure -isnot [bool] -or $tls.allowInsecure -or $tls.minVersion -cne '1.2') { throw 'Unsafe TLS settings.' }
+            Assert-Fingerprint $tls.fingerprint
+        } else {
+            if ($t.network -cne 'tcp' -or 'tlsSettings' -in @($t.PSObject.Properties.Name)) { throw 'Invalid REALITY transport.' }
+            $r = $t.realitySettings
+            Assert-Fields $r @('serverName','fingerprint','password','shortId','spiderX') @('serverName','fingerprint','password','shortId')
+            if (-not $r.serverName) { throw 'REALITY SNI required.' }
+            Assert-Fingerprint $r.fingerprint
+            Assert-RealityKey $r.password
+            Assert-ShortId $r.shortId
+        }
+        if ($t.network -ceq 'ws') { Assert-Fields $t.wsSettings @('path','host') @('path') }
+        elseif ('wsSettings' -in @($t.PSObject.Properties.Name)) { throw 'Unexpected WebSocket settings.' }
+    } catch { throw 'Configuration violates the local TLS/tunnel policy. Regenerate it using Update-Subscription.ps1. Details suppressed.' }
+}
+````

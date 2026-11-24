@@ -1,0 +1,133 @@
+﻿VIC-A isolated vault tests R3 (generated-only creation, System32 dependencies); only synthetic data. No Runtime access.
+CLR: 4.0.30319.42000; OS: Microsoft Windows NT 10.0.26300.0
+Windows PowerShell: 5.1.26100.10068; x64: True
+SHA256 14F9E5ABCD174C918487F6DA633AD4BDA7FA1B84FAE4F379444009FB816672A1  Install-VaultDependency.ps1
+SHA256 8352A39F251A2A5CEC54E0EA470A68B48EF17906AD85D67D12D9FCF48A446B3E  lib\dependency.json
+SHA256 F656AEB789BFC3A2AC587FAE1D7CFE278BBE8CE73F28DA73B4D08282EA8F9FE3  lib\vica-sodium.dll
+SHA256 5D95B679F9B1E3950343C44D44ABB035D1DDCACAD2B36808FC3600B9AFAC4BF1  Run-VaultTests.ps1
+SHA256 79C7DD318EB2DDA05D8D6E316C1848821C6D511A05AB1C18DBCF9EDF9381F4DF  SodiumPe.cs
+SHA256 4E6960A5FB31CA15C9F138B6E78218B1F509429EC443EC05F7CBF0C1ED18D6B3  Start-VaultCheck.ps1
+SHA256 5CB8B363BA0CCC03E50348CF8DA512D9ADE249F4981F19C07C256C69A396B85A  tests\synthetic-vector.json
+SHA256 BBF26AAEA2A3B2F0B037C1B8B1E2CB9CAFAC2E857CBFE57ED0263B41F7066542  tests\test_format.py
+SHA256 F6EEE8EA029D89FE8F0D9B1E658464585E456D0D9E068883A6DF99E9F3CA3EF3  tests\test_revision3.py
+SHA256 78F20314B2DBCFBAB33FA486A7F36201AD6ABD76EDBC373EBD480F2A25277E1F  Test-SodiumImports.ps1
+SHA256 D40BD2264886C9595DAF62CF48215D21DED260C015EA300309D349DF053414F2  Test-SodiumPe.ps1
+SHA256 ED3684A89C3F7CB2EECC53283AB8FDC199745C0F4457D33983E24F32BF620AB5  Test-Vault.ps1
+SHA256 5749B6A3DCC8D960A50971F78EC0FB4113F90743093E013E480831EF8CBC2E37  Test-VaultDllSearch.ps1
+SHA256 8A5CC21D8096C248AF27E73B0A5D2F4B922AC2CB2119D5938B603F18A149CA89  Test-VaultGenerator.ps1
+SHA256 B38D687E057EF26913DA9CC6BF80D09C8B0905E95C8ABC56E22C41B7B6405AA1  Test-VaultIO.ps1
+SHA256 4CA80145A1D2A061A7CB4F09E90EE96BA9ED477D7B0816869D65E71F69463D46  Test-VaultLoadFailure.ps1
+SHA256 3BD11E83E5FFF05184C738F0CA006BAE19122950143D20BE1E90DE74177C4514  Vault.Common.ps1
+SHA256 9DE76C76388574A64B031E4684C33E42864FD09D098A50DC7DC50698414476CB  VaultCrypto.cs
+SHA256 ADDD35536511597A02FA0A9FF1E5284677B8883B83E986E43F15A3DB996B903E  words\eff-large.txt
+SHA256 0A0697EA24BF262C42C3F42128F4B2E5F7330DEB95C74BCFC78BF2448885AB5B  words\NOTICE.md
+SHA256 AB502F497C16101D898CA072A3BB2E5D5E1FFE923DBF117B335AD7B666FBA137  ../Workspace.Common.ps1
+=== Synthetic PE inspector ===
+PASS: synthetic PE imports; invalid size, offset, delay imports, missing terminator and unmapped RVA rejected.
+
+=== PE dependency inspection ===
+vica-sodium.dll imports: advapi32.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, api-ms-win-crt-time-l1-1-0.dll, kernel32.dll, vcruntime140.dll
+Microsoft signature PASS: System32\vcruntime140.dll
+vcruntime140.dll imports: api-ms-win-crt-convert-l1-1-0.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-stdio-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, kernel32.dll
+PE import gate PASS: only approved Windows modules/API contracts and signature-verified System32 VC runtime.
+Not a recursive audit of Windows OS components or dynamic GetProcAddress calls; no PATH lookup or runtime installation.
+
+=== Generated passphrase sampling ===
+vica-sodium.dll imports: advapi32.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, api-ms-win-crt-time-l1-1-0.dll, kernel32.dll, vcruntime140.dll
+Microsoft signature PASS: System32\vcruntime140.dll
+vcruntime140.dll imports: api-ms-win-crt-convert-l1-1-0.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-stdio-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, kernel32.dll
+PE import gate PASS: only approved Windows modules/API contracts and signature-verified System32 VC runtime.
+Not a recursive audit of Windows OS components or dynamic GetProcAddress calls; no PATH lookup or runtime installation.
+PASS: 32 ephemeral six-word samples use the pinned 7776-word list; no full-sample repeats. Not a statistical entropy proof.
+
+=== Crypto and normalization ===
+vica-sodium.dll imports: advapi32.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, api-ms-win-crt-time-l1-1-0.dll, kernel32.dll, vcruntime140.dll
+Microsoft signature PASS: System32\vcruntime140.dll
+vcruntime140.dll imports: api-ms-win-crt-convert-l1-1-0.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-stdio-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, kernel32.dll
+PE import gate PASS: only approved Windows modules/API contracts and signature-verified System32 VC runtime.
+Not a recursive audit of Windows OS components or dynamic GetProcAddress calls; no PATH lookup or runtime installation.
+PASS: libsodium runtime 1.0.22 loaded; interoperability vector, round-trip, randomness, wrong password, tampering and truncation tested.
+No user data was read or changed. This is NOT an audit of host security or memory erasure.
+
+=== Vault file I/O and policy ===
+vica-sodium.dll imports: advapi32.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, api-ms-win-crt-time-l1-1-0.dll, kernel32.dll, vcruntime140.dll
+Microsoft signature PASS: System32\vcruntime140.dll
+vcruntime140.dll imports: api-ms-win-crt-convert-l1-1-0.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-stdio-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, kernel32.dll
+PE import gate PASS: only approved Windows modules/API contracts and signature-verified System32 VC runtime.
+Not a recursive audit of Windows OS components or dynamic GetProcAddress calls; no PATH lookup or runtime installation.
+PASS: manually chosen creation credential refused
+PASS: manually chosen creation credential refused
+PASS: manually chosen creation credential refused
+PASS: manually chosen creation credential refused
+PASS: create, flush, read-back, schema and configuration policy
+PASS: existing vault cannot be overwritten
+PASS: wrong password
+PASS: locked file
+PASS: confirmation mismatch
+PASS: write to missing parent fails
+PASS: unsafe configuration rejected before writing
+PASS: authenticated unsafe configuration rejected on read
+PASS: oversize stream rejected
+PASS: short stream rejected
+PASS: baseline preserved and no encrypted staging files remain
+Not tested: disk-full, power loss, physical unplug, malicious filesystem races.
+
+=== Full-copy baseline crypto ===
+vica-sodium.dll imports: advapi32.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, api-ms-win-crt-time-l1-1-0.dll, kernel32.dll, vcruntime140.dll
+Microsoft signature PASS: System32\vcruntime140.dll
+vcruntime140.dll imports: api-ms-win-crt-convert-l1-1-0.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-stdio-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, kernel32.dll
+PE import gate PASS: only approved Windows modules/API contracts and signature-verified System32 VC runtime.
+Not a recursive audit of Windows OS components or dynamic GetProcAddress calls; no PATH lookup or runtime installation.
+PASS: libsodium runtime 1.0.22 loaded; interoperability vector, round-trip, randomness, wrong password, tampering and truncation tested.
+No user data was read or changed. This is NOT an audit of host security or memory erasure.
+
+=== Full-copy baseline I/O ===
+vica-sodium.dll imports: advapi32.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, api-ms-win-crt-time-l1-1-0.dll, kernel32.dll, vcruntime140.dll
+Microsoft signature PASS: System32\vcruntime140.dll
+vcruntime140.dll imports: api-ms-win-crt-convert-l1-1-0.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-stdio-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, kernel32.dll
+PE import gate PASS: only approved Windows modules/API contracts and signature-verified System32 VC runtime.
+Not a recursive audit of Windows OS components or dynamic GetProcAddress calls; no PATH lookup or runtime installation.
+PASS: manually chosen creation credential refused
+PASS: manually chosen creation credential refused
+PASS: manually chosen creation credential refused
+PASS: manually chosen creation credential refused
+PASS: create, flush, read-back, schema and configuration policy
+PASS: existing vault cannot be overwritten
+PASS: wrong password
+PASS: locked file
+PASS: confirmation mismatch
+PASS: write to missing parent fails
+PASS: unsafe configuration rejected before writing
+PASS: authenticated unsafe configuration rejected on read
+PASS: oversize stream rejected
+PASS: short stream rejected
+PASS: baseline preserved and no encrypted staging files remain
+Not tested: disk-full, power loss, physical unplug, malicious filesystem races.
+
+=== Neighbour dependency canary ===
+vica-sodium.dll imports: advapi32.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, api-ms-win-crt-time-l1-1-0.dll, kernel32.dll, vcruntime140.dll
+Microsoft signature PASS: System32\vcruntime140.dll
+vcruntime140.dll imports: api-ms-win-crt-convert-l1-1-0.dll, api-ms-win-crt-heap-l1-1-0.dll, api-ms-win-crt-runtime-l1-1-0.dll, api-ms-win-crt-stdio-l1-1-0.dll, api-ms-win-crt-string-l1-1-0.dll, kernel32.dll
+PE import gate PASS: only approved Windows modules/API contracts and signature-verified System32 VC runtime.
+Not a recursive audit of Windows OS components or dynamic GetProcAddress calls; no PATH lookup or runtime installation.
+MODULE PASS: System32\VCRUNTIME140.dll
+PASS: crypto initialized despite invalid neighbouring runtime images; VC runtime was not preloaded before this test.
+This is a process-local regression test, not proof against a hostile host, injection or all loader states.
+
+=== Integrity rejection: dll ===
+PASS: isolated dll integrity rejection
+
+=== Integrity rejection: manifest ===
+PASS: isolated manifest integrity rejection
+
+=== Integrity rejection: source ===
+PASS: isolated source integrity rejection
+
+=== Integrity rejection: gate ===
+PASS: isolated gate integrity rejection
+
+=== Integrity rejection: pe ===
+PASS: isolated pe integrity rejection
+
+RESULT: PASS for the implemented tests only.
+NOT TESTED: missing AES hardware, hostile ZIP archives, disk-full, power failure, physical unplug, full migration or Xray integration.

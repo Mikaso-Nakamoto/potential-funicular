@@ -16,8 +16,16 @@ __pycache__/
 .npmrc
 config/local/
 
-# Generated private outputs
+# Generated private outputs and downloaded user reference media
 outputs/
+google_drive/
+
+# Portable browser state / subscription credentials (never commit)
+portable-workspace/Runtime/
+portable-workspace/private/
+portable-workspace/.install-*/
+portable-workspace/vic-a.ui.json
+portable-workspace/vic-a.ui.json.*.tmp
 
 # Private keys and signing material
 *.key
@@ -25,3 +33,11 @@ outputs/
 *.p12
 *.pfx
 *.keystore
+
+# Private working-vault preview runtime and unpublished stages
+/portable-workspace/WorkingRuntime/
+/portable-workspace/.working-vault-*/
+
+# Owned launcher self-check scratch/report
+/portable-workspace/.job-test-*/
+/portable-workspace/job-lifecycle-report.txt
