@@ -14,6 +14,10 @@ class Organizer(unittest.TestCase):
   self.assertLess(S.index('-ValidateOnly'),S.index('[IO.Directory]::Move'))
   self.assertLess(S.index('Get-AuthenticodeSignature'),S.index('[IO.Directory]::Move'))
   self.assertIn("'CreateNew','ReadWrite','None'",S)
+ def test_portable_base(self):
+  self.assertIn("param([string]$Base='')",S)
+  self.assertIn('$Base=Split-Path -Parent $PSScriptRoot',S)
+  self.assertNotIn('Z:\\Iran',S)
  def test_package(self):
   subprocess.run([sys.executable,str(H/'Build-Organizer.py')],check=True,capture_output=True)
   with zipfile.ZipFile(H.parents[1]/'downloads/VIC-A-Organizer.zip') as z:

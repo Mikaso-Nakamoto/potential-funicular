@@ -1,8 +1,10 @@
 #requires -Version 5.1
 [CmdletBinding()]
-param([string]$Base='Z:\Iran\Browser')
+param([string]$Base='')
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+# Default to the directory containing this extracted helper folder, never a volume label.
+if ([string]::IsNullOrWhiteSpace($Base)) { $Base=Split-Path -Parent $PSScriptRoot }
 $Base=[IO.Path]::GetFullPath($Base).TrimEnd('\')
 $source=Join-Path $Base 'VIC-A-New'
 $destination=Join-Path $Base 'VIC-A'
